@@ -1,0 +1,128 @@
+{
+  "project": "OpenMoji",
+  "project_url": "https://openmoji.org/",
+  "metadata_source": "https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/data/openmoji.json",
+  "assets": [
+    {
+      "path": "assets/food/strawberry.svg",
+      "hexcode": "1F353",
+      "annotation": "strawberry",
+      "author": "Liz Bravo",
+      "source": "https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F353.svg",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "changes": "None; original SVG preserved.",
+      "sha256": "d95668fd2f872fa9b8c3adb6b6a1b05376cf412dc99fdd485eb5b56ccf853459"
+    },
+    {
+      "path": "assets/food/croissant.svg",
+      "hexcode": "1F950",
+      "annotation": "croissant",
+      "author": "Miriam Vollmeier",
+      "source": "https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F950.svg",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "changes": "None; original SVG preserved.",
+      "sha256": "1923e7b9613d3049108d965b2956be5d822277eeaa7c213a2bd076f8395692a7"
+    },
+    {
+      "path": "assets/food/bento.svg",
+      "hexcode": "1F371",
+      "annotation": "bento box",
+      "author": "Miriam Vollmeier",
+      "source": "https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F371.svg",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "changes": "None; original SVG preserved.",
+      "sha256": "187da832e960b414ae4112eb3944b10731c9e249e2e4676c5174cc1fa672e4f8"
+    },
+    {
+      "path": "assets/food/stew.svg",
+      "hexcode": "1F372",
+      "annotation": "pot of food",
+      "author": "Miriam Vollmeier",
+      "source": "https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F372.svg",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "changes": "None; original SVG preserved.",
+      "sha256": "79ff37add1dbb09a4237dd2ae258b05f600cabe54363d0de058fbb5ff0ba6337"
+    },
+    {
+      "path": "assets/food/basket.svg",
+      "hexcode": "1F9FA",
+      "annotation": "basket",
+      "author": "Tonia Reinhardt",
+      "source": "https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F9FA.svg",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "changes": "None; original SVG preserved.",
+      "sha256": "f2dc0f74ccf57dcc51d168c4ec982bb998abe206a48309bd87ad61f83d2e82c8"
+    },
+    {
+      "path": "assets/food/shrimp.svg",
+      "hexcode": "1F990",
+      "annotation": "shrimp",
+      "author": "Robert Winslow",
+      "source": "https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F990.svg",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "changes": "None; original SVG preserved.",
+      "sha256": "85fc99b7b5de420af2956da75c12a69789fbaf3084ce134bc08b6305271876b0"
+    },
+    {
+      "path": "assets/food/egg.svg",
+      "hexcode": "1F95A",
+      "annotation": "egg",
+      "author": "Niklas Kuntz",
+      "source": "https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F95A.svg",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "changes": "None; original SVG preserved.",
+      "sha256": "a1a2840383bdf9cf3732903e66733ef7f9e5cd6da8212d15d92bfbfca5d1d5af"
+    },
+    {
+      "path": "assets/food/chicken.svg",
+      "hexcode": "1F357",
+      "annotation": "poultry leg",
+      "author": "Miriam Vollmeier",
+      "source": "https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F357.svg",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "changes": "None; original SVG preserved.",
+      "sha256": "bcc5a30154f43e8bc79580e392c7fa160cf47ebf61c50bd67c18e2e911656518"
+    },
+    {
+      "path": "assets/food/meat.svg",
+      "hexcode": "1F969",
+      "annotation": "cut of meat",
+      "author": "Miriam Vollmeier",
+      "source": "https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F969.svg",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "changes": "None; original SVG preserved.",
+      "sha256": "656f83f6bdbcdd31b7617a31b5bc98a3a65141d8ca427ea8e114a6b6797a4326"
+    },
+    {
+      "path": "assets/food/beans.svg",
+      "hexcode": "1FAD8",
+      "annotation": "beans",
+      "author": "Jana Junk",
+      "source": "https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1FAD8.svg",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "changes": "None; original SVG preserved.",
+      "sha256": "9fe86677dd266da83f22eeaf40beac2b1309a0e64de222bad87607eec1b672a6"
+    },
+    {
+      "path": "assets/food/milk.svg",
+      "hexcode": "1F95B",
+      "annotation": "glass of milk",
+      "author": "Laura Humpfer",
+      "source": "https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F95B.svg",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "changes": "None; original SVG preserved.",
+      "sha256": "d4d2d7d085dea7979510c84038303861c4480a930cbe1b52249315d3bc89e545"
+    }
+  ]
+}
