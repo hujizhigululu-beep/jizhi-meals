@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "机智定食 · 私人餐食手账",
+  "short_name": "机智定食",
+  "description": "草莓牛奶色的私人餐食手账，排餐、库存和备份，离线也能用。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFF8FA",
+  "theme_color": "#FFF8FA",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

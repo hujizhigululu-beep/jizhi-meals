@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FFF8FA">
+  <meta name="description" content="草莓牛奶色的私人餐食手账。按日期排餐，温柔管理食材，离线也能用。">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="机智定食">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./journal.css">
+  <title>机智定食 · 私人餐食手账</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="brand-header">
+      <span class="cover-edition" aria-hidden="true">STRAWBERRY MILK · PRIVATE JOURNAL</span>
+      <a class="brand" href="#calendar" aria-label="机智定食首页"><span>机智定食<small>把每天，都安排得甜一点</small></span></a>
+      <span class="cover-label">我的餐食手账 <span aria-hidden="true">♡</span></span>
+      <div class="cover-art" aria-hidden="true"><span class="gingham-scrap"></span><img class="milk-carton" src="./assets/milk-carton.svg" alt="" width="92" height="116"><img class="cover-berry" src="./assets/food/strawberry.svg" alt="" width="53" height="53"><span class="cover-spark">✧</span></div>
+      <span class="cover-bow" aria-hidden="true"></span>
+    </header>
+    <div id="data-notice" class="notice" hidden></div>
+    <main id="main"></main>
+    <nav class="bottom-nav" aria-label="主要页面">
+      <button data-page="calendar"><svg viewBox="0 0 36 32" aria-hidden="true"><path d="M5 7c5-2 9-1 13 1 4-2 8-3 13-1v21c-5-2-9-1-13 1-4-2-8-3-13-1zM18 8v21M9 12l5 1M9 17l5 1M22 13l5-1M22 18l5-1"/><path d="M12 3v8" class="nav-ribbon"/></svg><span>餐食日历</span></button>
+      <button data-page="inventory"><svg viewBox="0 0 36 32" aria-hidden="true"><path d="M5 13h26l-3 15H8zM11 13l4-8M25 13l-4-8M13 18l1 6M22 18l-1 6M7 13h22"/><path d="M17 17c-2-3-6 0-3 3l3 3 3-3c3-3-1-6-3-3z" class="nav-ribbon"/></svg><span>食材库存</span></button>
+      <button data-page="settings"><svg viewBox="0 0 36 32" aria-hidden="true"><path d="M8 7h19v21H8zM6 12h4M6 18h4M6 24h4M13 3v9l4-2 4 2V3z"/><path d="M18 18c-2-3-6 0-3 3l3 3 3-3c3-3-1-6-3-3z" class="nav-ribbon"/></svg><span>我的设置</span></button>
+    </nav>
+  </div>
+  <dialog id="sheet" aria-labelledby="sheet-title"><div class="sheet-content" id="sheet-content"></div></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <input id="import-file" type="file" accept="application/json,.json" hidden>
+  <noscript>这本手账需要开启 JavaScript 才能使用。数据只保存在你的设备中。</noscript>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
