@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { summarize, renderSummary } from '../summary.js';
+import { summarize, renderSummary, shiftSummaryMonth, summaryMonthDate } from '../summary.js';
 import { freshState, putDiary, normalize } from '../model.js';
 import { persist, load, STORAGE_KEY } from '../storage.js';
 
@@ -77,13 +77,70 @@ test('summary rendering escapes stored text and provides date/range buttons', ()
   const state = empty();
   state.meals = [{ ...meal('x', '2026-10-12', 'snack', true), name: '<img src=x onerror="alert(1)">', time: '"><script>bad</script>' }];
   state.diaries = [{ date: '2026-10-12', text: '<script>private</script>', mood: '" onclick="bad' }];
-  const html = renderSummary(state, '2026-10-12', 'month');
+  const html = renderSummary(state, '2026-10-12', 'month', '2026-10-12');
   assert.ok(!html.includes('<script>'));
   assert.ok(!html.includes('<img'));
   assert.ok(html.includes('&lt;img'));
   assert.ok(html.includes('data-review-date="2026-10-12"'));
   assert.ok(html.includes('data-summary-range="month" aria-pressed="true"'));
   assert.ok(html.includes('零食 / 加餐'));
+});
+
+test('历史月份导航跨年、跨闰月且不溢出支持的年份', () => {
+  assert.equal(shiftSummaryMonth('2026-12-31', 1), '2027-01-01');
+  assert.equal(shiftSummaryMonth('2027-01-01', -1), '2026-12-01');
+  assert.equal(shiftSummaryMonth('2024-03-31', -1), '2024-02-01');
+  assert.equal(shiftSummaryMonth('0001-01-01', -1), null);
+  assert.equal(shiftSummaryMonth('9999-12-31', 1), null);
+  assert.equal(shiftSummaryMonth('2026-02-30', 1), null);
+  assert.equal(shiftSummaryMonth('2026-12-31', .5), null);
+  assert.equal(summaryMonthDate('2024-02'), '2024-02-01');
+  for (const invalid of ['2026-2', '2026-13', '0000-01', '', null]) assert.equal(summaryMonthDate(invalid), null);
+});
+
+test('历史月统计、餐食和日记预览全部跟随选择范围，其他年月只被隐藏', () => {
+  const state = empty();
+  state.meals = [meal('去年十二月', '2026-12-31', 'dinner', true), meal('新年早餐', '2027-01-01', 'breakfast'), meal('新年加餐', '2027-01-01', 'snack'), meal('第二天加餐', '2027-01-02', 'snack')];
+  state.diaries = [{ date: '2026-12-31', text: '旧年的故事' }, { date: '2027-01-02', text: '新年的故事' }];
+  const raw = JSON.stringify(state);
+  const december = renderSummary(state, '2026-12-01', 'month', '2027-01-10');
+  assert.ok(december.includes('2026年 12月'));
+  assert.ok(december.includes('去年十二月') && december.includes('旧年的故事'));
+  assert.ok(!december.includes('新年早餐') && !december.includes('新年的故事'));
+  const january = renderSummary(state, shiftSummaryMonth('2026-12-01', 1), 'month', '2027-01-10');
+  assert.ok(january.includes('新年早餐') && january.includes('新年的故事'));
+  assert.ok(!january.includes('去年十二月') && !january.includes('旧年的故事'));
+  const stats = summarize(state, '2027-01-01').month;
+  assert.equal(stats.mealDays, 2);
+  assert.equal(stats.mealCount, 3);
+  assert.equal(stats.diaryDays, 1);
+  assert.equal(stats.counts.snack, 2);
+  assert.equal(JSON.stringify(state), raw);
+});
+
+test('多年份记录经过保存、反复筛选和重载仍完整存在', () => {
+  const state = freshState();
+  state.meals = [meal('旧便当', '2024-02-29', 'lunch', true), meal('年底计划', '2026-12-31', 'dinner'), meal('新年计划', '2027-01-01', 'breakfast')];
+  state.diaries = [{ date: '2024-02-29', mood: '🍓', text: '老日记', joy: '' }, { date: '2027-01-01', mood: '', text: '新日记', joy: '' }];
+  const values = new Map();
+  const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
+  persist(storage, state);
+  const before = storage.getItem(STORAGE_KEY);
+  const loaded = load(storage);
+  for (let i = 0; i < 20; i++) {
+    for (const date of ['2024-02-01', '2026-12-01', '2027-01-01']) renderSummary(loaded.state, date, 'month');
+  }
+  assert.equal(storage.getItem(STORAGE_KEY), before);
+  assert.deepEqual(load(storage).state.meals.map(m => m.id), ['旧便当', '年底计划', '新年计划']);
+  assert.equal(load(storage).state.diaries.length, 2);
+});
+
+test('本周可以跨年份统计，支持年份边界的部分周', () => {
+  const state = empty();
+  state.meals = [meal('year-end', '2026-12-31'), meal('year-start', '2027-01-01'), meal('last-supported-day', '9999-12-31')];
+  assert.equal(summarize(state, '2027-01-01').week.mealCount, 2);
+  assert.equal(summarize(state, '9999-12-31').week.end, '9999-12-31');
+  assert.equal(summarize(state, '9999-12-31').week.mealCount, 1);
 });
 
 test('empty state stays gentle and invalid dates do not enter the calendar', () => {

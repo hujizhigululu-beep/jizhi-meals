@@ -25,7 +25,7 @@ DAY = date.today().isoformat()
 NEXT_DAY = (date.today() + timedelta(days=1)).isoformat()
 OLD_DAY = (date.today() - timedelta(days=1)).isoformat()
 KEY = 'jizhi-meals-v1'
-CACHE = 'jizhi-meals-shell-v1.1-timeline-2'
+CACHE = 'jizhi-meals-shell-v1.2-compact-1'
 fixture = {
     'schemaVersion': 1,
     'inventory': [
@@ -102,6 +102,12 @@ try:
         assert page.evaluate('key => localStorage.getItem(key)', KEY) == RAW
         assert stock(page) == {'beef': 3, 'shrimp': 4}
         record(1, 'V1 read-only migration preserves raw JSON and already consumed stock')
+        page.wait_for_selector('.date-strip')
+        assert page.locator('[data-action="timeline"]').count() == 1
+        assert page.locator('.day-heading h1').inner_text().startswith(str(date.today().month) + '月' + str(date.today().day) + '日')
+        assert page.locator('#date-timeline').count() == 0
+        record('home', 'Fresh launch opens today directly with one left-side timeline entrance')
+        page.locator('[data-action="timeline"]').click()
         page.wait_for_selector('#date-timeline')
         assert '旧版便当' in page.locator(f'[data-timeline-date="{DAY}"]').inner_text()
         for width, height in [(390, 844), (375, 667), (320, 568)]:
@@ -116,7 +122,7 @@ try:
         page.set_viewport_size({'width': 390, 'height': 844})
         page.locator('[data-action="timeline-today"]').click()
         page.screenshot(path=str(ARTIFACTS / 'timeline-mobile.png'), full_page=True)
-        record('timeline', 'Default daily previews show about a week, no data writes or nav overlap at 320/375/390px')
+        record('timeline', 'History timeline previews show about a week, no data writes or nav overlap at 320/375/390px')
         last = page.locator('[data-timeline-date]').last.get_attribute('data-timeline-date')
         page.locator('#date-timeline').evaluate('el=>el.scrollTop=el.scrollHeight-el.clientHeight-1')
         page.wait_for_function("last=>document.querySelector('[data-timeline-date]:last-child').dataset.timelineDate>last", arg=last)
@@ -210,6 +216,44 @@ try:
         assert state(page)['inventory'] == backup['inventory']
         record(2, 'V1.1 JSON export/import round trip preserves meals, snacks, diaries and stock')
 
+        history = state(page)
+        for id, day, slot in [('history-dec', '2026-12-31', 'dinner'), ('history-jan-a', '2027-01-01', 'breakfast'), ('history-jan-b', '2027-01-02', 'snack')]:
+            history['meals'].append({'id':id,'date':day,'slot':slot,'name':id,'type':'其他','protein':'','note':'','resources':[],'completed':False,'completedAt':None,**({'time':''} if slot=='snack' else {})})
+        history['diaries'].extend([{'date':'2026-12-31','mood':'🍓','text':'旧年历史日记','joy':''},{'date':'2027-01-02','mood':'😊','text':'新年历史日记','joy':''}])
+        writer = context.new_page()
+        writer.goto(URL, wait_until='networkidle')
+        history_raw = json.dumps(history, ensure_ascii=False)
+        writer.evaluate('({key,raw})=>localStorage.setItem(key,raw)',{'key':KEY,'raw':history_raw})
+        page.wait_for_function("document.querySelector('#toast').textContent.includes('另一个窗口')")
+        writer.close()
+        page.locator('[data-page="summary"]').click()
+        page.locator('#summary-month').fill('2026-12')
+        page.wait_for_function("document.querySelector('#summary-month').value==='2026-12' && document.querySelector('.summary-period').textContent.includes('2026-12-31')")
+        assert page.locator('.summary-stat strong').all_inner_texts() == ['1','1']
+        assert 'history-dec' in page.locator('.summary-page').inner_text()
+        assert 'history-jan-a' not in page.locator('.summary-page').inner_text()
+        page.locator('[data-action="summary-next-month"]').click()
+        assert page.locator('#summary-month').input_value() == '2027-01'
+        assert page.locator('.summary-stat strong').all_inner_texts() == ['2','1']
+        assert '新年历史日记' in page.locator('.summary-page').inner_text()
+        assert '旧年历史日记' not in page.locator('.summary-page').inner_text()
+        page.locator('[data-action="summary-prev-month"]').click()
+        assert page.locator('#summary-month').input_value() == '2026-12'
+        assert page.locator('.summary-stat strong').all_inner_texts() == ['1','1']
+        assert page.evaluate('key=>localStorage.getItem(key)',KEY) == history_raw
+        record('history', 'December to January and back updates scoped counts and previews without changing any stored record')
+        page.reload(wait_until='networkidle')
+        assert {'history-dec','history-jan-a','history-jan-b'} <= {m['id'] for m in state(page)['meals']}
+        assert len(state(page)['diaries']) == 3
+        page.locator('#summary-month').fill('2026-12')
+        page.locator('[data-review-date="2026-12-31"]').first.click()
+        assert 'history-dec' in page.locator('.meal-name').inner_text()
+        page.locator('[data-page="calendar"]').click()
+        assert page.locator('#date-timeline').count() == 0
+        assert 'history-dec' not in page.locator('.calendar-page').inner_text()
+        assert page.evaluate('key=>localStorage.getItem(key)',KEY) == history_raw
+        record('history', 'Reload preserves years of data; opening historical entries and returning home do not overwrite them')
+
         page.locator('[data-page="summary"]').click()
         assert page.locator('h1').inner_text() == '我的生活汇总'
         page.locator('[data-summary-range="month"]').click()
@@ -262,6 +306,21 @@ try:
             assert_width(page)
             page.locator('.close-button[data-close]').click()
         record(3, '320px/390px navigation, pages and multi-ingredient dialog have no horizontal overflow')
+
+        page.set_viewport_size({'width':390,'height':844})
+        page.locator('[data-page="calendar"]').click()
+        assert page.locator('.brand-header').bounding_box()['height'] <= 95
+        assert max(row.bounding_box()['height'] for row in page.locator('.calendar-page .meals .meal-card').all()) <= 120
+        assert page.locator('.calendar-page .meals').bounding_box()['y'] + page.locator('.calendar-page .meals').bounding_box()['height'] < page.locator('.bottom-nav').bounding_box()['y']
+        page.screenshot(path=str(ARTIFACTS/'compact-home.png'),full_page=True)
+        page.locator('[data-page="inventory"]').click()
+        assert page.locator('.inventory-list').evaluate("el=>getComputedStyle(el).gridTemplateColumns.split(' ').length") == 2
+        assert max(row.bounding_box()['height'] for row in page.locator('.ingredient-card').all()) < 210
+        page.screenshot(path=str(ARTIFACTS/'compact-inventory.png'),full_page=True)
+        page.locator('[data-page="summary"]').click()
+        page.screenshot(path=str(ARTIFACTS/'compact-summary.png'),full_page=True)
+        page.locator('[data-page="calendar"]').click()
+        record('compact', 'Banner and horizontal meal rows fit primary content; two-column inventory cards are compact')
         page2 = context.new_page()
         page2.goto(URL, wait_until='networkidle')
         page.locator('[data-action="add-snack"]').click()
@@ -284,13 +343,13 @@ try:
         page.locator('[data-page="settings"]').click()
         page.wait_for_function('document.querySelector("#offline-status").textContent.includes("离线资源已缓存")')
         cache_count = page.evaluate('async name => (await (await caches.open(name)).keys()).length', CACHE)
-        assert cache_count == 34
+        assert cache_count == 35
         page.locator('[data-page="calendar"]').click()
         detail(page)
         page.locator('[data-action="share-day"]').click()
         page.locator('#share-form button[type="submit"]').click()
         page.wait_for_selector('#download-card')
-        record('regression', 'All 34 assets cached; offline reload and offline PNG generation succeed')
+        record('regression', 'All 35 assets cached; offline reload and offline PNG generation succeed')
         assert not errors, errors
         assert not failed_http, failed_http
         context.close()
@@ -329,6 +388,23 @@ try:
             assert stock(new_page) == {'beef': 3, 'shrimp': 4}
             record('regression', 'V1 worker stays consistent until tabs close; V1.1 activates with unchanged V1 data and works offline')
             upgrade.close()
+        visual_device = {**p.devices['iPhone 13'], 'viewport': {'width':390,'height':844}}
+        visual = browser.new_context(**visual_device)
+        demo = json.loads(history_raw)
+        demo['meals'] = [m for m in demo['meals'] if not (m['date'] == DAY and m['slot'] in ['breakfast','lunch','dinner'])]
+        for slot, name, note in [('breakfast','牛奶坚果与牛角包','开启甜甜的一天'),('lunch','小米饭 · 牛肉丸便当','小配菜也记在这里'),('dinner','好好吃一份虾丸晚餐','今天也辛苦啦 ♡')]:
+            demo['meals'].append({'id':'demo-'+slot,'date':DAY,'slot':slot,'name':name,'type':'自制便当','protein':'','note':note,'resources':[{'ingredientId':'beef','name':'牛肉丸','unit':'份','amount':.5},{'ingredientId':'shrimp','name':'虾丸','unit':'份','amount':.5}],'completed':False,'completedAt':None})
+        visual.add_init_script('localStorage.setItem('+json.dumps(KEY)+','+json.dumps(json.dumps(demo,ensure_ascii=False))+');')
+        visual_page = visual.new_page()
+        served_root[0] = ROOT.parent
+        visual_page.goto(URL,wait_until='networkidle')
+        rows = visual_page.locator('.calendar-page .meals .meal-card')
+        assert rows.count() == 3
+        assert max(r.bounding_box()['height'] for r in rows.all()) <= 120
+        assert rows.last.bounding_box()['y'] + rows.last.bounding_box()['height'] < visual_page.locator('.bottom-nav').bounding_box()['y']
+        visual_page.screenshot(path=str(ARTIFACTS/'compact-home-filled.png'),full_page=True)
+        visual.close()
+        record('compact', 'A filled day with three multi-ingredient meals keeps all primary cards visible on a 390x844 screen')
         browser.close()
         report = {'engine': 'Chromium', 'device_emulation': 'iPhone 13, plus 320px viewport', 'physical_iphone_tested': False, 'native_share_menu': 'API mocked; device check still required', 'png_dimensions': dimensions, 'cached_assets': cache_count, 'page_errors': errors, 'failed_http_resources': failed_http, 'tests': results}
         (ARTIFACTS / 'browser-results.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
