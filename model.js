@@ -1,7 +1,8 @@
-export const SCHEMA = 1;
+export const SCHEMA = 2;
 export const SLOTS = ['breakfast', 'lunch', 'dinner'];
+export const ALL_SLOTS = [...SLOTS, 'snack'];
 export const TYPES = ['自制便当', '公司食堂', '外出就餐', '外卖', '零食 / 加餐', '其他'];
-export const freshState = () => ({ schemaVersion: SCHEMA, inventory: [], meals: [], updatedAt: null });
+export const freshState = () => ({ schemaVersion: SCHEMA, inventory: [], meals: [], diaries: [], updatedAt: null });
 export const uid = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 export const round = n => Math.round((n + Number.EPSILON) * 1000) / 1000;
 // Optional future IndexedDB reference; never store image content in localStorage.
@@ -33,102 +34,239 @@ export function weekDates(s) {
 }
 const shortText = (v, max = 200) => typeof v === 'string' ? v.trim().slice(0, max) : '';
 const numberOK = n => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= 1e9;
+const idOK = id => typeof id === 'string' && id.length > 0 && id.length <= 100 && id === id.trim();
+const timeOK = time => time === '' || time == null || typeof time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
+function protectedError(message) {
+  const error = new Error(message);
+  error.code = 'PROTECTED_DATA';
+  return error;
+}
+function rawResources(meal) {
+  if (meal.resources !== undefined) {
+    if (!Array.isArray(meal.resources)) throw new Error('餐食的食材列表格式异常，请保留原文件。');
+    if (meal.resource != null) throw new Error('餐食同时包含新旧食材关联，无法安全判断用量，请保留原文件。');
+    return meal.resources;
+  }
+  return meal.resource == null ? [] : [meal.resource];
+}
+function storedResources(meal) {
+  const ids = new Set();
+  return rawResources(meal).map(resource => {
+    if (!resource || !idOK(resource.ingredientId) || !shortText(resource.name, 60) || !shortText(resource.unit, 12) || !numberOK(resource.amount) || round(resource.amount) <= 0) {
+      throw protectedError('餐食的库存关联异常，不能安全扣减或返还；请保留原文件并恢复有效备份。');
+    }
+    if (ids.has(resource.ingredientId)) throw protectedError('同一餐的食材关联重复，不能安全扣减或返还；请保留原文件。');
+    ids.add(resource.ingredientId);
+    return { ingredientId: resource.ingredientId, name: shortText(resource.name, 60), unit: shortText(resource.unit, 12), amount: round(resource.amount) };
+  });
+}
+/** Normalize only: inventory quantities already include completed meals. Never replay deductions. */
 export function normalize(raw) {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || raw.schemaVersion !== SCHEMA || !Array.isArray(raw.inventory) || !Array.isArray(raw.meals)) {
-    throw new Error('这份文件不是支持的机智定食 V1 备份，原有数据没有改变。');
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || ![1, SCHEMA].includes(raw.schemaVersion) || !Array.isArray(raw.inventory) || !Array.isArray(raw.meals)) {
+    throw new Error('这份文件不是支持的机智定食 V1 / V1.1 备份，原有数据没有改变。');
   }
   const state = freshState();
   const warnings = [];
+  if (raw._readOnly) warnings.push('这份数据已处于保护状态，请保留原文件并恢复有效备份。');
+  // Any lossy normalization makes the entire view read-only, even for planned rows.
+  const text = (value, max, field) => {
+    if (value != null && typeof value !== 'string') warnings.push(`${field}格式异常，已保护原文件`);
+    if (typeof value === 'string' && value.trim().length > max) warnings.push(`${field}超出长度限制，已保护原文件`);
+    return shortText(value, max);
+  };
   const ids = new Set();
   for (const item of raw.inventory) {
-    if (!item || !shortText(item.id, 100) || ids.has(item.id) || !shortText(item.name, 60) || !numberOK(item.quantity) || !numberOK(item.perMeal) || round(item.perMeal) <= 0 || !shortText(item.unit, 12)) {
-      warnings.push('一条食材数据格式异常，已跳过'); continue;
+    if (!item || !idOK(item.id) || ids.has(item.id) || !shortText(item.name, 60) || !numberOK(item.quantity) || !numberOK(item.perMeal) || round(item.perMeal) <= 0 || !shortText(item.unit, 12)) {
+      warnings.push('一条食材数据格式异常或重复，已保护原文件'); continue;
     }
     ids.add(item.id);
-    state.inventory.push({ id: item.id, name: shortText(item.name, 60), quantity: round(item.quantity), perMeal: round(item.perMeal), unit: shortText(item.unit, 12), note: shortText(item.note), expires: parseDate(item.expires) ? item.expires : '' });
+    if (item.expires && !parseDate(item.expires)) warnings.push('一条食材的保质期格式异常，已保护原文件');
+    state.inventory.push({ id: item.id, name: text(item.name, 60, '食材名称'), quantity: round(item.quantity), perMeal: round(item.perMeal), unit: text(item.unit, 12, '食材单位'), note: text(item.note, 200, '食材备注'), expires: parseDate(item.expires) ? item.expires : '' });
   }
   const mealIds = new Set();
   const positions = new Set();
   for (const meal of raw.meals) {
-    if (!meal || !shortText(meal.id, 100) || mealIds.has(meal.id) || !parseDate(meal.date) || !SLOTS.includes(meal.slot) || !shortText(meal.name, 80) || positions.has(`${meal.date}/${meal.slot}`)) {
-      warnings.push('一条餐食数据格式异常或重复，已跳过'); continue;
+    const position = `${meal?.date}/${meal?.slot}`;
+    if (!meal || !idOK(meal.id) || mealIds.has(meal.id) || !parseDate(meal.date) || !ALL_SLOTS.includes(meal.slot) || !shortText(meal.name, 80) || meal.slot !== 'snack' && positions.has(position)) {
+      warnings.push('一条餐食数据格式异常或重复，已保护原文件'); continue;
     }
-    let resource = null;
-    if (meal.resource) {
-      const r = meal.resource;
-      if (shortText(r.ingredientId, 100) && shortText(r.name, 60) && shortText(r.unit, 12) && numberOK(r.amount) && r.amount > 0 && round(r.amount) > 0) {
-        resource = { ingredientId: r.ingredientId, name: shortText(r.name, 60), unit: shortText(r.unit, 12), amount: round(r.amount) };
-        if (!ids.has(r.ingredientId)) warnings.push('有餐食关联的食材已缺失，仍保留餐食记录');
-      } else {
-        // Skip a broken completed row so it cannot return an unknown stock amount.
-        if (meal.completed === true) { warnings.push('一条已吃餐食的库存记录异常，已跳过；请保留原文件'); continue; }
-        warnings.push('一条餐食的食材用量异常，已保留菜名并移除关联');
-      }
+    let resources;
+    try { resources = storedResources(meal); }
+    catch (error) { warnings.push(error.message); continue; }
+    for (const resource of resources) {
+      const source = rawResources(meal).find(r => r.ingredientId === resource.ingredientId);
+      text(source.name, 60, '关联食材名称'); text(source.unit, 12, '关联食材单位');
+      const item = state.inventory.find(i => i.id === resource.ingredientId);
+      if (!item) warnings.push('有餐食关联的食材已缺失，已保护原文件');
+      else if (item.unit !== resource.unit) warnings.push('关联食材的库存单位已改变，无法安全返还，已保护原文件');
     }
-    mealIds.add(meal.id); positions.add(`${meal.date}/${meal.slot}`);
-    state.meals.push({ id: meal.id, date: meal.date, slot: meal.slot, name: shortText(meal.name, 80), type: TYPES.includes(meal.type) ? meal.type : '其他', protein: shortText(meal.protein, 60), note: shortText(meal.note), resource, completed: meal.completed === true, completedAt: typeof meal.completedAt === 'string' ? meal.completedAt : null, ...(photoReference(meal.photoId) ? { photoId: meal.photoId } : {}) });
+    if (meal.completed != null && typeof meal.completed !== 'boolean') warnings.push('一条餐食的已吃状态格式异常，已保护原文件');
+    if (meal.completedAt != null && typeof meal.completedAt !== 'string') warnings.push('一条餐食的完成时间格式异常，已保护原文件');
+    if (!timeOK(meal.time)) warnings.push('一条加餐的时间格式异常，已保护原文件');
+    if (meal.type != null && !TYPES.includes(meal.type)) warnings.push('一条餐食的类型异常，已保护原文件');
+    if (meal.photoId != null && !photoReference(meal.photoId)) warnings.push('一条餐食的照片引用异常，已保护原文件');
+    mealIds.add(meal.id); if (meal.slot !== 'snack') positions.add(position);
+    state.meals.push({ id: meal.id, date: meal.date, slot: meal.slot, name: text(meal.name, 80, '餐食名称'), type: TYPES.includes(meal.type) ? meal.type : '其他', protein: text(meal.protein, 60, '蛋白质备注'), note: text(meal.note, 200, '餐食备注'), resources, completed: meal.completed === true, completedAt: typeof meal.completedAt === 'string' ? meal.completedAt : null, ...(meal.slot === 'snack' ? { time: timeOK(meal.time) ? meal.time || '' : '' } : {}), ...(photoReference(meal.photoId) ? { photoId: meal.photoId } : {}) });
   }
+  if ((raw.schemaVersion === SCHEMA || raw.diaries !== undefined) && !Array.isArray(raw.diaries)) warnings.push('日记列表缺失或格式异常，已保护原文件');
+  const diaryDates = new Set();
+  for (const diary of Array.isArray(raw.diaries) ? raw.diaries : []) {
+    if (!diary || !parseDate(diary.date) || diaryDates.has(diary.date)) { warnings.push('一条日记的日期异常或重复，已保护原文件'); continue; }
+    diaryDates.add(diary.date);
+    if (diary.photoIds != null) warnings.push('本版本尚不支持日记照片，请保留原文件');
+    if (diary.updatedAt != null && (typeof diary.updatedAt !== 'string' || !Number.isFinite(Date.parse(diary.updatedAt)))) warnings.push('日记的编辑时间格式异常，已保护原文件');
+    state.diaries.push({ date: diary.date, mood: text(diary.mood, 100, '日记心情'), text: text(diary.text, 5000, '日记正文'), joy: text(diary.joy, 500, '今日小确幸'), ...(typeof diary.updatedAt === 'string' ? { updatedAt: diary.updatedAt } : {}) });
+  }
+  if (raw.updatedAt != null && typeof raw.updatedAt !== 'string') warnings.push('保存时间格式异常，已保护原文件');
   state.updatedAt = typeof raw.updatedAt === 'string' ? raw.updatedAt : null;
-  return { state, warnings };
+  const locked = warnings.length > 0;
+  if (locked) state._readOnly = true;
+  return { state, warnings, locked };
+}
+function assertMutable(state) {
+  if (state._readOnly) throw protectedError('原数据已保护，请先保存原文件并恢复有效备份。');
+  const inventoryIds = new Set();
+  for (const item of state.inventory) {
+    if (!item || !idOK(item.id) || inventoryIds.has(item.id) || !numberOK(item.quantity) || !shortText(item.name, 60) || !shortText(item.unit, 12) || !numberOK(item.perMeal) || round(item.perMeal) <= 0) throw protectedError('库存数据异常或重复，已停止修改，请保留原文件。');
+    inventoryIds.add(item.id);
+  }
+  const mealIds = new Set();
+  const positions = new Set();
+  for (const meal of state.meals) {
+    const position = `${meal?.date}/${meal?.slot}`;
+    if (!meal || !idOK(meal.id) || mealIds.has(meal.id) || !parseDate(meal.date) || !ALL_SLOTS.includes(meal.slot) || typeof meal.completed !== 'boolean' || meal.slot !== 'snack' && positions.has(position)) throw protectedError('餐食记录异常或重复，已停止修改，请保留原文件。');
+    mealIds.add(meal.id); if (meal.slot !== 'snack') positions.add(position);
+    storedResources(meal);
+  }
 }
 export function reserved(state, ingredientId, excludeId = null) {
-  return round(state.meals.filter(m => !m.completed && m.id !== excludeId && m.resource?.ingredientId === ingredientId).reduce((n, m) => n + m.resource.amount, 0));
+  return round(state.meals.filter(meal => !meal.completed && meal.id !== excludeId).reduce((sum, meal) => sum + rawResources(meal).filter(r => r.ingredientId === ingredientId).reduce((n, r) => n + r.amount, 0), 0));
 }
 export function forecast(state, ingredientId, excludeId = null) {
   const item = state.inventory.find(i => i.id === ingredientId);
   return item ? round(item.quantity - reserved(state, ingredientId, excludeId)) : null;
 }
-export function putMeal(state, meal, replace = false) {
-  if (!parseDate(meal.date) || !SLOTS.includes(meal.slot) || !shortText(meal.name, 80)) throw new Error('填好菜名和日期，就可以存下这餐啦。');
-  const existing = state.meals.find(m => m.id === meal.id);
-  if (existing?.completed) throw new Error('这餐已经吃过啦，请先撤销已吃再修改。');
-  const target = state.meals.find(m => m.date === meal.date && m.slot === meal.slot && m.id !== meal.id);
+function selectedResources(state, meal, existing) {
+  const used = new Set();
+  const old = existing?.completed ? storedResources(existing) : [];
+  return rawResources(meal).map(resource => {
+    if (!resource || !idOK(resource.ingredientId)) throw new Error('食材或用量不太对，请重新选择。');
+    if (used.has(resource.ingredientId)) throw new Error('这份食材已经选过啦，每餐只需关联一次。');
+    used.add(resource.ingredientId);
+    const item = state.inventory.find(i => i.id === resource.ingredientId);
+    const amount = resource.amount == null || resource.amount === '' ? item?.perMeal : resource.amount;
+    if (!item || !numberOK(amount) || round(amount) <= 0) throw new Error('食材或用量不太对，请重新选择。');
+    const snapshot = old.find(r => r.ingredientId === item.id);
+    return { ingredientId: item.id, name: snapshot?.name || item.name, unit: snapshot?.unit || item.unit, amount: round(amount) };
+  });
+}
+/** Prepare a full inventory transaction before writing even one quantity. */
+function stockChanges(state, returns, consumes, allowNegative) {
+  const changes = new Map();
+  for (const [resources, direction] of [[returns, 1], [consumes, -1]]) {
+    for (const resource of resources) {
+      const item = state.inventory.find(i => i.id === resource.ingredientId);
+      if (!item) throw new Error('关联食材找不到了，无法安全扣减或返还；请先恢复包含该食材的备份。');
+      if (item.unit !== resource.unit) throw new Error('关联食材的单位已经改变，无法安全扣减或返还；请先核对库存单位。');
+      changes.set(item.id, round((changes.get(item.id) || 0) + direction * resource.amount));
+    }
+  }
+  const next = [];
+  const insufficient = [];
+  for (const [id, difference] of changes) {
+    const item = state.inventory.find(i => i.id === id);
+    const quantity = round(item.quantity + difference);
+    if (!numberOK(quantity)) throw new Error('库存数量超出可保存范围，请核对数量。');
+    // A neutral edit of a previously authorized negative stock requires no new permission.
+    if (quantity < 0 && difference < 0 && !allowNegative) insufficient.push({ ingredientId: id, name: item.name, unit: item.unit, quantity: item.quantity, remaining: quantity });
+    next.push({ item, quantity });
+  }
+  if (insufficient.length) {
+    const error = new Error(`实际库存不足：${insufficient.map(i => i.name).join('、')}。小冰箱快见底啦，请核对用量或确认继续扣减。`);
+    error.code = 'INSUFFICIENT_STOCK'; error.ingredients = insufficient;
+    throw error;
+  }
+  return next;
+}
+const applyStock = changes => { for (const { item, quantity } of changes) item.quantity = quantity; };
+export function putMeal(state, meal, replace = false, allowNegative = false) {
+  assertMutable(state);
+  if (!meal || !parseDate(meal.date) || !ALL_SLOTS.includes(meal.slot) || !shortText(meal.name, 80)) throw new Error('填好菜名和日期，就可以存下这餐啦。');
+  if (!timeOK(meal.time)) throw new Error('加餐时间请填写为 HH:MM，例如 15:30。');
+  const id = meal.id ?? uid();
+  if (!idOK(id)) throw new Error('餐食编号格式异常，请重新打开编辑。');
+  const existing = state.meals.find(m => m.id === id);
+  if (existing?.completed && (existing.date !== meal.date || existing.slot !== meal.slot)) throw new Error('已吃记录不能移动；可以复制为新计划。');
+  const target = meal.slot === 'snack' ? null : state.meals.find(m => m.date === meal.date && m.slot === meal.slot && m.id !== id);
   if (target?.completed) throw new Error('目标位置已有已吃记录，请选择另一餐。');
   if (target && !replace) throw new Error('目标位置已经安排了餐食。');
-  if (meal.resource) {
-    const item = state.inventory.find(i => i.id === meal.resource.ingredientId);
-    if (!item || !numberOK(meal.resource.amount) || round(meal.resource.amount) <= 0) throw new Error('食材或用量不太对，请重新选择。');
-    meal.resource = { ingredientId: item.id, name: item.name, unit: item.unit, amount: round(meal.resource.amount) };
-  }
-  state.meals = state.meals.filter(m => m.id !== meal.id && m.id !== target?.id);
-  state.meals.push({ ...meal, name: shortText(meal.name, 80), note: shortText(meal.note), protein: shortText(meal.protein, 60), completed: false, completedAt: null });
+  const resources = selectedResources(state, meal, existing);
+  const changes = existing?.completed ? stockChanges(state, storedResources(existing), resources, allowNegative) : [];
+  const next = { id, date: meal.date, slot: meal.slot, name: shortText(meal.name, 80), type: TYPES.includes(meal.type) ? meal.type : '其他', protein: shortText(meal.protein, 60), note: shortText(meal.note), resources, completed: existing?.completed === true, completedAt: existing?.completed ? existing.completedAt : null, ...(meal.slot === 'snack' ? { time: meal.time || '' } : {}), ...(photoReference(meal.photoId) ? { photoId: meal.photoId } : {}) };
+  const meals = state.meals.filter(m => m.id !== id && m.id !== target?.id);
+  meals.push(next);
+  applyStock(changes); state.meals = meals;
+  return next;
 }
 export function removeMeal(state, id) {
-  if (state.meals.find(m => m.id === id)?.completed) throw new Error('先撤销已吃，才能删除这餐哦。');
-  state.meals = state.meals.filter(m => m.id !== id);
+  assertMutable(state);
+  const meal = state.meals.find(m => m.id === id);
+  if (!meal) return false;
+  const changes = meal.completed ? stockChanges(state, storedResources(meal), [], true) : [];
+  applyStock(changes); state.meals = state.meals.filter(m => m.id !== id);
+  return true;
 }
 export function completeMeal(state, id, allowNegative = false) {
+  assertMutable(state);
   const meal = state.meals.find(m => m.id === id);
   if (!meal || meal.completed) return false;
-  if (meal.resource) {
-    const item = state.inventory.find(i => i.id === meal.resource.ingredientId);
-    if (!item) throw new Error('关联食材找不到了，请先编辑这餐并重新选择食材。');
-    if (item.quantity < meal.resource.amount && !allowNegative) throw new Error('实际库存不足，请核对用量。');
-    item.quantity = round(item.quantity - meal.resource.amount);
-  }
-  meal.completed = true;
-  meal.completedAt = new Date().toISOString();
+  const changes = stockChanges(state, [], storedResources(meal), allowNegative);
+  applyStock(changes); meal.completed = true; meal.completedAt = new Date().toISOString();
   return true;
 }
 export function undoComplete(state, id) {
+  assertMutable(state);
   const meal = state.meals.find(m => m.id === id);
   if (!meal?.completed) return false;
-  if (meal.resource) {
-    const item = state.inventory.find(i => i.id === meal.resource.ingredientId);
-    if (!item) throw new Error('原食材缺失，无法安全返还库存；请先恢复包含该食材的备份。');
-    item.quantity = round(item.quantity + meal.resource.amount);
-  }
-  meal.completed = false; meal.completedAt = null;
+  const changes = stockChanges(state, storedResources(meal), [], true);
+  applyStock(changes); meal.completed = false; meal.completedAt = null;
   return true;
 }
 export function transferMeal(state, id, date, slot, move, replace = false) {
+  assertMutable(state);
   const source = state.meals.find(m => m.id === id);
   if (!source) throw new Error('找不到这餐啦。');
   if (move && source.completed) throw new Error('已吃记录不能移动；可以复制为新计划。');
-  if (source.date === date && source.slot === slot) throw new Error('请选择另一个日期或餐次。');
+  if (source.date === date && source.slot === slot && (move || slot !== 'snack')) throw new Error('请选择另一个日期或餐次。');
+  const resources = storedResources(source);
+  for (const resource of resources) {
+    const item = state.inventory.find(i => i.id === resource.ingredientId);
+    if (!item || item.unit !== resource.unit) throw new Error('原关联食材缺失或单位已改变，请核对库存后再复制或移动。');
+  }
   const next = structuredClone(source);
   next.id = move ? source.id : uid(); next.date = date; next.slot = slot;
   next.completed = false; next.completedAt = null;
-  putMeal(state, next, replace);
+  const saved = putMeal(state, next, replace);
+  // Carry the complete association snapshots, including historical ingredient names.
+  saved.resources = resources;
+  return saved;
+}
+export function putDiary(state, diary) {
+  assertMutable(state);
+  if (!diary || !parseDate(diary.date)) throw new Error('请选择有效日期，再收好今天的故事。');
+  for (const [key, max, label] of [['mood', 100, '心情'], ['text', 5000, '日记'], ['joy', 500, '小确幸']]) {
+    if (diary[key] != null && typeof diary[key] !== 'string') throw new Error(`${label}请使用文字填写。`);
+    if (typeof diary[key] === 'string' && diary[key].length > max) throw new Error(`${label}最多可以保存 ${max} 个字符。`);
+  }
+  const next = { date: diary.date, mood: shortText(diary.mood, 100), text: shortText(diary.text, 5000), joy: shortText(diary.joy, 500), updatedAt: new Date().toISOString() };
+  state.diaries = (state.diaries || []).filter(d => d.date !== diary.date);
+  if (next.mood || next.text || next.joy) state.diaries.push(next);
   return next;
+}
+export function removeDiary(state, date) {
+  assertMutable(state);
+  if (!parseDate(date)) throw new Error('请选择有效日期。');
+  const previous = (state.diaries || []).length;
+  state.diaries = (state.diaries || []).filter(d => d.date !== date);
+  return state.diaries.length !== previous;
 }

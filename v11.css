@@ -1,0 +1,521 @@
+/* V1.1 additions: keep the strawberry milk journal's paper and tape. */
+
+/* Four notebook tabs must fit even on a 320 px phone. */
+.bottom-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding-inline: 6px;
+}
+.bottom-nav button {
+  min-width: 0;
+  max-width: none;
+  width: 100%;
+  padding-inline: 2px;
+}
+.bottom-nav button span {
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+.app-shell {
+  padding-bottom: calc(112px + env(safe-area-inset-bottom));
+}
+.close-button {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+/* Each ingredient stays on its own little paper slip. */
+.resource-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  margin: 12px 0;
+}
+.resource-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: 10px;
+  align-items: end;
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid #ddc9c7;
+  border-radius: 3px 8px 3px 3px;
+  background: var(--paper);
+  box-shadow: 2px 2px 0 #f0e4d9;
+}
+.resource-row > label:first-child,
+.resource-row > select {
+  grid-column: 1 / -1;
+}
+.resource-row label {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 550;
+  color: #775b63;
+  line-height: 1.6;
+}
+.resource-row :is(input, select) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 46px;
+  margin-top: 6px;
+  border: 1px solid #dfc7cd;
+  border-radius: 5px;
+  padding: 10px;
+  background: #fffef9;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 400;
+}
+.resource-row select {
+  width: 0;
+  min-width: 100%;
+  text-overflow: ellipsis;
+}
+.resource-row :is(input, select):focus {
+  outline: none;
+  border-color: #d982a2;
+  box-shadow: 0 0 0 3px #f6b8cc33;
+}
+.resource-row .field-hint,
+.resource-row .resource-hint {
+  grid-column: 1 / -1;
+}
+.resource-remove {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 46px;
+  padding: 6px;
+  border: 1px solid #e1bbc6;
+  border-radius: 5px;
+  background: #fff0f3;
+  color: #9b506a;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.resource-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 5px;
+}
+.resource-controls:is(fieldset) {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+.resource-controls > .resource-list,
+.resource-controls > p {
+  flex: 1 0 100%;
+  width: 100%;
+  min-width: 0;
+}
+.resource-controls button {
+  min-height: 44px;
+}
+.resource-hint,
+.resource-empty {
+  color: #866b73;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.resource-hint {
+  margin-top: 8px;
+}
+.resource-empty {
+  padding: 13px;
+  border: 1px dashed #dfc4cc;
+  border-radius: 4px;
+  background: #fffdf7;
+}
+
+/* Small day tools and unlimited snack cards. */
+.day-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0 2px 19px;
+}
+.day-tools button {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.snack-section {
+  min-width: 0;
+  margin: 29px 2px 0;
+}
+.snack-heading,
+.diary-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 17px;
+}
+.snack-heading :is(h2, h3),
+.diary-heading :is(h2, h3) {
+  font-family: "Songti SC", "SimSun", Georgia, serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+.snack-heading button,
+.diary-heading button {
+  min-height: 44px;
+  font-size: 12px;
+}
+.snack-card {
+  min-width: 0;
+  margin-bottom: 22px;
+}
+.snack-card::before {
+  background-color: #eccccc99;
+  border-color: #d0a8ac;
+  transform: translateX(-50%) rotate(2deg);
+}
+.snack-card .slot-icon {
+  background: #fff1e9;
+  border-color: #dfbfae;
+  outline-color: #eddfd2;
+}
+.snack-card .meal-slot > div {
+  min-width: 0;
+}
+.snack-card .meal-actions {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.snack-card .meal-time {
+  overflow-wrap: anywhere;
+}
+
+/* Diary content is independent paper, with room for long stories. */
+.diary-card {
+  position: relative;
+  min-width: 0;
+  margin: 29px 2px 0;
+  padding: 19px 17px 17px;
+  border: 1px solid #ddc9c7;
+  border-radius: 3px 9px 3px 3px;
+  background: var(--paper);
+  box-shadow: 3px 4px 0 #f1e4dc;
+}
+.diary-card::before {
+  content: "";
+  position: absolute;
+  width: 54px;
+  height: 15px;
+  top: -7px;
+  right: 25px;
+  transform: rotate(3deg);
+  background: repeating-linear-gradient(90deg, #d1dabc99 0 5px, #fff6e677 5px 10px);
+  border-inline: 1px dashed #b7c09e;
+  pointer-events: none;
+}
+.diary-heading {
+  margin-bottom: 10px;
+  border-bottom: 1px dashed #e1c9cc;
+  padding-bottom: 7px;
+}
+.diary-mood,
+.diary-text,
+.diary-joy {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.9;
+}
+.diary-mood {
+  width: fit-content;
+  max-width: 100%;
+  margin: 5px 0 12px;
+  padding: 5px 9px;
+  border: 1px solid #e5c8cf;
+  border-radius: 3px;
+  background: #fff1f5;
+  color: #895c6b;
+  font-size: 13px;
+}
+.diary-text {
+  padding: 3px 0;
+  font-size: 13px;
+  line-height: 26px;
+  background: repeating-linear-gradient(transparent 0 25px, #e8dcd2 25px 26px);
+}
+.diary-joy {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-left: 3px solid #e3b1c0;
+  background: #fff3e8;
+  color: #876b60;
+  font-size: 12px;
+}
+
+/* A gentle recap, with no scores or progress targets. */
+.summary-page,
+.summary-section {
+  min-width: 0;
+}
+.summary-range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 17px 0 12px;
+}
+.summary-range button {
+  min-height: 44px;
+}
+.summary-period {
+  margin: 0 0 17px;
+  color: #886b73;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  margin-bottom: 16px;
+}
+.summary-stat {
+  min-width: 0;
+  padding: 17px 14px;
+  border: 1px solid #ddc9c7;
+  border-radius: 3px 8px 3px 3px;
+  background: var(--paper);
+  box-shadow: 2px 3px 0 #f0e4dc;
+  line-height: 1.7;
+}
+.summary-stat > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #886b73;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.summary-stat strong {
+  color: #a35c79;
+  font: 32px/1.3 Georgia, serif;
+}
+.summary-stat small {
+  margin-left: 5px;
+  font-size: 11px;
+}
+.summary-slot-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 23px;
+}
+.summary-slot-count {
+  min-width: 0;
+  padding: 11px 5px;
+  border: 1px dashed #ddc4c7;
+  border-radius: 4px;
+  background: #fff4f6;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.summary-slot-count strong {
+  display: block;
+  color: #936677;
+  font: 22px/1.4 Georgia, serif;
+}
+.summary-section h3 {
+  line-height: 1.6;
+}
+.summary-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 9px;
+}
+.summary-entry {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 56px;
+  padding: 13px 1px;
+  border-bottom: 1px dashed #e1c9cc;
+  text-align: left;
+}
+.summary-entry:last-child {
+  border-bottom: 0;
+  padding-bottom: 3px;
+}
+.summary-entry-title {
+  display: block;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 550;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.summary-entry-meta {
+  display: block;
+  margin-top: 4px;
+  color: #886b73;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.summary-entry-preview {
+  display: block;
+  margin-top: 7px;
+  color: #886f6a;
+  font-size: 12px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.summary-empty {
+  color: #886b73;
+  padding: 13px 0 3px;
+  font-size: 12px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+
+/* Local PNG preview and privacy choices, comfortable in an iPhone sheet. */
+.share-options {
+  min-width: 0;
+  margin: 15px 0;
+}
+.share-options:is(fieldset),
+.share-options fieldset {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0 0 12px;
+  padding: 10px 12px 12px;
+  border: 1px solid #dfc7cd;
+  border-radius: 5px;
+  background: var(--paper);
+}
+.share-options legend {
+  padding: 0 5px;
+  color: #775b63;
+  font-size: 12px;
+}
+.share-options label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 0;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.share-options input[type="checkbox"] {
+  flex: 0 0 21px;
+  width: 21px;
+  height: 21px;
+  margin: 0;
+  accent-color: #b85c79;
+}
+.share-preview {
+  min-width: 0;
+  max-width: 100%;
+  margin: 18px 0 14px;
+  padding: 8px;
+  border: 1px solid #ddc9c7;
+  border-radius: 5px;
+  background: #f1e5de;
+}
+.share-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  border-radius: 2px;
+  background: var(--paper);
+  box-shadow: 0 2px 8px #62494b15;
+  -webkit-touch-callout: default;
+}
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 15px;
+}
+.share-actions :is(button, a) {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1 1 120px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 11px 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+}
+.share-note {
+  margin-top: 13px;
+  color: #886b73;
+  font-size: 12px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 700px) {
+  .snack-section,
+  .diary-card {
+    margin-top: 32px;
+  }
+  .snack-card {
+    max-width: 100%;
+  }
+  .snack-card .meal-top {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  .snack-card .tag,
+  .snack-card .done-stamp {
+    margin-left: 0;
+  }
+}
+@media (max-width: 380px) {
+  .bottom-nav {
+    gap: 2px;
+  }
+  .bottom-nav button span {
+    font-size: 10px;
+  }
+  .resource-row {
+    padding: 10px;
+    gap: 8px;
+  }
+  .diary-card {
+    padding: 17px 14px 15px;
+  }
+  .summary-stats {
+    gap: 10px;
+  }
+  .summary-stat {
+    padding: 14px 11px;
+  }
+  .summary-slot-counts {
+    gap: 5px;
+  }
+  .summary-section {
+    padding: 17px;
+  }
+}
+@media (max-width: 600px) {
+  .sheet-content {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+}
