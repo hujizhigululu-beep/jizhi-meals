@@ -1,3 +1,5 @@
+import { COLLAGE_THEME, drawCollage } from './share-art-collage.js';
+
 /* One shared record model; these templates only arrange the supplied content. */
 const definitions = (() => {
   const pad = 36;
@@ -122,61 +124,8 @@ const definitions = (() => {
     }
   };
 
-  const collage = {
-    id: 'life-collage', kind: 'life', name: '一天生活拼贴',
-    theme: {bg: '#FFF5F7', paper: '#FFFDFA', ink: '#644A53', muted: '#A08791', accent: '#DC8FAB', line: '#E6CAD5', tape: '#F4C6D7', titleFont: 'Georgia, "KaiTi", "Kaiti SC", serif'},
-    draw(p, d, t) {
-      const w = p.width, contentW = w - pad * 2;
-      const groups = d.groups || [];
-      const paperStyles = {
-        meal: {fill: '#FFF9EF', tab: '#F4C6D7', label: '吃饭的小日常'},
-        exercise: {fill: '#F0F6ED', tab: '#DCEAD8', label: '动一动的时刻'},
-        study: {fill: '#F2EDF8', tab: '#E9E1F4', label: '认真学习了一点'}
-      };
-      const titleH = p.measure(dateText(d), contentW - 64, title(t, {size: 39, lineHeight: 50}));
-      let y = 62 + titleH + 48;
-      const blocks = groups.map((group, i) => {
-        const blockW = i % 2 ? contentW - 26 : contentW - 18;
-        const blockX = i % 2 ? pad + 26 : pad;
-        const rowOpts = body(t, {size: 21, lineHeight: 30, gap: 14, metaColor: t.muted});
-        const textH = p.rowsHeight(group.rows || [], blockW - 44, rowOpts);
-        const blockH = textH + 87;
-        const result = {group, x: blockX, y, w: blockW, h: blockH, rowOpts, paper: paperStyles[group.kind] || {fill: t.paper, tab: t.tape, label: group.label}};
-        y += blockH + 33;
-        return result;
-      });
-      const lifeRows = d.lifeRows || [];
-      const diaryH = lifeRows.length ? p.rowsHeight(lifeRows, contentW - 50, body(t, {gap: 16, metaColor: t.muted})) + 83 : 0;
-      const emptyH = !blocks.length && !lifeRows.length ? 86 : 0;
-      const captionH = d.caption ? p.measure(d.caption, contentW - 40, body(t)) + 92 : 0;
-      const height = y + diaryH + (diaryH ? 27 : 0) + emptyH + captionH + 72;
-      p.rect(0, 0, w, height, {fill: t.bg});
-      p.dots(0, 0, w, height, {color: '#EDCEDB', step: 24});
-      p.rect(pad, 31, 151, 22, {fill: '#FFF0D3', radius: 2});
-      p.text(d.isRange ? '生活碎片 · 一起翻看' : '今天的小拼贴', pad + 9, 34, 135, {size: 13, lineHeight: 18, color: t.muted});
-      p.text(dateText(d), pad, 62, contentW - 64, title(t, {size: 39, lineHeight: 50}));
-      p.slot(w - 102, 64, 52);
-      blocks.forEach(block => {
-        p.rect(block.x + 3, block.y + 4, block.w, block.h, {fill: '#EBDDE2', radius: 4});
-        p.rect(block.x, block.y, block.w, block.h, {fill: block.paper.fill, stroke: t.line, radius: 4});
-        p.tape(block.x + block.w - 133, block.y - 10, 92, {fill: block.paper.tab, angle: block.group.kind === 'exercise' ? -4.5 : 3});
-        p.headerTag(block.group.label || block.paper.label, block.x + 17, block.y + 15, Math.min(block.w - 45, 205), {fill: block.paper.tab, color: t.ink});
-        p.rows(block.group.rows || [], block.x + 22, block.y + 61, block.w - 44, block.rowOpts);
-      });
-      if (diaryH) {
-        p.rect(pad + 8, y, contentW - 8, diaryH, {fill: '#FFF8DA', stroke: '#E9DDBA', radius: 1});
-        p.text('心情 / 今日小故事', pad + 29, y + 17, contentW - 50, {size: 16, lineHeight: 24, weight: '600', color: '#A58C55'});
-        p.rows(lifeRows, pad + 29, y + 55, contentW - 50, body(t, {gap: 16, metaColor: t.muted}));
-        y += diaryH + 27;
-      }
-      if (emptyH) {
-        p.text('这段日期没有可分享的记录。', pad + 16, y + 12, contentW - 32, body(t, {color: t.muted}));
-        y += emptyH;
-      }
-      y = optionalCaption(p, d, t, y, pad, contentW, {fill: t.paper, radius: 3});
-      return footer(p, t, y + 12, '机智定食  ·  小小日常，也值得留存', true);
-    }
-  };
+  const collage = { id: 'life-collage', kind: 'life', name: '一天生活拼贴',
+    theme: COLLAGE_THEME, draw: drawCollage, contentSized: true };
 
   const report = {
     id: 'life-report', kind: 'life', name: '月末生活月报',

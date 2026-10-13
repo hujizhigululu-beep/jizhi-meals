@@ -180,7 +180,8 @@ try {
       const file = await download(page.locator('#download-card'), id, 'png');
       assert.match(file.name, /\.png$/); assert.equal(file.bytes.subarray(1, 4).toString(), 'PNG');
       const size = { width: file.bytes.readUInt32BE(16), height: file.bytes.readUInt32BE(20) };
-      assert.ok(size.width >= 1200 && size.height >= 1200);
+      // The art samples intentionally produce compact postcards for sparse days.
+      assert.ok(size.width >= 1200 && size.height >= 600 && size.height <= 10000);
       report.images.push({ template: id, ...size, bytes: file.bytes.length });
     }
   }

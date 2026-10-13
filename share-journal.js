@@ -116,6 +116,9 @@ export function prepareJournalShare(state, options = {}) {
     circle(x,y,radius,opts={}){this.ops.push({type:'circle',x,y,radius,opts});}
     dots(x,y,width,height,opts={}){this.ops.push({type:'dots',x,y,width,height,opts});}
     tape(x,y,width,opts={}){this.ops.push({type:'tape',x,y,width,opts});}
+    // Decoration IDs are authored assets; user text only ever enters text().
+    art(id,x,y,width,height){if(!/^(strawberry|badges|collage)-[a-z0-9-]+$/.test(id))throw new Error('分享装饰名称无效。');this.ops.push({type:'art',id,x,y,width,height});}
+    group(x,y,width,height,angle,draw){this.ops.push({type:'group-start',x,y,width,height,angle});draw(this);this.ops.push({type:'group-end'});}
     slot(x,y,size){this.slots.push({x,y,size});}
     headerTag(label,x,y,width,opts={}){this.rect(x,y,width,36,{fill:opts.fill||this.theme.accent,radius:4});this.text(label,x+10,y+4,width-20,{size:18,lineHeight:27,weight:'600',color:opts.color||this.theme.ink});return 36;}
     rowParts(row,opts){const base={size:21,lineHeight:29,gap:12,color:this.theme.ink,metaColor:this.theme.muted,...opts};return [{text:row.title,opts:{size:base.size,lineHeight:base.lineHeight,weight:'600',color:base.color}},{text:row.meta,opts:{size:Math.max(17,base.size-3),lineHeight:25,color:base.metaColor}},{text:row.note,opts:{size:Math.max(18,base.size-2),lineHeight:27,color:base.color}}];}
@@ -123,14 +126,19 @@ export function prepareJournalShare(state, options = {}) {
     rows(rows,x,y,width,opts={}){let cursor=y;for(const row of rows){for(const part of this.rowParts(row,opts))cursor+=this.text(part.text||'',x,cursor,width,part.opts);cursor+=opts.gap??12;}return cursor-y;}
   }
   function rounded(c,x,y,w,h,r){r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();}
-  function paint(c,p,H){
+  function paint(c,p,H,artImages){
     c.fillStyle=p.theme.bg;c.fillRect(0,0,p.width,H);
-    for(const op of p.ops){c.save();const o=op.opts||{};c.lineWidth=o.width||1;c.setLineDash(o.dash||[]);
+    for(const op of p.ops){
+      if(op.type==='group-start'){c.save();c.translate(op.x+op.width/2,op.y+op.height/2);c.rotate(op.angle*Math.PI/180);c.translate(-op.width/2,-op.height/2);continue;}
+      if(op.type==='group-end'){c.restore();continue;}
+      c.save();const o=op.opts||{};c.lineWidth=o.width||1;c.setLineDash(o.dash||[]);
+      if(o.shadow){const shadow=typeof o.shadow==='object'?o.shadow:{};c.shadowColor=shadow.color||'#9d607326';c.shadowBlur=shadow.blur??8;c.shadowOffsetX=shadow.x??1;c.shadowOffsetY=shadow.y??3;}
       if(op.type==='text'){c.font=p.font(o);c.fillStyle=o.color;c.textBaseline='top';c.textAlign=o.align;const x=op.x+(o.align==='center'?op.width/2:o.align==='right'?op.width:0);op.lines.forEach((line,i)=>c.fillText(line,x,op.y+i*o.lineHeight));}
       else if(op.type==='rect'){rounded(c,op.x,op.y,op.width,op.height,o.radius||0);if(o.fill){c.fillStyle=o.fill;c.fill();}if(o.stroke){c.strokeStyle=o.stroke;c.stroke();}}
       else if(op.type==='line'){c.beginPath();c.moveTo(op.x1,op.y1);c.lineTo(op.x2,op.y2);c.strokeStyle=o.color||p.theme.line;c.stroke();}
       else if(op.type==='circle'){c.beginPath();c.arc(op.x,op.y,op.radius,0,Math.PI*2);if(o.fill){c.fillStyle=o.fill;c.fill();}if(o.stroke){c.strokeStyle=o.stroke;c.stroke();}}
-      else if(op.type==='dots'){c.fillStyle=o.color||p.theme.line;const step=o.step||16;for(let x=op.x;x<op.x+op.width;x+=step)for(let y=op.y;y<op.y+op.height;y+=step){c.beginPath();c.arc(x,y,.9,0,Math.PI*2);c.fill();}}
+      else if(op.type==='dots'){c.fillStyle=o.color||p.theme.line;const step=o.step||16;for(let x=op.x;x<op.x+op.width;x+=step)for(let y=op.y;y<op.y+op.height;y+=step){c.beginPath();c.arc(x,y,o.radius??.9,0,Math.PI*2);c.fill();}}
+      else if(op.type==='art'){c.drawImage(artImages.get(op.id),op.x,op.y,op.width,op.height);}
       else if(op.type==='tape'){c.translate(op.x+op.width/2,op.y+9);c.rotate((o.angle||0)*Math.PI/180);c.globalAlpha=.72;c.fillStyle=o.fill||p.theme.tape;c.fillRect(-op.width/2,-9,op.width,18);c.globalAlpha=.35;c.strokeStyle=p.theme.paper;for(let x=-op.width/2;x<op.width/2;x+=8){c.beginPath();c.moveTo(x,-9);c.lineTo(x,9);c.stroke();}}
       c.restore();
     }
@@ -138,6 +146,26 @@ export function prepareJournalShare(state, options = {}) {
 
 // Only bundled, same-origin SVG resources enter the canvas. No remote uploads.
 const stickerImages = new Map();
+const decorationImages = new Map();
+async function loadDecoration(id) {
+  if (!decorationImages.has(id)) {
+    const pending = new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = async () => {
+        try {
+          if (typeof image.decode === 'function') await image.decode();
+          if (!(image.naturalWidth > 0 && image.naturalHeight > 0)) throw new Error('装饰尺寸无效');
+          resolve(image);
+        } catch { reject(new Error('分享装饰没有加载成功，请重新打开后再试。')); }
+      };
+      image.onerror = () => reject(new Error('分享装饰没有加载成功，请重新打开后再试。'));
+      image.src = new URL(`./assets/share-art/${id}.svg`, import.meta.url).href;
+    });
+    decorationImages.set(id, pending);
+    pending.catch(() => decorationImages.delete(id));
+  }
+  return decorationImages.get(id);
+}
 async function loadSticker(id) {
   if (!stickerImages.has(id)) {
     const path = stickerPath(id);
@@ -175,6 +203,8 @@ export async function generateJournalShareCard(state, options = {}) {
   let width = settings.format === 'square' ? 700 : 600, painter, height;
   for (let attempt = 0; attempt < 7; attempt++) {
     painter = new Painter(width, settings.format, theme);
+    // A square's paper ends above optional sticker attribution, not below it.
+    painter.frameHeight = settings.format === 'square' ? width - creditHeight : 0;
     height = Math.ceil(template.draw(painter, data, theme)) + creditHeight;
     if (!(Number.isFinite(height) && height > 0)) throw new Error('卡片尺寸没有生成成功，请重试。');
     if (settings.format !== 'square' || height <= width) break;
@@ -185,18 +215,20 @@ export async function generateJournalShareCard(state, options = {}) {
   if (settings.format === 'square') {
     if (height > width) throw new Error('内容超出方图容量，请缩小日期范围或选择分享长图；记录没有被截掉。');
     height = width;
-  } else height = Math.max(settings.format === 'long' ? 1000 : 750, height);
+  } else if (!template.contentSized) height = Math.max(settings.format === 'long' ? 1000 : 750, height);
   if (height * SCALE > MAX_PIXEL_HEIGHT || width * height * SCALE * SCALE > MAX_PIXEL_AREA) {
     throw new Error('这段记录太长，请缩小日期范围后导出；内容没有被截掉。');
   }
   if (painter.slots.length < images.length) throw new Error('这个版式暂时无法容纳所选贴纸，请减少贴纸后重试。');
+  const artIds = [...new Set(painter.ops.filter(op => op.type === 'art').map(op => op.id))];
+  const artImages = new Map(await Promise.all(artIds.map(async id => [id, await loadDecoration(id)])));
   const canvas = document.createElement('canvas');
   try {
     canvas.width = Math.round(width * SCALE); canvas.height = Math.ceil(height * SCALE);
     const context = canvas.getContext('2d');
     if (!context) throw new Error('此浏览器暂时无法生成图片，请使用 Safari 或 Chrome 重新打开。');
     context.scale(SCALE, SCALE);
-    paint(context, painter, height);
+    paint(context, painter, height, artImages);
     images.forEach((image, index) => {
       const slot = painter.slots[index], ratio = image.naturalWidth / image.naturalHeight;
       const imageWidth = ratio >= 1 ? slot.size : slot.size * ratio;

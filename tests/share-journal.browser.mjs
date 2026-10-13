@@ -37,10 +37,18 @@ try {
     const actual = CanvasRenderingContext2D.prototype.fillText;
     window.drawn = [];
     CanvasRenderingContext2D.prototype.fillText = function (text, x, y, ...args) {
-      const scale = this.getTransform().a, logicalWidth = this.canvas.width / scale, logicalHeight = this.canvas.height / scale;
-      const width = this.measureText(text).width, size = Number(this.font.match(/([\d.]+)px/)?.[1] || 0);
-      const left = this.textAlign === 'center' ? x - width / 2 : this.textAlign === 'right' ? x - width : x;
-      window.drawn.push({ text, left, right: left + width, y, bottom: y + size, width: logicalWidth, height: logicalHeight });
+      // Group rotations change all six affine components. Compare actual glyph
+      // bounds in pixel space so every layout keeps the same full-image check.
+      const matrix = this.getTransform(), metrics = this.measureText(text);
+      const maxWidth = args[0], compression = typeof maxWidth === 'number' && maxWidth > 0 && metrics.width > maxWidth ? maxWidth / metrics.width : 1;
+      const left = x - metrics.actualBoundingBoxLeft * compression, right = x + metrics.actualBoundingBoxRight * compression;
+      const top = y - metrics.actualBoundingBoxAscent, bottom = y + metrics.actualBoundingBoxDescent;
+      const points = [[left, top], [right, top], [right, bottom], [left, bottom]].map(([px, py]) => ({
+        x: matrix.a * px + matrix.c * py + matrix.e,
+        y: matrix.b * px + matrix.d * py + matrix.f,
+      }));
+      window.drawn.push({ text, left: Math.min(...points.map(p => p.x)), right: Math.max(...points.map(p => p.x)),
+        y: Math.min(...points.map(p => p.y)), bottom: Math.max(...points.map(p => p.y)), width: this.canvas.width, height: this.canvas.height });
       return actual.call(this, text, x, y, ...args);
     };
     return module.SHARE_TEMPLATES.map(({ id, kind }) => ({ id, kind }));

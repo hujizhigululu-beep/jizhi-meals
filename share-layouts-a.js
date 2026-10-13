@@ -1,88 +1,10 @@
+import { STRAWBERRY_THEME, drawStrawberry } from './share-art-strawberry.js';
+import { BADGES_THEME, drawBadges } from './share-art-badges.js';
+
 /* Four independent compositions. The painter owns wrapping, fonts and stickers. */
 const definitions = [
-  {
-    id: 'meal-strawberry',
-    kind: 'meal',
-    name: '草莓牛奶手账',
-    theme: {
-      bg: '#fff7fa', paper: '#fffdf7', ink: '#684c50', muted: '#997582',
-      accent: '#f6b8cc', line: '#e8c7d2', tape: '#f5c5d7',
-      titleFont: 'Georgia, "Songti SC", "SimSun", serif'
-    },
-    draw(p, d, t) {
-      const w = p.width, s = Math.max(.84, Math.min(1.4, w / 720));
-      const m = Math.max(36, Math.round(40 * s)), inner = w - m * 2;
-      const rows = Array.isArray(d.meals) ? d.meals : [];
-      const groups = [];
-      for (const row of rows) {
-        const label = row.groupLabel || '餐食记录';
-        let group = groups.find(item => item.label === label);
-        if (!group) { group = { label, rows: [] }; groups.push(group); }
-        group.rows.push(row);
-      }
-      const mealOrder = ['早餐', '午餐', '晚餐', '零食 / 加餐'];
-      groups.sort((a,b)=>(mealOrder.includes(a.label)?mealOrder.indexOf(a.label):mealOrder.length)-(mealOrder.includes(b.label)?mealOrder.indexOf(b.label):mealOrder.length));
-      const rowOpts = { size: 24 * s, lineHeight: 33 * s, gap: 18 * s,
-        color: t.ink, metaColor: t.muted };
-      const capOpts = { size: 21 * s, lineHeight: 31 * s, color: t.ink };
-      const panels = groups.map((group, index) => ({ ...group,
-        height: 74 * s + p.rowsHeight(group.rows, inner - (index % 2 ? 5 * s : 0) - 46 * s, rowOpts) + 24 * s }));
-      const captionH = d.caption ? 64 * s + p.measure(d.caption, inner - 44 * s, capOpts) : 0;
-      const emptyH = rows.length ? 0 : 118 * s;
-      const titleOpts = { size: 37 * s, weight: '700', font: 'title', color: t.ink, lineHeight: 46 * s };
-      const titleHeight = p.measure(d.dateLabel, inner - 80 * s, titleOpts);
-      const startY = Math.max(164 * s, 100 * s + titleHeight) + 32 * s;
-      const height = startY + panels.reduce((sum, panel) => sum + panel.height + 30 * s, 0)
-        + (emptyH ? emptyH + 24 * s : 0) + (captionH ? captionH + 24 * s : 0) + 87 * s;
-      p.rect(0, 0, w, height, { fill: t.bg });
-      p.dots(0, 0, w, height, { color: '#eed3de', step: 22 * s });
-      // Binding stays in the margin; it never passes through the record text.
-      for (let y = 104 * s; y < height - 38 * s; y += 63 * s) {
-        p.circle(m - 22 * s, y, 4.5 * s, { fill: '#fffefa', stroke: t.line });
-      }
-      p.headerTag('机智定食 · 吃饭小手账', m, 36 * s, Math.min(inner - 88 * s, 302 * s),
-        { fill: '#fce0ea', color: '#99667d' });
-      p.slot(w - m - 69 * s, 24 * s, 67 * s);
-      p.text(d.dateLabel, m, 92 * s, inner - 80 * s, titleOpts);
-      let y = startY;
-      panels.forEach((panel, index) => {
-        const shift = index % 2 ? 5 * s : 0;
-        const x = m + shift, pw = inner - shift;
-        p.rect(x + 3 * s, y + 4 * s, pw, panel.height,
-          { fill: '#f5e4e9', radius: 10 * s });
-        p.rect(x, y, pw, panel.height,
-          { fill: t.paper, stroke: t.line, radius: 8 * s });
-        p.tape(x + pw / 2 - 46 * s, y - 9 * s, 92 * s,
-          { fill: t.tape, angle: index % 2 ? 3 : -3 });
-        p.text(panel.label, x + 23 * s, y + 25 * s, pw - 46 * s,
-          { size: 18 * s, weight: '700', color: '#a26b81', lineHeight: 26 * s });
-        p.line(x + 23 * s, y + 59 * s, x + pw - 23 * s, y + 59 * s,
-          { color: t.line, dash: [5 * s, 5 * s] });
-        p.rows(panel.rows, x + 23 * s, y + 74 * s, pw - 46 * s, rowOpts);
-        y += panel.height + 30 * s;
-      });
-      if (!rows.length) {
-        p.rect(m, y, inner, emptyH, { fill: t.paper, stroke: t.line, radius: 9 * s });
-        p.text('这段日期还没有餐食记录', m + 23 * s, y + 39 * s, inner - 46 * s,
-          { size: 22 * s, color: t.muted, lineHeight: 31 * s });
-        y += emptyH + 24 * s;
-      }
-      if (d.caption) {
-        p.rect(m, y, inner, captionH, { fill: '#fff0d3', radius: 6 * s });
-        p.text('留在页角的一句话', m + 22 * s, y + 16 * s, inner - 44 * s,
-          { size: 16 * s, color: '#94715e', lineHeight: 24 * s });
-        p.text(d.caption, m + 22 * s, y + 47 * s, inner - 44 * s, capOpts);
-        y += captionH + 24 * s;
-      }
-      p.line(m, y + 17 * s, w - m - 156 * s, y + 17 * s,
-        { color: t.line, dash: [4 * s, 5 * s] });
-      p.text('机智定食 · 把真实的日常收好', m, y + 31 * s, inner - 156 * s,
-        { size: 14 * s, color: t.muted, lineHeight: 22 * s });
-      p.slot(w - m - 137 * s, y - 4 * s, 58 * s);
-      p.slot(w - m - 65 * s, y - 6 * s, 60 * s);
-      return Math.max(height, y + 87 * s);
-    }
-  },
+  { id: 'meal-strawberry', kind: 'meal', name: '草莓牛奶手账',
+    theme: STRAWBERRY_THEME, draw: drawStrawberry, contentSized: true },
   {
     id: 'meal-cafe',
     kind: 'meal',
@@ -252,78 +174,8 @@ const definitions = [
       return Math.max(height, y + 181 * s);
     }
   },
-  {
-    id: 'exercise-badges',
-    kind: 'exercise',
-    name: '活力徽章板',
-    theme: {
-      bg: '#fff7f2', paper: '#fffdf8', ink: '#705456', muted: '#a28384',
-      accent: '#f6b8cc', line: '#eacbcb', tape: '#fff0d3',
-      titleFont: 'Georgia, "Songti SC", "SimSun", serif'
-    },
-    draw(p, d, t) {
-      const w = p.width, s = Math.max(.84, Math.min(1.4, w / 720));
-      const m = Math.max(36, Math.round(42 * s)), inner = w - 2 * m;
-      const rows = Array.isArray(d.exercises) ? d.exercises : [];
-      const rowOpts = { size: 23 * s, lineHeight: 32 * s, gap: 17 * s,
-        color: t.ink, metaColor: t.muted };
-      const noteOpts = { size: 21 * s, color: t.ink, lineHeight: 31 * s };
-      const rowsH = rows.length ? p.rowsHeight(rows, inner - 46 * s, rowOpts) : 47 * s;
-      const captionH = d.caption ? p.measure(d.caption, inner - 46 * s, noteOpts) + 69 * s : 0;
-      const title = d.isRange ? '收好这份活力' : (Number(d.counts.exerciseDays) > 0 ? '今天也有动一动' : '我的运动小记');
-      const titleOpts = { size: 35 * s, weight: '700', font: 'title', color: t.ink, lineHeight: 44 * s };
-      const dateOpts = { size: 18 * s, color: t.muted, lineHeight: 27 * s };
-      const startY = 105 * s + p.measure(title, inner, titleOpts) + p.measure(d.dateLabel, inner, dateOpts) + 25 * s;
-      const height = startY + 214 * s + 25 * s + (Number(d.counts.exerciseMinutes) > 0 ? 46 * s : 0)
-        + 58 * s + rowsH + 28 * s + (captionH ? captionH + 21 * s : 0) + 76 * s;
-      p.rect(0, 0, w, height, { fill: t.bg });
-      p.headerTag('轻轻积累 · 活力徽章板', m, 36 * s, 284 * s,
-        { fill: '#fce0e6', color: '#a76f7b' });
-      const titleH = p.text(title, m, 94 * s, inner, titleOpts);
-      let y = 105 * s + titleH;
-      y += p.text(d.dateLabel, m, y, inner, dateOpts) + 25 * s;
-      const boardH = 214 * s, centerX = w / 2, centerY = y + 107 * s;
-      p.rect(m, y, inner, boardH, { fill: '#fff2e5', stroke: '#eed9bc', radius: 21 * s });
-      p.circle(centerX, centerY, 82 * s, { fill: '#fffdf8', stroke: '#eec6c8' });
-      p.circle(centerX, centerY, 73 * s, { stroke: '#f0d5d5' });
-      p.text(String(d.counts.exerciseDays), centerX - 65 * s, centerY - 53 * s, 130 * s,
-        { size: 67 * s, weight: '700', font: 'title', color: '#bc7785', lineHeight: 77 * s, align: 'center' });
-      p.text('运动打卡天数', centerX - 70 * s, centerY + 29 * s, 140 * s,
-        { size: 16 * s, weight: '700', color: '#997076', lineHeight: 24 * s, align: 'center' });
-      const r = 36 * s, leftX = m + 55 * s, rightX = w - m - 55 * s;
-      p.circle(leftX, y + 74 * s, r, { fill: '#dcead8', stroke: '#c4d8bd' });
-      p.circle(rightX, y + 132 * s, r, { fill: '#e9e1f4', stroke: '#d4c8e5' });
-      p.slot(leftX - 28 * s, y + 46 * s, 56 * s);
-      p.slot(rightX - 28 * s, y + 104 * s, 56 * s);
-      p.tape(m + 17 * s, y - 6 * s, 71 * s, { fill: t.tape, angle: -5 });
-      y += boardH + 25 * s;
-      if (Number(d.counts.exerciseMinutes) > 0) {
-        p.text(`已填写时长 · ${d.counts.exerciseMinutes} 分钟`, m, y, inner,
-          { size: 18 * s, color: t.muted, lineHeight: 28 * s, align: 'center' });
-        y += 46 * s;
-      }
-      p.text('活动小清单', m + 23 * s, y, inner - 46 * s,
-        { size: 19 * s, weight: '700', font: 'title', color: t.ink, lineHeight: 29 * s });
-      p.line(m + 23 * s, y + 38 * s, w - m - 23 * s, y + 38 * s,
-        { color: t.line, dash: [5 * s, 5 * s] });
-      y += 58 * s;
-      if (rows.length) y += p.rows(rows, m + 23 * s, y, inner - 46 * s, rowOpts);
-      else y += p.text('这段日期还没有运动打卡', m + 23 * s, y, inner - 46 * s,
-        { size: 22 * s, color: t.muted, lineHeight: 31 * s });
-      y += 28 * s;
-      if (d.caption) {
-        p.rect(m, y, inner, captionH, { fill: '#f9e8ef', radius: 12 * s });
-        p.text('留给自己的一句话', m + 23 * s, y + 17 * s, inner - 46 * s,
-          { size: 16 * s, color: t.muted, lineHeight: 24 * s });
-        p.text(d.caption, m + 23 * s, y + 49 * s, inner - 46 * s, noteOpts);
-        y += captionH + 21 * s;
-      }
-      p.text('机智定食 · 每一次都值得被收好', m, y + 15 * s, inner - 88 * s,
-        { size: 15 * s, font: 'title', color: t.muted, lineHeight: 24 * s });
-      p.slot(w - m - 65 * s, y - 2 * s, 58 * s);
-      return Math.max(height, y + 76 * s);
-    }
-  }
+  { id: 'exercise-badges', kind: 'exercise', name: '活力徽章板',
+    theme: BADGES_THEME, draw: drawBadges, contentSized: true }
 ];
 
 
