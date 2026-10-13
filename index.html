@@ -27,17 +27,27 @@
   <link rel="stylesheet" href="./month-calendar.css">
   <link rel="stylesheet" href="./day-records.css">
   <link rel="stylesheet" href="./share-editor.css">
+  <link rel="stylesheet" href="./notebook-system.css">
+  <link rel="stylesheet" href="./notebook-pages.css">
+  <link rel="stylesheet" href="./notebook-records.css">
   <title>机智定食 · 私人生活手账</title>
 </head>
 <body>
   <div class="app-shell">
-    <header class="brand-header">
-      <span class="cover-edition" aria-hidden="true">STRAWBERRY MILK · PRIVATE JOURNAL</span>
-      <a class="brand" href="#calendar" aria-label="机智定食首页"><span>机智定食<small>把每天，都安排得甜一点</small></span></a>
-      <span class="cover-label">我的餐食手账 <span aria-hidden="true">♡</span></span>
-      <div class="cover-art" aria-hidden="true"><span class="gingham-scrap"></span><img class="milk-carton" src="./assets/milk-carton.svg" alt="" width="92" height="116"><img class="cover-berry" src="./assets/food/strawberry.svg" alt="" width="53" height="53"><span class="cover-spark">✧</span></div>
-      <span class="cover-bow" aria-hidden="true"></span>
-    </header>
+    <header class="brand-header" data-chapter="day"><div class="notebook-heading notebook-heading-day" data-theme="day">
+    <span class="notebook-cover-tape" aria-hidden="true"></span>
+    <div class="notebook-brand-copy">
+      <span class="notebook-edition cover-edition">PRIVATE FOOD JOURNAL</span>
+      <a class="brand" href="#calendar" aria-label="机智定食首页"><span>机智定食<small>把日常，收得甜甜一点 ♡</small></span></a>
+    </div>
+    <div class="notebook-cover-art" aria-hidden="true">
+      <span class="notebook-art-paper"></span>
+      <img class="notebook-art-primary" src="./assets/milk-carton.svg" width="78" height="78" alt="">
+      <img class="notebook-art-secondary" src="./assets/share-art/strawberry-stamp.svg" width="45" height="45" alt="">
+      <span class="notebook-art-spark">✧</span>
+    </div>
+    <span class="notebook-cover-label cover-label" aria-hidden="true">今日小餐桌 ♡</span>
+  </div></header>
     <div id="data-notice" class="notice" hidden></div>
     <main id="main"></main>
     <nav class="bottom-nav" aria-label="主要页面">

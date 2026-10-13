@@ -9,12 +9,14 @@ import { renderMonthCalendar, shiftMonth } from './month-calendar.js';
 import { getDayRecord, toggleCheckin, putActivity, removeActivity, setDayStickers } from './activity.js';
 import { renderDayRecords, CHECKIN_NAMES } from './day-records-view.js';
 import { mountShareEditor } from './share-editor.js';
+import { renderNotebookHeader } from './notebook-header.js';
 
 const $ = selector => document.querySelector(selector);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const today = () => dateKey(new Date());
 const labels = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '零食 / 加餐' };
 const mealArt = { breakfast: 'croissant', lunch: 'bento', dinner: 'stew', snack: 'strawberry' };
+const mealPaperArt = { breakfast: 'strawberry-croissant', lunch: 'strawberry-bento', dinner: 'strawberry-soup', snack: 'strawberry-pudding' };
 const slotEnglish = { breakfast: '01 · BREAKFAST', lunch: '02 · LUNCH', dinner: '03 · DINNER', snack: '04 · LITTLE TREATS' };
 const illustration = (name, className = '') => `<img src="./assets/food/${name}.svg" alt="" aria-hidden="true" class="${className}" width="48" height="48">`;
 const resourceText = meal => (meal.resources || []).map(r => `${r.name} · ${r.amount} ${r.unit}`).join('、');
@@ -60,9 +62,11 @@ function restoreActivityDraft(draft,previous,originalItem,date,kind){
 let timelineAnchorDate = null;
 let timelineController = null;
 const timelineExpandedDates = new Set();
+const mealExpandedIds = new Set();
+const diaryExpandedDates = new Set();
 let offlineReady = false;
 let swUpdateReady = false;
-const APP_CACHE = 'jizhi-meals-shell-v1.4-share-art-samples-1';
+const APP_CACHE = 'jizhi-meals-shell-v1.4-notebook-visual-1';
 let cardAsset = null;
 let cardPreviewUrl = null;
 let shareGeneration = 0;
@@ -171,7 +175,10 @@ function formError(form, message) { const el = form.querySelector('.form-error')
 function render({captureDrafts=true}={}) {
   if(captureDrafts)captureDayUI();
   timelineController?.destroy(); timelineController = null;
-  $('.brand small').textContent = ({ calendar: '把每天，都安排得甜一点', inventory: '小小储备，慢慢吃好每一餐', summary: '翻翻这段日子里的小故事', settings: '把手账和回忆，轻轻收好' })[page];
+  const chapter = page === 'calendar' ? calendarView : page;
+  const header = $('.brand-header');
+  header.innerHTML = renderNotebookHeader(page, calendarView);
+  header.dataset.chapter = chapter;
   document.body.classList.toggle('timeline-mode', page === 'calendar' && calendarView === 'timeline');
   document.body.classList.toggle('day-mode', page === 'calendar' && calendarView === 'day');
   document.body.classList.toggle('month-mode', page === 'calendar' && calendarView === 'month');
@@ -261,9 +268,15 @@ function renderCalendar() {
 }
 function mealCard(slot, snack = null) {
   const meal = slot === 'snack' ? snack : state.meals.find(m => m.date === selectedDate && m.slot === slot);
-  const content = meal ? `<button class="meal-details" data-detail="${escape(meal.id)}" aria-label="查看${escape(meal.name)}详情"><div class="meal-name-line"><span class="meal-name">${escape(meal.name)}</span>${meal.completed ? '<span class="done-stamp">已吃</span>' : ''}</div>${meal.resources.length ? `<span class="meal-resource-list">${meal.resources.map(r => `<span class="meal-resource-chip">${escape(r.name)} ${r.amount}${escape(r.unit)}</span>`).join('')}</span>` : meal.protein ? `<span class="protein-line">${escape(meal.protein)}</span>` : ''}${meal.note ? `<span class="meal-note">${escape(meal.note)}</span>` : `<span class="meal-caption">${times[slot]}</span>`}</button>` : `<span class="empty-label">今天想吃什么捏？(｡•ᴗ•｡)</span>`;
-  const controls = meal ? `<button class="meal-edit" data-edit-meal="${escape(meal.id)}" aria-label="查看或编辑${escape(meal.name)}">编辑</button>${meal.completed ? `<button class="meal-undo" data-undo="${escape(meal.id)}" aria-label="撤销${escape(meal.name)}已吃并返还库存">撤销</button>` : `<button class="meal-complete" data-complete="${escape(meal.id)}" aria-label="标记${escape(meal.name)}已吃">吃过</button>`}` : `<button class="meal-add" data-add="${slot}" aria-label="添加${labels[slot]}">＋</button>`;
-  return `<article class="meal-card ${slot} ${slot === 'snack' ? 'snack-card' : ''} ${meal ? 'has-meal' : 'is-empty'} ${meal?.completed ? 'done' : ''}"><div class="meal-category"><span class="slot-icon" aria-hidden="true">${illustration(mealArt[slot])}</span><strong>${labels[slot]}</strong>${meal?.time ? `<small class="meal-time">${escape(meal.time)}</small>` : ''}</div><div class="meal-content">${content}</div><div class="meal-card-controls">${controls}</div></article>`;
+  const category = `<div class="meal-category"><span class="slot-icon" aria-hidden="true"><img src="./assets/share-art/${mealPaperArt[slot]}.svg" alt="" width="32" height="32"></span><strong>${labels[slot]}</strong>${meal?.time ? `<small class="meal-time">${escape(meal.time)}</small>` : ''}</div>`;
+  const classes = `meal-card ${slot} ${slot === 'snack' ? 'snack-card' : ''} ${meal ? 'has-meal' : 'is-empty'} ${meal?.completed ? 'done' : ''}`;
+  if (!meal) return `<article class="${classes}">${category}<div class="meal-content"><span class="empty-label">今天想吃什么捏？(｡•ᴗ•｡)</span></div><div class="meal-card-controls"><button class="meal-add" data-add="${slot}" aria-label="添加${labels[slot]}">＋</button></div></article>`;
+  const brief = meal.note || resourceText(meal) || meal.protein || times[slot];
+  const resources = meal.resources.length ? `<span class="meal-resource-list">${meal.resources.map(r => `<span class="meal-resource-chip">${escape(r.name)} ${r.amount}${escape(r.unit)}</span>`).join('')}</span>` : '';
+  const quick = meal.completed
+    ? `<button class="meal-undo" data-undo="${escape(meal.id)}" aria-label="撤销${escape(meal.name)}已吃并返还库存">撤销</button>`
+    : `<button class="meal-complete" data-complete="${escape(meal.id)}" aria-label="标记${escape(meal.name)}已吃">吃过</button>`;
+  return `<article class="${classes}"><details class="meal-record" data-meal-fold="${escape(meal.id)}" ${mealExpandedIds.has(meal.id) ? 'open' : ''}><summary class="meal-record-summary">${category}<div class="meal-inline-summary"><div class="meal-name-line"><span class="meal-name">${escape(meal.name)}</span><span class="${meal.completed ? 'done-stamp' : 'planned-stamp'}">${meal.completed ? '已吃' : '小计划'}</span></div><span class="meal-brief">${escape(brief)}</span></div><span class="meal-fold-toggle" aria-hidden="true">⌄</span></summary><div class="meal-record-body"><button class="meal-details" data-detail="${escape(meal.id)}" aria-label="查看${escape(meal.name)}详情"><span class="meal-name">${escape(meal.name)}</span><span aria-hidden="true">详情 ↗</span></button>${resources}<p class="meal-kind">${escape(meal.type)}${meal.protein ? ' · ' + escape(meal.protein) : ''}</p>${meal.note ? `<p class="meal-note">${escape(meal.note)}</p>` : ''}<div class="meal-card-controls"><button class="meal-edit" data-edit-meal="${escape(meal.id)}" aria-label="查看或编辑${escape(meal.name)}">编辑这餐</button><button class="text-button" data-detail="${escape(meal.id)}">复制 / 移动 / 删除</button></div></div></details><div class="meal-quick-controls">${quick}</div></article>`;
 }
 function renderSnacks() {
   const snacks = state.meals.filter(m => m.date === selectedDate && m.slot === 'snack').sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
@@ -271,7 +284,9 @@ function renderSnacks() {
 }
 function renderDiary() {
   const diary = state.diaries.find(d => d.date === selectedDate);
-  return `<section class="diary-card" aria-label="今日日记"><div class="diary-heading"><h2>今天的小故事 (˶ᵔ ᵕ ᵔ˶)</h2><button class="text-button" data-action="edit-diary">${diary ? '编辑小纸条' : '写点什么'}</button></div>${diary?.mood ? `<p class="diary-mood">${escape(diary.mood)}</p>` : ''}${diary?.text ? `<p class="diary-text">${escape(diary.text)}</p>` : ''}${diary?.joy ? `<p class="diary-joy">今日小确幸 ♡<br>${escape(diary.joy)}</p>` : ''}${diary ? '' : '<p class="muted">心情、小确幸，慢慢写就好 (｡•ᴗ•｡)</p>'}</section>`;
+  const heading = `<div class="diary-heading"><h2>今天的小故事 (˶ᵔ ᵕ ᵔ˶)</h2><button class="text-button" data-action="edit-diary">${diary ? '编辑小纸条' : '写点什么'}</button></div>`;
+  if (!diary) return `<section class="diary-card" aria-label="今日日记">${heading}<p class="muted">心情、小确幸，慢慢写就好 (｡•ᴗ•｡)</p></section>`;
+  return `<section class="diary-card" aria-label="今日日记">${heading}<details class="diary-disclosure" data-diary-date="${selectedDate}" ${diaryExpandedDates.has(selectedDate) ? 'open' : ''}><summary class="diary-summary">${diary.mood ? `<span class="diary-mood">${escape(diary.mood)}</span>` : ''}<span class="diary-preview">${escape(diary.text || diary.joy || '这一页的小心情 ♡')}</span><span class="diary-fold-toggle" aria-hidden="true">⌄</span></summary><div class="diary-body">${diary.mood ? `<p class="diary-mood">${escape(diary.mood)}</p>` : ''}${diary.text ? `<p class="diary-text">${escape(diary.text)}</p>` : ''}${diary.joy ? `<p class="diary-joy">今日小确幸 ♡<br>${escape(diary.joy)}</p>` : ''}</div></details></section>`;
 }
 function diaryEditor() {
   if (readOnlyGuard()) return;
@@ -531,6 +546,18 @@ async function clearData() {
 }
 function navigate(nextPage) { if (page !== nextPage || nextPage === 'calendar') { if (nextPage === 'calendar') { calendarView = 'day'; selectedDate = today(); } page = nextPage; location.hash = nextPage; render(); window.scrollTo(0, 0); } }
 window.addEventListener('hashchange', () => { const next = location.hash.slice(1); if (PAGES.includes(next)) { if (next === 'calendar' && page !== 'calendar') { calendarView = 'day'; selectedDate = today(); } page = next; render(); } });
+// Reading a paper only changes this session's fold state, never saved records.
+document.addEventListener('toggle', event => {
+  const details = event.target;
+  if (details.matches?.('.meal-record[data-meal-fold]')) {
+    if (details.open) mealExpandedIds.add(details.dataset.mealFold);
+    else mealExpandedIds.delete(details.dataset.mealFold);
+  }
+  if (details.matches?.('.diary-disclosure[data-diary-date]')) {
+    if (details.open) diaryExpandedDates.add(details.dataset.diaryDate);
+    else diaryExpandedDates.delete(details.dataset.diaryDate);
+  }
+}, true);
 document.addEventListener('change', e => {
   if(e.target.id==='calendar-month'){selectCalendarMonth(e.target.value);return;}
   if (e.target.id !== 'summary-month') return;

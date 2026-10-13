@@ -72,11 +72,13 @@ export function renderMonthCalendar(state, { month, mode = 'all', selectedDate, 
     return `<button type="button" class="month-day${date === today ? ' is-today' : ''}" data-month-date="${date}" aria-label="${escape(label)}" aria-pressed="${date === selectedDate}"><span class="month-day-number">${parsed.getDate()}</span><span class="month-dots" aria-hidden="true">${kinds.filter(kind => flags[kind]).map(kind => `<span class="month-dot" data-kind="${kind}"></span>`).join('')}</span></button>`;
   }).join('');
   return `<section class="month-calendar" aria-label="${title}生活月历">
+    <div class="month-paper-binding" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="month-paper-tag" aria-hidden="true"><span>LITTLE CALENDAR</span><span>把每一天，轻轻收好 ♡</span></div>
     <div class="month-toolbar"><button type="button" data-month-step="-1" aria-label="上个月" ${shiftMonth(month, -1) ? '' : 'disabled'}>‹</button><label class="month-selector"><input type="month" id="calendar-month" min="0001-01" max="9999-12" value="${month}" aria-label="查看月份"></label><button type="button" data-month-step="1" aria-label="下个月" ${shiftMonth(month, 1) ? '' : 'disabled'}>›</button></div>
     <div class="month-modes" aria-label="月历显示类型">${Object.entries(MONTH_MODES).map(([id, name]) => `<button type="button" data-month-mode="${id}" aria-pressed="${id === mode}">${name}</button>`).join('')}</div>
     <div class="month-weekdays" aria-hidden="true">${['一', '二', '三', '四', '五', '六', '日'].map(label => `<span>${label}</span>`).join('')}</div>
     <div class="month-grid" role="group" aria-label="${title}日期">${cells}</div>
     <div class="month-legend" aria-label="圆点图例">${['meal', 'exercise', 'study'].map(kind => `<span><i class="month-dot" data-kind="${kind}" aria-hidden="true"></i>${kind === 'meal' ? '吃饭' : kind === 'exercise' ? '运动' : '学习'}</span>`).join('')}</div>
-    <div class="month-stats" aria-label="${title}累计天数">${[['meal', '餐食记录', stats.mealDays], ['exercise', '运动打卡', stats.exerciseDays], ['study', '学习打卡', stats.studyDays]].map(([kind, label, count]) => `<div class="month-stat" data-kind="${kind}"><span>${label}</span><p><strong>${count}</strong><small>天</small></p></div>`).join('')}</div>
+    <div class="month-stats" aria-label="${title}累计天数">${[['meal', '餐食记录', stats.mealDays], ['exercise', '运动打卡', stats.exerciseDays], ['study', '学习打卡', stats.studyDays]].map(([kind, label, count]) => `<div class="month-stat" data-kind="${kind}"><span>${label}</span><p><strong>${count}</strong><small>天</small></p>${stats[`${kind}Minutes`] ? `<span class="month-stat-minutes">${stats[`${kind}Minutes`]} 分钟</span>` : ''}</div>`).join('')}</div>
   </section>`;
 }

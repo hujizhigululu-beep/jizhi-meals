@@ -117,7 +117,7 @@ export function prepareJournalShare(state, options = {}) {
     dots(x,y,width,height,opts={}){this.ops.push({type:'dots',x,y,width,height,opts});}
     tape(x,y,width,opts={}){this.ops.push({type:'tape',x,y,width,opts});}
     // Decoration IDs are authored assets; user text only ever enters text().
-    art(id,x,y,width,height){if(!/^(strawberry|badges|collage)-[a-z0-9-]+$/.test(id))throw new Error('分享装饰名称无效。');this.ops.push({type:'art',id,x,y,width,height});}
+    art(id,x,y,width,height){if(!/^(strawberry|badges|collage|cafe|ticket|study|report)-[a-z0-9-]+$/.test(id))throw new Error('分享装饰名称无效。');this.ops.push({type:'art',id,x,y,width,height});}
     group(x,y,width,height,angle,draw){this.ops.push({type:'group-start',x,y,width,height,angle});draw(this);this.ops.push({type:'group-end'});}
     slot(x,y,size){this.slots.push({x,y,size});}
     headerTag(label,x,y,width,opts={}){this.rect(x,y,width,36,{fill:opts.fill||this.theme.accent,radius:4});this.text(label,x+10,y+4,width-20,{size:18,lineHeight:27,weight:'600',color:opts.color||this.theme.ink});return 36;}

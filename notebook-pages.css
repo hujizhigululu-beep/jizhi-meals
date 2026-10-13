@@ -1,0 +1,671 @@
+/* Chapters of one private notebook. Loaded after the existing UI and system tokens. */
+
+/* Daily page: seven little date tickets and short, expandable meal slips. */
+.calendar-page .chapter-heading { margin-bottom: 10px; }
+.calendar-page .calendar-topline { margin-bottom: 3px; }
+.calendar-page .calendar-month { font-size: 14px; color: var(--journal-ink); }
+.calendar-page .week-toolbar { gap: 6px; margin-bottom: 2px; }
+.calendar-page .week-pager { gap: 3px; }
+.calendar-page .week-label { color: var(--journal-muted); font-size: 11px; }
+.calendar-page .week-pager .icon-button { width: 36px; min-height: 44px; height: 44px; }
+.calendar-page .jump-button { min-height: 44px; padding-inline: 9px; font-size: 11px; }
+.calendar-page .date-strip { gap: 5px; padding: 5px 0 7px; margin-bottom: 4px; }
+.calendar-page .date-tab {
+  position: relative;
+  min-height: 58px;
+  gap: 2px;
+  border: 1px solid var(--journal-line);
+  border-radius: 6px 6px 10px 6px;
+  background: var(--journal-paper);
+  box-shadow: 0 2px 0 #b9869712;
+}
+.calendar-page .date-tab::before { display: none; }
+.calendar-page .date-tab .weekday { color: var(--journal-muted); font-size: 10px; }
+.calendar-page .date-tab .date-number { color: var(--journal-ink); font-size: 21px; line-height: 1.15; }
+.calendar-page .date-tab .date-dot { bottom: 4px; width: 4px; height: 4px; background: #c67b9a; }
+.calendar-page .date-tab.weekend { background-color: #fff7ee; }
+.calendar-page .date-tab.active {
+  background-color: var(--journal-pink);
+  background-image: radial-gradient(#ffffffb3 .9px, transparent 1px);
+  background-size: 7px 7px;
+  border-color: #df9fb6;
+  box-shadow: 0 2px 0 #dfb5c34d;
+}
+.calendar-page .date-tab.active::before {
+  display: block;
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 26%;
+  right: 26%;
+  height: 7px;
+  border-inline: 1px dashed #c894a8;
+  background: #f4c2d4bd;
+  pointer-events: none;
+}
+.calendar-page .date-tab.today { border-color: #d586a8; }
+.calendar-page .date-tab.active .date-number { color: #8c4d67; }
+.calendar-page .day-heading {
+  padding: 7px 10px;
+  margin: 3px 0 7px;
+  background: var(--journal-paper);
+  border: 1px solid var(--journal-line);
+  border-radius: var(--journal-radius);
+  box-shadow: var(--journal-shadow);
+}
+.calendar-page .day-heading h2 { font-size: 17px; line-height: 1.5; color: var(--journal-ink); }
+.calendar-page .day-heading .tiny-heart { font-size: 10px; padding: 3px 6px; background: #fff0f5; }
+.calendar-page .day-tools {
+  gap: 6px;
+  padding: 0 5px 3px;
+  margin: 0 0 8px;
+  border-bottom: 1px dashed var(--journal-line);
+  background: linear-gradient(90deg, #fde8f288, transparent);
+}
+.calendar-page .day-record-label { color: #93677b; font-size: 12px; }
+.calendar-page .day-tools button { min-height: 44px; padding-inline: 9px; font-size: 11px; }
+.calendar-page .meals { gap: 7px; padding: 0; }
+.calendar-page .meal-card,
+.calendar-page .meal-card.snack-card {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--journal-line);
+  border-radius: var(--journal-radius);
+  box-shadow: var(--journal-shadow);
+  background: var(--journal-paper);
+  background-image: none;
+}
+.calendar-page .meal-card::before,
+.calendar-page .meal-card::after { display: none; }
+.calendar-page .meal-card.breakfast { border-left: 3px solid #ecd396; }
+.calendar-page .meal-card.lunch { border-left: 3px solid #edb5ca; }
+.calendar-page .meal-card.dinner { border-left: 3px solid #b9cfda; }
+.calendar-page .meal-card.snack-card { border-left: 3px solid #e5c9b3; }
+.calendar-page .meal-card.done { background-color: #fcfffb; border-color: #d3dfcb; }
+.calendar-page .meal-card.is-empty {
+  grid-template-columns: 40px minmax(0, 1fr) 44px;
+  gap: 7px;
+  min-height: 62px;
+  padding: 6px 8px;
+}
+.calendar-page .meal-card.has-meal { display: block; }
+.calendar-page .meal-category { align-self: center; gap: 2px; }
+.calendar-page .meal-category .slot-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px dashed #d9c1ae;
+  background: var(--journal-yellow);
+  outline: none;
+}
+.calendar-page .meal-card.lunch .slot-icon { background: #ffe7ef; border-color: #e5bbcc; }
+.calendar-page .meal-card.dinner .slot-icon { background: #edf5fb; border-color: #bfd0da; }
+.calendar-page .meal-card.snack-card .slot-icon { background: var(--journal-apricot); }
+.calendar-page .meal-category .slot-icon img { width: 26px; height: 26px; }
+.calendar-page .meal-category strong { font-size: 10px; font-weight: 600; line-height: 1.3; }
+.calendar-page .meal-category .meal-time { font-size: 10px; line-height: 1.2; }
+.calendar-page .empty-label { color: var(--journal-muted); font-size: 11px; line-height: 1.5; }
+.calendar-page .meal-record { min-width: 0; }
+.calendar-page .meal-record-summary {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 7px 60px 7px 8px;
+  cursor: pointer;
+  list-style: none;
+}
+.calendar-page .meal-record-summary::-webkit-details-marker,
+.calendar-page .diary-summary::-webkit-details-marker { display: none; }
+.calendar-page .meal-record-summary::marker,
+.calendar-page .diary-summary::marker { content: ''; }
+.calendar-page .meal-record-summary .meal-content,
+.calendar-page .meal-inline-summary { min-width: 0; }
+.calendar-page .meal-name-line { display: flex; align-items: center; flex-wrap: nowrap; gap: 5px; }
+.calendar-page .meal-name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--body-font);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+.calendar-page .meal-name-line .done-stamp {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 1px 4px;
+  border: 1px solid #b9cbb0;
+  border-radius: 4px;
+  background: var(--journal-mint);
+  color: #536b4c;
+  font-size: 9px;
+  line-height: 1.4;
+  transform: none;
+}
+.calendar-page .meal-name-line .planned-stamp { flex: 0 0 auto; padding: 1px 4px; border: 1px dashed #e2c8d5; border-radius: 4px; color: #b3889c; background: #fff6fa; font-size: 9px; line-height: 1.4; }
+.calendar-page .meal-inline-summary {
+  display: block;
+  color: var(--journal-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.calendar-page .meal-brief { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--journal-muted); font-size: 11px; line-height: 1.5; margin-top: 2px; }
+.calendar-page .meal-fold-toggle {
+  display: grid;
+  place-items: center;
+  color: #b17792;
+  font-size: 14px;
+  line-height: 1;
+}
+.calendar-page .meal-record[open] > .meal-record-summary .meal-fold-toggle { transform: rotate(180deg); }
+.calendar-page .meal-record[open] > .meal-record-summary { border-bottom: 1px dashed var(--journal-line); }
+.calendar-page .meal-record-body {
+  min-width: 0;
+  padding: 8px 10px 8px 56px;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.calendar-page .meal-record-body .meal-name { white-space: normal; overflow: visible; text-overflow: clip; }
+.calendar-page .meal-record-body .meal-details { display: flex; flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 8px; min-height: 44px; padding: 2px 0; }
+.calendar-page .meal-record-body .meal-details > [aria-hidden] { flex: 0 0 auto; padding-top: 2px; color: #ad8397; font-size: 10px; }
+.calendar-page .meal-record-body .meal-kind { margin: 4px 0; color: var(--journal-muted); font-size: 11px; line-height: 1.6; overflow-wrap: anywhere; }
+.calendar-page .meal-record-body .meal-note,
+.calendar-page .meal-record-body .protein-line {
+  display: block;
+  margin: 4px 0 0;
+  overflow: visible;
+  white-space: pre-wrap;
+  -webkit-line-clamp: unset;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.7;
+  background: none;
+}
+.calendar-page .meal-resource-list { display: flex; flex-wrap: wrap; gap: 4px; max-height: none; margin-top: 4px; overflow: visible; }
+.calendar-page .meal-resource-chip {
+  max-width: 100%;
+  padding: 2px 5px;
+  border: 1px solid #ecd1dc;
+  border-radius: 4px;
+  color: #8d5970;
+  background: #fff1f6;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.calendar-page .meal-caption { display: none; }
+.calendar-page .meal-card-controls,
+.calendar-page .snack-card .meal-card-controls { display: flex; align-items: center; gap: 6px; }
+.calendar-page .meal-record-body .meal-card-controls { justify-content: flex-end; margin-top: 7px; }
+.calendar-page .meal-quick-controls { position: absolute; top: 10px; right: 8px; display: grid; place-items: center; width: 44px; }
+.calendar-page .meal-quick-controls button { width: 44px; min-width: 44px; min-height: 44px; margin: 0; padding: 2px; border: 1px solid #e0b5c8; border-radius: 7px; color: #894b65; background: var(--journal-pink); font-size: 11px; line-height: 1.3; }
+.calendar-page .meal-quick-controls .meal-undo { border-color: #c0d2b7; color: #526b4d; background: var(--journal-mint); }
+.calendar-page .meal-card-controls button,
+.calendar-page .snack-card .meal-card-controls button { width: 44px; min-width: 44px; min-height: 44px; border-radius: 7px; font-size: 11px; }
+.calendar-page .meal-card-controls .meal-add { font-size: 22px; border-style: dashed; background: #fffcf6; }
+.calendar-page .meal-card-controls .meal-complete { color: #894b65; background: var(--journal-pink); border-color: #e0b5c8; }
+.calendar-page .meal-card-controls .meal-undo { color: #526b4d; background: var(--journal-mint); border-color: #c0d2b7; }
+.calendar-page .meal-record-body .meal-card-controls { flex-wrap: wrap; }
+.calendar-page .meal-record-body .meal-card-controls button { width: auto; min-width: 72px; padding: 6px 8px; }
+.calendar-page .meal-record-body .meal-card-controls .text-button { flex: 1 1 auto; min-width: 0; white-space: normal; font-size: 10px; }
+.calendar-page .snack-section { margin: 12px 0 0; }
+.calendar-page .snack-heading { gap: 5px; margin-bottom: 6px; }
+.calendar-page .snack-heading h2 { color: var(--journal-ink); font-size: 15px; }
+.calendar-page .snack-heading button { min-height: 44px; padding-inline: 8px; font-size: 11px; }
+.calendar-page .snack-card { margin-bottom: 7px; }
+.calendar-page .snack-section > .muted { margin: 2px 3px 0; font-size: 11px; line-height: 1.65; }
+
+/* A little letter beside the activity slips. Full diary text remains selectable. */
+.calendar-page .diary-card {
+  position: relative;
+  margin: 14px 0 0;
+  padding: 10px 11px;
+  border: 1px solid #e8d4be;
+  border-radius: var(--journal-radius);
+  background: #fffaf0;
+  box-shadow: var(--journal-shadow);
+}
+.calendar-page .diary-card::before {
+  display: block;
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: 24px;
+  width: 42px;
+  height: 11px;
+  border-inline: 1px dashed #ccbc91;
+  background: repeating-linear-gradient(90deg, #ede2bdbd 0 4px, #fff8e995 4px 8px);
+  transform: rotate(3deg);
+  pointer-events: none;
+}
+.calendar-page .diary-heading { margin-bottom: 3px; padding-bottom: 3px; gap: 5px; border-color: #e8d4be; }
+.calendar-page .diary-heading h2 { color: #806248; font-size: 15px; }
+.calendar-page .diary-heading button { min-height: 44px; padding: 4px; font-size: 11px; }
+.calendar-page .diary-disclosure { min-width: 0; }
+.calendar-page .diary-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  color: #8d755f;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.calendar-page .diary-summary::after { content: none; }
+.calendar-page .diary-summary .diary-fold-toggle { flex: 0 0 auto; margin-left: auto; color: #ab9477; }
+.calendar-page .diary-disclosure[open] > .diary-summary .diary-fold-toggle { transform: rotate(180deg); }
+.calendar-page .diary-disclosure[open] > .diary-summary::before { content: '收起小纸条'; flex: 1; color: #b2997d; font-size: 11px; }
+.calendar-page .diary-disclosure[open] > .diary-summary .diary-mood,
+.calendar-page .diary-disclosure[open] > .diary-summary .diary-preview { display: none; }
+.calendar-page .diary-summary > :is(span, p) { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.calendar-page .diary-summary .diary-mood { flex: 0 1 auto; max-width: 45%; margin: 0; padding: 3px 6px; font-size: 11px; }
+.calendar-page .diary-preview { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calendar-page .diary-text {
+  padding: 3px 0;
+  color: var(--journal-ink);
+  background-image: repeating-linear-gradient(transparent 0 23px, #eadfce 23px 24px);
+  font-size: 13px;
+  line-height: 24px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.calendar-page .diary-mood { margin: 5px 0 7px; border-color: #ded3ec; background: var(--journal-lilac); color: #766187; font-size: 12px; }
+.calendar-page .diary-joy { margin-top: 8px; padding: 7px 9px; border-left: 3px solid #e1c786; background: var(--journal-yellow); color: #7c6644; font-size: 12px; line-height: 1.7; }
+.calendar-page .diary-card > .muted { font-size: 11px; line-height: 1.7; margin-top: 3px; }
+.calendar-page .footer-note { margin-top: 12px; font-size: 10px; }
+
+/* Pantry: a compact provision ticket, then aligned rows or a two-column shelf. */
+.inventory-page .section-heading { margin-bottom: 11px; }
+.inventory-page .runway-note {
+  position: relative;
+  margin: 13px 0 12px;
+  padding: 10px 12px 4px;
+  border: 1px solid #d6dcc7;
+  border-radius: var(--journal-radius);
+  background: linear-gradient(115deg, #f2f8e9, #fff9ea);
+  box-shadow: var(--journal-shadow);
+}
+.inventory-page .runway-note::before {
+  width: 49px;
+  height: 11px;
+  left: 24px;
+  top: -5px;
+  border-color: #b9c29e;
+  background-color: #d5e3b9b3;
+  transform: rotate(-3deg);
+}
+.inventory-page .runway-note::after { border-color: #e8ebd8; border-radius: 7px; }
+.inventory-page .runway-note h2 { min-height: 20px; margin-bottom: 1px; font-size: 14px; color: #6f7953; }
+.inventory-page .runway-note h2::after { background-image: url('./assets/stickers/fork.svg'); width: 26px; height: 26px; }
+.inventory-page .runway-background-art { width: 66px; height: 55px; top: 27px; right: 19px; opacity: .13; }
+.inventory-page .runway-note .runway-total { padding-right: 76px; margin: 0 0 5px; color: #74684e; font-size: 13px; line-height: 1.4; }
+.inventory-page .runway-note .runway-total > strong { margin-inline: 3px; color: #788850; font-size: 30px; font-weight: 700; }
+.inventory-page .runway-note .runway-coverage { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; padding-top: 6px; margin: 5px 0 4px; border-color: #d8dcc4; }
+.inventory-page .runway-coverage small { margin: 0; color: #8e917b; font-size: 11px; }
+.inventory-page .runway-coverage strong { color: #627052; font-size: 13px; font-weight: 600; line-height: 1.5; }
+.inventory-page .runway-note .runway-bottleneck { margin: 2px 0 3px; color: #978875; font-size: 11px; line-height: 1.5; }
+.inventory-page .runway-bottleneck strong { color: #8a7458; }
+.inventory-page .runway-details { margin-top: 4px; border-color: #d8dcc4; }
+.inventory-page .runway-details > summary { min-height: 44px; color: #7d8961; font-size: 11px; }
+.inventory-page .runway-details > summary::after { color: #89936d; }
+.inventory-page .runway-details .runway-counts { gap: 6px; padding-top: 7px; padding-bottom: 5px; }
+.inventory-page .runway-counts span { color: #8b826c; font-size: 11px; }
+.inventory-page .runway-counts b { color: #7b7958; font-size: 17px; }
+.inventory-page .runway-default { margin-top: 6px; gap: 6px; font-size: 12px; }
+.inventory-page .runway-default select { min-height: 44px; padding: 7px 8px; border-color: #d8d9bf; font-size: 16px; }
+.inventory-page .runway-note p { margin: 7px 0; font-size: 11px; line-height: 1.75; }
+.inventory-page .fridge-toolbar { margin: 11px 0 6px; gap: 7px; }
+.inventory-page .fridge-toolbar h2 { font-size: 15px; color: var(--journal-ink); gap: 6px; }
+.inventory-page .fridge-toolbar h2::before { width: 17px; height: 10px; }
+.inventory-page .fridge-switch { gap: 2px; padding: 2px; border-color: var(--journal-line); background: #fff3f8; box-shadow: none; }
+.inventory-page .fridge-switch button { min-width: 48px; min-height: 40px; padding: 5px 7px; font-size: 11px; }
+.inventory-page .fridge-switch button[aria-pressed='true'] { color: #925672; background: var(--journal-pink); box-shadow: 0 1px 2px #ca8ca515; }
+.inventory-page .inventory-list.fridge-rows {
+  display: block;
+  padding: 0 8px 3px;
+  border: 1px solid var(--journal-line);
+  border-radius: var(--journal-radius);
+  background: var(--journal-paper);
+  box-shadow: var(--journal-shadow);
+}
+.inventory-page .inventory-column-head,
+.inventory-page .ingredient-row-summary { grid-template-columns: minmax(0, 1fr) 116px 14px; gap: 5px; padding-inline: 1px; }
+.inventory-page .inventory-column-head { padding-top: 8px; padding-bottom: 6px; border-bottom: 1px dashed var(--journal-line); color: var(--journal-muted); font-size: 10px; }
+.inventory-page .inventory-column-numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.inventory-page .inventory-column-numbers > span { color: #8e6176; font-size: 10px; }
+.inventory-page .ingredient-row { border-color: #ead5df; background: transparent; }
+.inventory-page .ingredient-row-summary { min-height: 52px; padding-block: 7px; }
+.inventory-page .ingredient-row-heading { gap: 5px; }
+.inventory-page .ingredient-row .ingredient-name { font-size: 13px; color: var(--journal-ink); font-weight: 650; }
+.inventory-page .ingredient-row .ingredient-category { flex: 0 1 auto; min-width: 0; max-width: 96px; gap: 3px; overflow: hidden; font-size: 10px; }
+.inventory-page .ingredient-row .category-chip { flex: 0 0 auto; padding: 1px 3px; font-size: 9px; }
+.inventory-page .ingredient-row .ingredient-category > span:last-child { overflow: hidden; text-overflow: ellipsis; font-size: 9px; }
+.inventory-page .ingredient-row-summary .stock-numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; white-space: normal; }
+.inventory-page .ingredient-row-summary .stock-numbers > span { min-width: 0; overflow-wrap: anywhere; }
+.inventory-page .ingredient-row-summary .stock-numbers strong { font-size: 17px; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.inventory-page .ingredient-row-summary .stock-numbers .unit { font-size: 9px; margin-left: 1px; }
+.inventory-page .ingredient-row[open] .ingredient-row-summary { border-radius: 6px; background: #fff0f64d; }
+.inventory-page .ingredient-row-detail { padding: 5px 7px 4px; margin: 0 0 6px; border-radius: 5px; background: #fff7ec; gap: 4px 8px; }
+.inventory-page .ingredient-full-name { color: #806248; margin: 0; font-size: 12px; line-height: 1.65; }
+.inventory-page .ingredient-row-detail .ingredient-meta { color: #917960; font-size: 11px; line-height: 1.65; }
+.inventory-page .ingredient-row-detail .text-button { min-height: 44px; font-size: 11px; padding-inline: 4px; }
+.inventory-page .inventory-list:not(.fridge-rows) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding-top: 4px; }
+.inventory-page .ingredient-card {
+  min-width: 0;
+  padding: 9px 9px 5px;
+  border: 1px solid var(--journal-line);
+  border-radius: var(--journal-radius);
+  background: var(--journal-paper);
+  box-shadow: var(--journal-shadow);
+}
+.inventory-page .ingredient-card:nth-child(even) { background-color: #fff9f1; }
+.inventory-page .ingredient-card .ingredient-header { gap: 5px; }
+.inventory-page .ingredient-card .ingredient-name { font-size: 13px; line-height: 1.45; -webkit-line-clamp: 2; }
+.inventory-page .ingredient-card .ingredient-emoji { width: 27px; height: 27px; min-width: 27px; background: #fff8e7; border-color: #e5d5bb; }
+.inventory-page .ingredient-card .ingredient-emoji img { width: 25px; height: 25px; }
+.inventory-page .ingredient-card .stock-numbers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; padding: 5px 0; margin: 5px 0 4px; }
+.inventory-page .ingredient-card .stock-numbers > div + div { padding-left: 5px; border-color: #ead5df; }
+.inventory-page .ingredient-card .stock-numbers small { margin-bottom: 2px; font-size: 9px; }
+.inventory-page .ingredient-card .stock-numbers strong { font-size: 21px; line-height: 1.2; }
+.inventory-page .ingredient-card .stock-numbers .unit { margin-left: 1px; font-size: 9px; }
+.inventory-page .ingredient-card .ingredient-category { gap: 3px; margin: 4px 0; font-size: 10px; }
+.inventory-page .ingredient-card .ingredient-meta { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 10px; line-height: 1.6; }
+.inventory-page .ingredient-card .inventory-actions { gap: 3px; padding-top: 2px; margin-top: 2px; }
+.inventory-page .ingredient-card .inventory-actions .text-button { min-height: 44px; padding: 3px; font-size: 11px; }
+.inventory-page .ingredient-card .warning-label { font-size: 9px; line-height: 1.4; }
+.inventory-page .inventory-explanation { margin: 5px 0 0; padding-inline: 3px; }
+.inventory-page .inventory-explanation > summary { min-height: 44px; color: var(--journal-muted); font-size: 11px; }
+.inventory-page .inventory-explanation p { font-size: 11px; line-height: 1.75; }
+.inventory-page .journal-whitespace { height: 28px; margin-top: 2px; }
+.inventory-page .journal-whitespace::after { width: 82px; height: 34px; opacity: .1; }
+
+/* Review chapter: a month ticket, two keepsake counts and small date index cards. */
+.summary-page .summary-overview { margin-bottom: 10px; }
+.summary-page .summary-month-nav {
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 7px;
+  padding: 7px;
+  margin-bottom: 7px;
+  border: 1px solid var(--journal-line);
+  border-radius: var(--journal-radius);
+  background-color: #fff4f8;
+  background-image: radial-gradient(#deafbf40 .7px, transparent .9px);
+  background-size: 8px 8px;
+  box-shadow: var(--journal-shadow);
+}
+.summary-page .summary-month-nav label { min-height: 44px; gap: 1px; }
+.summary-page .summary-month-caption { font-size: 9px; color: #b08295; }
+.summary-page .summary-month-title { color: #8e566c; font-size: 19px; line-height: 1.4; }
+.summary-page .summary-month-title > span { font-size: 11px; }
+.summary-page .summary-month-nav input { min-height: 44px; }
+.summary-page .summary-range { gap: 6px; margin: 5px 0 3px; }
+.summary-page .summary-range button { min-height: 44px; padding: 5px 12px; font-size: 11px; }
+.summary-page .summary-range > span { color: var(--journal-muted); font-size: 10px; }
+.summary-page .summary-period { margin: 0; color: var(--journal-muted); font-size: 11px; line-height: 1.6; }
+.summary-page .summary-stats { gap: 8px; margin-bottom: 8px; }
+.summary-page .summary-stat {
+  position: relative;
+  padding: 9px 11px 7px;
+  border: 1px solid #e7bccf;
+  border-radius: var(--journal-radius);
+  background: #fff0f7;
+  box-shadow: var(--journal-shadow);
+}
+.summary-page .summary-stat::after { content: '♡'; position: absolute; right: 11px; bottom: 8px; color: #dfadc0; font-family: Georgia, serif; font-size: 22px; pointer-events: none; }
+.summary-page .summary-stat:nth-child(2) { border-color: #dccfeb; background: var(--journal-lilac); }
+.summary-page .summary-stat:nth-child(2)::after { content: '✎'; color: #c7b4da; }
+.summary-page .summary-stat > span { margin-bottom: 3px; color: #a17289; font-size: 10px; line-height: 1.5; }
+.summary-page .summary-stats .summary-stat .summary-stat-value > strong { color: #a75678; font-size: 29px; line-height: 1.2; }
+.summary-page .summary-stat:nth-child(2) > span,
+.summary-page .summary-stat:nth-child(2) .summary-stat-value > strong,
+.summary-page .summary-stat:nth-child(2) small { color: #847098; }
+.summary-page .summary-stat small { color: #a47b8b; font-size: 10px; }
+.summary-page .summary-slot-counts { gap: 5px; margin-bottom: 4px; }
+.summary-page .summary-slot-count { gap: 1px; padding: 6px 3px; border: 1px dashed #e6d3b8; border-radius: 7px; background: #fff8e9; }
+.summary-page .summary-slot-count:nth-child(2) { background: #fff0f5; border-color: #e8c4d4; }
+.summary-page .summary-slot-count:nth-child(3) { background: #edf5f9; border-color: #c9dce6; }
+.summary-page .summary-slot-count:nth-child(4) { background: #fff3ec; border-color: #ead0bd; }
+.summary-page .summary-slot-count > span { color: #9b8264; font-size: 10px; }
+.summary-page .summary-slot-counts .summary-slot-count > strong { margin-top: 1px; color: #8c6e74; font-size: 17px; line-height: 1.4; }
+.summary-page .summary-slot-count strong small { font-size: 9px; font-weight: 400; }
+.summary-page .summary-count-note { margin: 0 2px 11px; color: var(--journal-muted); font-size: 10px; line-height: 1.6; }
+.summary-page .summary-section.settings-card {
+  position: relative;
+  padding: 11px 11px 3px;
+  margin: 0 0 12px;
+  border: 1px solid var(--journal-line);
+  border-radius: var(--journal-radius);
+  background: var(--journal-paper);
+  box-shadow: var(--journal-shadow);
+}
+.summary-page .summary-section.summary-story-catalog { margin-top: 14px; border-color: #ead7b8; background: #fffaf0; }
+.summary-page .summary-section.summary-story-catalog::before { width: 40px; height: 10px; top: -5px; left: 24px; background: #eddbafb0; border-color: #ccba8e; }
+.summary-page .summary-section-heading { gap: 4px 8px; margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px dashed var(--journal-line); }
+.summary-page .summary-section-heading h2 { color: #8b6174; font-size: 15px; line-height: 1.5; }
+.summary-page .summary-section-heading > span { color: #b1939e; font-size: 8px; letter-spacing: 1px; }
+.summary-page .summary-list { margin-top: 0; }
+.summary-page .summary-list .summary-entry { grid-template-columns: 34px minmax(0, 1fr) 40px; gap: 8px; min-height: 58px; padding: 7px 0; border-bottom: 1px dashed #ead9df; }
+.summary-page .summary-entry:last-child { border-bottom: 0; }
+.summary-page .summary-entry-date { min-height: 39px; gap: 0; padding: 3px 1px 2px; border: 1px solid #ead1dc; border-top: 3px solid #e7bdd0; border-radius: 4px; background: #fff8fb; }
+.summary-page .summary-entry-month { color: #b08b9d; font-size: 8px; line-height: 1.35; }
+.summary-page .summary-entry-day { color: #965d77; font-size: 18px; line-height: 1.2; }
+.summary-page .summary-entry-day small { display: none; }
+.summary-page .summary-entry-content .summary-entry-title { color: var(--journal-ink); font-size: 13px; line-height: 1.5; }
+.summary-page .summary-entry-meta { margin-top: 1px; color: var(--journal-muted); font-size: 10px; line-height: 1.5; }
+.summary-page .summary-entry-link { display: grid; place-items: center; min-height: 44px; color: #b17992; font-size: 10px; }
+.summary-page .summary-story-line { gap: 5px; }
+.summary-page .summary-entry-mood { font-size: 11px; color: #ac8174; }
+.summary-page .summary-entry-content .summary-entry-preview { font-size: 12px; color: #927665; }
+.summary-page .summary-placeholder { gap: 9px; padding: 12px 0; }
+.summary-page .summary-placeholder img { width: 31px; height: 31px; }
+.summary-page .summary-placeholder .summary-empty { font-size: 11px; line-height: 1.7; }
+
+/* Private space: numbered pockets, each on its own colour of stationery. */
+.settings-page .settings-group {
+  position: relative;
+  min-width: 0;
+  padding: 11px 12px;
+  margin-bottom: 11px;
+  border: 1px solid var(--journal-line);
+  border-radius: var(--journal-radius);
+  background: var(--journal-paper);
+  box-shadow: var(--journal-shadow);
+}
+.settings-page .settings-group:first-of-type { border: 1px solid #e6bdce; background: #fff1f7; }
+.settings-page .settings-group.settings-install { background: #f2f8ec; border-color: #d1dfc6; }
+.settings-page .settings-group.settings-data { background: #fff8ec; border-color: #e8d3b3; }
+.settings-page .settings-group.settings-rules { background: #f7f2fc; border: 1px solid #e1d7ee; border-radius: var(--journal-radius); box-shadow: var(--journal-shadow); }
+.settings-page .settings-group.settings-credits { background: #fff7f2; border: 1px solid #ead2c3; border-radius: var(--journal-radius); box-shadow: var(--journal-shadow); }
+.settings-page .settings-group-title { align-items: center; gap: 8px; margin-bottom: 5px; color: var(--journal-ink); font-size: 15px; line-height: 1.5; }
+.settings-page .settings-group-title > span {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border: 1px dashed #deb5c8;
+  border-radius: 5px;
+  background: #fffbf6;
+  color: #b17a95;
+  font-family: Georgia, serif;
+  font-size: 12px;
+}
+.settings-page .settings-install .settings-group-title > span { color: #85966e; border-color: #bfceac; }
+.settings-page .settings-data .settings-group-title > span { color: #b19466; border-color: #d9c393; }
+.settings-page .settings-rules .settings-group-title > span { color: #9c84b8; border-color: #d2c1e5; }
+.settings-page .settings-credits .settings-group-title > span { color: #b78c72; border-color: #dfc4af; }
+.settings-page .settings-group-intro,
+.settings-page .settings-install-status { color: var(--journal-muted); font-size: 11px; line-height: 1.75; }
+.settings-page .settings-actions { gap: 7px; margin-top: 8px; }
+.settings-page .settings-backup > .settings-actions button { padding: 7px 9px; min-height: 44px; font-size: 11px; }
+.settings-page .settings-help { margin-top: 3px; border-top: 1px dashed #e6cfdb; }
+.settings-page .settings-install .settings-help { border-color: #d3ddc6; }
+.settings-page .settings-help > summary { min-height: 44px; color: #9f7b91; font-size: 10px; gap: 6px; }
+.settings-page .settings-install .settings-help > summary { color: #839170; }
+.settings-page .settings-help-content { padding-top: 1px; }
+.settings-page .settings-help-content p,
+.settings-page .settings-help-content li,
+.settings-page .settings-group-content p,
+.settings-page .settings-group-content.credits { font-size: 11px; line-height: 1.8; overflow-wrap: anywhere; }
+.settings-page .settings-group-summary { min-height: 44px; gap: 8px; }
+.settings-page .settings-group-content { padding-top: 5px; }
+.settings-page .settings-disclosure-mark { color: #a487a5; }
+.settings-page .settings-data-counts { gap: 6px; margin: 8px 0 7px; }
+.settings-page .settings-data-counts > span { padding: 6px 5px; text-align: center; border: 1px dashed #e1ceb0; border-radius: 6px; color: #9a856c; background: #fffdf7; font-size: 10px; line-height: 1.6; }
+.settings-page .settings-data-counts strong { color: #977753; font-size: 22px; line-height: 1.3; }
+.settings-page .settings-backup-actions { gap: 5px; }
+.settings-page .settings-backup-actions button { min-height: 44px; padding: 7px 10px; font-size: 11px; }
+.settings-page .settings-danger { padding: 11px 12px; margin-top: 14px; border: 1px solid #e3c9ce; border-radius: var(--journal-radius); background: #fffafa; box-shadow: none; }
+.settings-page .settings-danger .settings-group-title { color: #975967; font-size: 14px; }
+.settings-page .settings-danger p { color: #946773; font-size: 11px; line-height: 1.8; }
+.settings-page .settings-danger .danger { min-height: 44px; color: #9d5464; border-color: #ddb8c1; background: #fffdf9; font-size: 11px; }
+.settings-page .footer-note { margin-top: 12px; font-size: 10px; line-height: 1.7; }
+
+/* Timeline: a running stitched rule; opened days become a tiny collage. */
+.timeline-mode { --timeline-height: clamp(280px, calc(100svh - 400px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), 588px); }
+@supports (height: 100dvh) {
+  .timeline-mode { --timeline-height: clamp(280px, calc(100dvh - 400px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), 588px); }
+}
+.timeline-page .timeline-heading { margin-bottom: 8px; gap: 7px; }
+.timeline-page #timeline-period { font-size: 10px; padding: 5px 6px; border: 1px dashed #e5cbd7; border-radius: 5px; color: #ad7f94; background: #fffaf6; }
+.timeline-page .timeline-toolbar { margin-bottom: 8px; gap: 5px; }
+.timeline-page .timeline-toolbar button { min-height: 44px; padding: 6px 9px; font-size: 11px; }
+.timeline-page .timeline-toolbar > span { color: var(--journal-muted); font-size: 10px; }
+.timeline-page .timeline-scroll {
+  border: 1px solid var(--journal-line);
+  border-radius: var(--journal-radius);
+  background-color: var(--journal-paper);
+  background-image: radial-gradient(#cfb7a719 .65px, transparent .8px);
+  background-size: 8px 8px;
+  box-shadow: var(--journal-shadow);
+}
+.timeline-page .timeline-row {
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  border-bottom: 1px dashed #ecd7df;
+}
+.timeline-page .timeline-row::after { left: 68px; border-color: #e6c7d5; }
+.timeline-page .timeline-row.is-weekend { background: #fff7ec80; }
+.timeline-page .timeline-row.is-selected { background: #fff0f7; border-left-color: #d895b2; }
+.timeline-page .timeline-row.is-today { border-left-color: #d07d9f; box-shadow: none; }
+.timeline-page .timeline-day-summary {
+  grid-template-columns: 48px minmax(0, 1fr) 17px;
+  gap: 18px;
+  min-height: max(52px, calc((var(--timeline-height) - 2px) / 7));
+  padding: 7px 9px 7px 7px;
+}
+.timeline-page .timeline-date { gap: 2px; }
+.timeline-page .timeline-date::after { right: -15px; width: 6px; height: 6px; border-color: #dca9c0; background: #fffdf8; }
+.timeline-page .timeline-row.has-records .timeline-date::after { background: #efc5d6; }
+.timeline-page .timeline-row.is-selected .timeline-date::after { background: #d68daa; border-color: #c57997; }
+.timeline-page .timeline-month,
+.timeline-page .timeline-weekday { font-size: 10px; color: #ae8c9e; line-height: 1.35; }
+.timeline-page .timeline-day-number { color: #8b6276; font-size: 23px; line-height: 1; }
+.timeline-page .timeline-row.is-today .timeline-day-number { color: #b26588; }
+.timeline-page .timeline-row.is-today .timeline-day-number::after { top: -9px; right: 0; font-size: 9px; }
+.timeline-page .timeline-preview { gap: 2px; }
+.timeline-page .timeline-compact-line { color: var(--journal-ink); font-size: 12px; line-height: 1.5; }
+.timeline-page .timeline-empty { color: #b298a5; font-size: 11px; line-height: 1.5; }
+.timeline-page .timeline-record-mark { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #b0899d; font-size: 9px; line-height: 1.5; }
+.timeline-page .timeline-row:not(.has-records) .timeline-record-mark { color: #c2aab5; }
+.timeline-page .timeline-chevron { color: #b590a5; font-size: 13px; }
+.timeline-page .timeline-expanded { padding: 0 10px 9px 79px; font-size: 12px; line-height: 1.7; }
+.timeline-page .timeline-expanded .timeline-record-section {
+  min-width: 0;
+  margin: 0 0 7px;
+  padding: 8px 9px;
+  border: 1px solid #ead3de;
+  border-radius: 6px;
+  background: #fff5fa;
+  white-space: normal;
+  overflow: visible;
+}
+.timeline-page .timeline-expanded .timeline-record-section + .timeline-record-section { padding-top: 8px; border-top: 1px solid #ead3de; }
+.timeline-page .timeline-expanded .timeline-section-title { margin: 0 0 4px; color: #a7748e; font-size: 12px; line-height: 1.5; letter-spacing: .2px; }
+.timeline-page .timeline-expanded .timeline-meals { gap: 4px; }
+.timeline-page .timeline-expanded .timeline-meal { grid-template-columns: 26px minmax(0, 1fr) auto; gap: 5px; font-size: 12px; line-height: 1.6; }
+.timeline-page .timeline-expanded .timeline-meal-name { color: var(--journal-ink); font-weight: 550; }
+.timeline-page .timeline-expanded .timeline-meal-label,
+.timeline-page .timeline-expanded .timeline-snack-label,
+.timeline-page .timeline-expanded .timeline-snack-time,
+.timeline-page .timeline-expanded .timeline-meal-state,
+.timeline-page .timeline-expanded .timeline-feeling-row > small { font-size: 10px; line-height: 1.6; color: #ac8f9e; }
+.timeline-page .timeline-expanded .timeline-meal-state { color: #79996d; }
+.timeline-page .timeline-expanded .timeline-snacks { margin-top: 6px; }
+.timeline-page .timeline-expanded .timeline-snack-label { margin-bottom: 3px; }
+.timeline-page .timeline-expanded .timeline-snack-list { gap: 4px; }
+.timeline-page .timeline-expanded .timeline-record-section[data-kind='study'] { background: var(--journal-lilac); border-color: #ddd2eb; }
+.timeline-page .timeline-expanded .timeline-record-section[data-kind='study'] .timeline-section-title { color: #947bae; }
+.timeline-page .timeline-expanded .timeline-record-section[data-kind='exercise'] { background: var(--journal-mint); border-color: #ccdbc1; }
+.timeline-page .timeline-expanded .timeline-record-section[data-kind='exercise'] .timeline-section-title { color: #7d9268; }
+.timeline-page .timeline-expanded .timeline-activity-state { display: inline-block; padding: 1px 5px; margin-bottom: 3px; font-size: 9px; border-radius: 4px; background: #ffffff85; color: #867b6c; }
+.timeline-page .timeline-expanded .timeline-activity-items { margin: 2px 0 0; padding: 0; list-style: none; }
+.timeline-page .timeline-expanded .timeline-activity-item { padding: 4px 0; border-bottom: 1px dashed #ad9dab36; color: var(--journal-ink); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.timeline-page .timeline-expanded .timeline-activity-item:last-child { border-bottom: 0; }
+.timeline-page .timeline-expanded .timeline-activity-item > small { color: #9a8791; font-size: 10px; }
+.timeline-page .timeline-expanded .timeline-activity-item > p { margin: 2px 0 0; font-size: 11px; line-height: 1.7; white-space: pre-wrap; }
+.timeline-page .timeline-expanded .timeline-feelings-section { background: var(--journal-yellow); border-color: #e4d4b0; }
+.timeline-page .timeline-expanded .timeline-feelings-section .timeline-section-title { color: #a28a61; }
+.timeline-page .timeline-expanded .timeline-feeling-row { grid-template-columns: 32px minmax(0, 1fr); gap: 4px; font-size: 12px; line-height: 1.7; }
+.timeline-page .timeline-expanded .timeline-feeling-row + .timeline-feeling-row { margin-top: 4px; }
+.timeline-page .timeline-expanded .timeline-story-section { background: #fffaf1; border-color: #e6d5bd; }
+.timeline-page .timeline-expanded .timeline-story-section .timeline-section-title { color: #a08465; }
+.timeline-page .timeline-expanded .timeline-story-text { color: #876e58; font-size: 12px; line-height: 1.8; }
+.timeline-page .timeline-expanded .timeline-sticker-strip { gap: 5px; padding: 3px 0; }
+.timeline-page .timeline-expanded .timeline-sticker-strip img { width: 29px; height: 29px; }
+.timeline-page .timeline-expanded .timeline-open { display: block; width: 100%; min-height: 44px; margin-top: 3px; padding: 4px 8px; border: 1px dashed #e4cbd8; border-radius: 6px; color: #a6758e; background: #fff9fc; text-align: center; font-size: 11px; }
+
+@media (max-width: 360px) {
+  .calendar-page .date-strip { gap: 4px; }
+  .calendar-page .date-tab { min-height: 56px; }
+  .calendar-page .day-heading h2 { font-size: 16px; }
+  .calendar-page .day-heading .tiny-heart { font-size: 9px; }
+  .calendar-page .meal-record-summary { grid-template-columns: 35px minmax(0, 1fr) 15px; gap: 6px; padding-left: 7px; padding-right: 58px; }
+  .calendar-page .meal-record-body { padding-left: 48px; padding-right: 8px; }
+  .calendar-page .meal-name { font-size: 13px; }
+  .calendar-page .diary-heading h2 { font-size: 13px; }
+  .calendar-page .diary-heading button { font-size: 10px; }
+  .inventory-page .fridge-toolbar h2 { font-size: 14px; gap: 4px; }
+  .inventory-page .fridge-toolbar h2::before { width: 12px; }
+  .inventory-page .fridge-switch button { min-width: 44px; padding-inline: 5px; }
+  .inventory-page .inventory-list.fridge-rows { padding-inline: 7px; }
+  .inventory-page .inventory-column-head,
+  .inventory-page .ingredient-row-summary { grid-template-columns: minmax(0, 1fr) 108px 12px; gap: 4px; }
+  .inventory-page .ingredient-row .ingredient-category > span:last-child { display: none; }
+  .inventory-page .ingredient-row-summary .stock-numbers strong { font-size: 15px; }
+  .inventory-page .ingredient-card { padding-inline: 8px; }
+  .inventory-page .ingredient-card .ingredient-name { font-size: 12px; }
+  .inventory-page .ingredient-card .stock-numbers strong { font-size: 19px; }
+  .summary-page .summary-month-title { font-size: 18px; }
+  .summary-page .summary-list .summary-entry { grid-template-columns: 31px minmax(0, 1fr) 38px; gap: 6px; }
+  .summary-page .summary-section-heading h2 { font-size: 14px; }
+  .summary-page .summary-entry-content .summary-entry-title { font-size: 12px; }
+  .settings-page .settings-group,
+  .settings-page .settings-danger { padding-inline: 11px; }
+  .timeline-page .timeline-day-summary { grid-template-columns: 43px minmax(0, 1fr) 15px; gap: 16px; padding-right: 8px; }
+  .timeline-page .timeline-row::after { left: 61px; }
+  .timeline-page .timeline-date::after { right: -13px; }
+  .timeline-page .timeline-expanded { padding-left: 70px; padding-right: 8px; }
+  .timeline-page .timeline-toolbar button { padding-inline: 7px; font-size: 10px; }
+  .timeline-page .timeline-toolbar > span { font-size: 9px; }
+}
+
+@media (min-width: 700px) {
+  .calendar-page .meal-record-summary { grid-template-columns: 44px minmax(0, 1fr) 18px; padding-left: 11px; padding-right: 62px; }
+  .calendar-page .meal-record-body { padding-left: 63px; }
+  .inventory-page .ingredient-card { padding-inline: 11px; }
+  .timeline-page .timeline-day-summary { padding-right: 15px; }
+}

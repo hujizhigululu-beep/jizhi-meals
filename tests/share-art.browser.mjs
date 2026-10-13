@@ -8,12 +8,17 @@ import assert from 'node:assert/strict';
 // Real, local PNG samples for art review. Fixtures never use personal records.
 const { chromium, webkit } = createRequire(import.meta.url)('playwright');
 const root = resolve('.');
-const output = resolve(process.env.SHARE_ART_OUTPUT || '/workspace/artifacts/jizhi-share-art');
+const output = resolve(process.env.SHARE_ART_OUTPUT || '/workspace/artifacts/jizhi-notebook-ui/shares');
 const engine = process.env.SHARE_ENGINE === 'webkit' ? 'webkit' : 'chromium';
 const templates = [
   { id: 'meal-strawberry', kind: 'meal', file: 'strawberry' },
+  { id: 'meal-cafe', kind: 'meal', file: 'cafe' },
+  { id: 'exercise-ticket', kind: 'exercise', file: 'ticket' },
   { id: 'exercise-badges', kind: 'exercise', file: 'badges' },
+  { id: 'study-notebook', kind: 'study', file: 'notebook' },
+  { id: 'study-library', kind: 'study', file: 'library' },
   { id: 'life-collage', kind: 'life', file: 'collage' },
+  { id: 'life-report', kind: 'life', file: 'report' },
 ];
 const formats = ['portrait', 'long', 'square'];
 const report = { engine, viewport: { width: 390, height: 844 }, generatedAt: new Date().toISOString(), results: [], failures: [], browserErrors: [] };
@@ -103,7 +108,7 @@ try {
       if (variant === 'sparse') {
         state.meals = [state.meals[0]];
         state.dayRecords[0].exercise.items = [];
-        state.dayRecords[0].study.checked = false;
+        state.dayRecords[0].study.checked = true;
         state.dayRecords[0].study.items = [];
         state.diaries = [];
       } else if (variant === 'long') {
@@ -111,7 +116,7 @@ try {
         const note = ['第一行：听风经过树叶 🍃。'.repeat(5), '第二行：慢慢走，慢慢记，今天也很可爱。'.repeat(5), '第三行：组合 Emoji 👩‍🎨🧑🏽‍🍳 与中文一起好好保存。【备注末尾完整】'].join('\n');
         state.meals = [{ ...state.meals[0], name: title }];
         state.dayRecords[0].exercise.items = [{ content: title, minutes: 35, note }];
-        state.dayRecords[0].study.items = [{ content: '读一本很长很长的故事书', minutes: 20, note: '书页里的小确幸。' }];
+        state.dayRecords[0].study.items = [{ content: title, minutes: 20, note }];
         state.diaries[0] = { ...state.diaries[0], text: note + '\n【日记末尾完整】' };
       } else if (variant === 'range') {
         state.meals = ['2026-12-31', '2027-01-01'].flatMap((date, day) => state.meals.slice(0, 2).map((meal, index) => ({ ...meal, id: `${day}-${index}`, date, name: `${day ? '新年' : '年末'}·${meal.name}` })));
@@ -121,7 +126,7 @@ try {
         const html = '<img src=x onerror="globalThis.shareArtExecuted=true"><script>globalThis.shareArtExecuted=true</script> & <b>纯文本</b>';
         state.meals = [{ ...state.meals[0], name: html }];
         state.dayRecords[0].exercise.items = [{ content: html, minutes: 10, note: html }];
-        state.dayRecords[0].study.items = [];
+        state.dayRecords[0].study.items = [{ content: html, minutes: 10, note: html }];
         state.diaries[0] = { ...state.diaries[0], mood: html, joy: html, text: html };
       } else if (variant === 'privacy') {
         state.diaries[0] = { date: '2026-10-13', mood: '私密心情不得导出', joy: '私密小确幸不得导出', text: '私密日记不得导出' };
@@ -212,9 +217,9 @@ try {
       report.results.push({ template: template.id, variant: 'empty', format: 'portrait', error: result.error, unchanged: result.unchanged });
     });
   }
-  await check('three distinct compositions', async () => {
+  await check('eight distinct compositions', async () => {
     const normals = report.results.filter(row => row.variant === 'normal' && row.format === 'portrait');
-    assert.equal(normals.length, 3); assert.equal(new Set(normals.map(row => row.hash)).size, 3);
+    assert.equal(normals.length, templates.length); assert.equal(new Set(normals.map(row => row.hash)).size, templates.length);
   });
   await check('browser assets and execution', async () => { assert.deepEqual(report.browserErrors, []); });
 } catch (error) {
@@ -225,7 +230,7 @@ try {
   report.passed = report.failures.length === 0;
   await writeFile(resolve(output, `${engine}-art-results.json`), JSON.stringify(report, null, 2));
   const summary = `${engine}: ${report.results.filter(row => row.bytes).length} real PNG validations; ${report.failures.length} failures.\n` +
-    `390×844 mobile viewport; three compositions × portrait/long/square; sparse and long Chinese/Emoji previews; cross-year ranges, privacy, plain text and unchanged records.\n` +
+    `390×844 mobile viewport; eight compositions × portrait/long/square; sparse and long Chinese/Emoji previews; cross-year ranges, privacy, plain text and unchanged records.\n` +
     report.failures.map(failure => `FAIL ${failure.name}: ${failure.message}`).join('\n') + '\n';
   await writeFile(resolve(output, 'verification.txt'), summary);
   console.log(summary);

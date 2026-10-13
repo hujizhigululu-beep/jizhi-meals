@@ -1,0 +1,344 @@
+/* The notebook's common paper, print, ephemera and controls. Page compositions live separately. */
+:root,
+body {
+  --journal-paper: #fffdf4;
+  --journal-pink: #f5b4cb;
+  --journal-mint: #eaf5e7;
+  --journal-lilac: #f1eafa;
+  --journal-yellow: #fff2cd;
+  --journal-apricot: #fff0e4;
+  --journal-ink: #714f56;
+  --journal-muted: #a17983;
+  --journal-line: #ebc8d2;
+  --journal-radius: 12px;
+  --journal-shadow: 0 2px 5px #875b6510, 1px 2px 0 #f1dfe333;
+  --journal-soft-pink: #ffe8f0;
+  --journal-title-font: "Songti SC", "STSong", "Noto Serif CJK SC", "SimSun", Georgia, serif;
+  --journal-body-font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Segoe UI", "Microsoft YaHei", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  --bg: #fff5f7;
+  --paper: var(--journal-paper);
+  --ink: var(--journal-ink);
+  --muted: #896872;
+  --line: var(--journal-line);
+  --pink: var(--journal-pink);
+  --card: var(--journal-soft-pink);
+  --green: var(--journal-mint);
+  --yellow: var(--journal-yellow);
+  --shadow: var(--journal-shadow);
+  --radius: var(--journal-radius);
+  --accent: #bd6386;
+  --berry: #ad5778;
+  --title-font: var(--journal-title-font);
+  --body-font: var(--journal-body-font);
+  color-scheme: light;
+}
+
+body {
+  color: var(--journal-ink);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, #de9ab14a .85px, transparent 1px),
+    repeating-linear-gradient(0deg, #fff9ee2b 0 1px, transparent 1px 5px);
+  background-size: 14px 14px, 100% 5px;
+  font-family: var(--journal-body-font);
+  line-height: 1.55;
+}
+body .app-shell,
+body.timeline-mode .app-shell {
+  width: 100%;
+  max-width: 780px;
+  padding: calc(12px + env(safe-area-inset-top)) 14px calc(105px + env(safe-area-inset-bottom));
+}
+body #main, body .page { min-width: 0; }
+body .page { animation: none; }
+body h1, body h2, body h3 { color: var(--journal-ink); font-family: var(--journal-title-font); font-weight: 650; }
+body h1 { font-size: 22px; letter-spacing: .035em; line-height: 1.4; }
+body h2 { font-size: 18px; line-height: 1.45; }
+body h3 { font-size: 16px; line-height: 1.5; }
+body .eyebrow { font-family: var(--journal-body-font); font-size: 9px; line-height: 1.4; letter-spacing: .16em; color: #ab7489; }
+body .section-heading { gap: 9px; margin-bottom: 12px; }
+body .section-heading > div { min-width: 0; }
+body .subheading { margin-top: 4px; font-size: 11px; line-height: 1.65; }
+body .footer-note { font-size: 11px; line-height: 1.8; margin-top: 16px; color: #95717d; }
+
+/* One book cover, six small compositions. The inner theme avoids relying on :has(). */
+body .brand-header,
+body.timeline-mode .brand-header {
+  position: relative;
+  display: block;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 0 14px;
+  border: 1px solid #e4b9c8;
+  border-radius: 12px 18px 12px 12px;
+  background: var(--journal-paper);
+  box-shadow: var(--journal-shadow);
+  isolation: isolate;
+}
+body .brand-header::before,
+body.timeline-mode .brand-header::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 6px;
+  z-index: 3;
+  border: 1px dashed #e8bfcc;
+  border-radius: 7px 12px 7px 7px;
+  pointer-events: none;
+}
+body .brand-header::after,
+body.timeline-mode .brand-header::after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 17px;
+  bottom: 15px;
+  left: -5px;
+  width: 9px;
+  z-index: 4;
+  background: radial-gradient(circle, var(--bg) 2px, #dfaec0 2.1px 2.8px, transparent 3px) center / 9px 21px repeat-y;
+  pointer-events: none;
+}
+body .notebook-heading {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px;
+  align-items: center;
+  height: 104px;
+  min-width: 0;
+  padding: 13px 14px 12px 21px;
+  border-radius: inherit;
+  background: linear-gradient(115deg, var(--journal-paper) 60%, #ffe5ee 100%);
+  overflow: hidden;
+}
+body .notebook-heading::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 100px;
+  background: radial-gradient(circle, #dda4b956 1px, transparent 1.2px) 4px 4px / 9px 9px;
+  pointer-events: none;
+}
+body .notebook-brand-copy { position: relative; z-index: 2; min-width: 0; }
+body .notebook-heading .notebook-edition {
+  position: static;
+  display: block;
+  font-family: var(--journal-body-font);
+  font-size: 8px;
+  line-height: 1.25;
+  color: #b0778e;
+  font-weight: 650;
+  letter-spacing: .1em;
+  margin: 0 0 3px;
+}
+body .notebook-heading .brand,
+body.timeline-mode .notebook-heading .brand {
+  display: inline-flex;
+  width: 100%;
+  font-size: 31px;
+  letter-spacing: .12em;
+  line-height: 1.2;
+  font-family: var(--journal-title-font);
+  font-weight: 750;
+  color: #854858;
+  min-height: 44px;
+}
+body .notebook-heading .brand > span { min-width: 0; }
+body .notebook-heading .brand small,
+body.timeline-mode .notebook-heading .brand small {
+  display: block;
+  margin-top: 5px;
+  font: 10px/1.4 var(--journal-body-font);
+  letter-spacing: .015em;
+  color: #976e7c;
+}
+body .notebook-cover-tape {
+  position: absolute;
+  top: -3px;
+  left: 31px;
+  width: 61px;
+  height: 11px;
+  transform: rotate(-4deg);
+  background: repeating-linear-gradient(90deg, #f4b1c694 0 6px, #fff2ee8c 6px 7px);
+  border-inline: 1px dashed #dba3b78a;
+  z-index: 3;
+  pointer-events: none;
+}
+body .notebook-cover-art {
+  position: relative;
+  width: 88px;
+  height: 77px;
+  align-self: start;
+  margin-top: 1px;
+  pointer-events: none;
+  z-index: 2;
+}
+body .notebook-art-paper {
+  position: absolute;
+  left: 16px;
+  right: 0;
+  top: 6px;
+  bottom: 3px;
+  transform: rotate(8deg);
+  background: #fff4e5;
+  border: 1px solid #efd0c0;
+  border-radius: 2px;
+  box-shadow: 1px 2px 2px #ad798412;
+}
+body .notebook-art-primary { position: absolute; right: 14px; top: -3px; width: 55px; height: 75px; object-fit: contain; transform: rotate(-7deg); }
+body .notebook-art-secondary { position: absolute; right: -3px; bottom: 0; width: 40px; height: 43px; object-fit: contain; transform: rotate(7deg); }
+body .notebook-art-spark { position: absolute; left: 4px; bottom: 2px; font-size: 17px; color: #d4b070; }
+body .notebook-heading .notebook-cover-label {
+  display: block;
+  position: absolute;
+  right: 13px;
+  bottom: 9px;
+  font-size: 8px;
+  color: #9a7380;
+  line-height: 1;
+  letter-spacing: .04em;
+  pointer-events: none;
+  z-index: 4;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  transform: none;
+}
+
+body .notebook-heading-month { background: linear-gradient(115deg, var(--journal-paper) 55%, #f3eafa); }
+body .notebook-heading-month::before { background-image: linear-gradient(#d8cae438 1px, transparent 1px), linear-gradient(90deg, #d8cae438 1px, transparent 1px); background-size: 12px 12px; }
+body .notebook-heading-month .notebook-art-paper { top: 13px; left: 2px; right: 15px; bottom: 1px; transform: rotate(-8deg); background: #ede4f5; border-color: #d5c3e3; }
+body .notebook-heading-month .notebook-art-primary { width: 69px; height: 69px; right: 8px; top: -5px; transform: rotate(-6deg); }
+body .notebook-heading-month .notebook-art-secondary { width: 31px; height: 40px; right: -6px; bottom: -1px; transform: rotate(8deg); }
+body .notebook-heading-month .notebook-cover-tape { background-color: #e0cdef90; }
+
+body .notebook-heading-timeline { background: linear-gradient(115deg, var(--journal-paper) 57%, #fff0e4); }
+body .notebook-heading-timeline .notebook-art-paper { inset: 11px 2px 7px 5px; border: 1px dashed #d5bba6; transform: rotate(-6deg); background: #fff6df; }
+body .notebook-heading-timeline .notebook-art-primary { width: 68px; height: 62px; right: 14px; top: -4px; transform: rotate(-7deg); }
+body .notebook-heading-timeline .notebook-art-secondary { width: 49px; height: 35px; right: -4px; bottom: 4px; transform: rotate(9deg); }
+body .notebook-heading-timeline .notebook-art-spark { left: 3px; bottom: 4px; }
+
+body .notebook-heading-inventory { background: linear-gradient(115deg, var(--journal-paper) 55%, #eaf5e7); }
+body .notebook-heading-inventory::before { background-image: radial-gradient(circle, #b6cba14a 1px, transparent 1.2px); }
+body .notebook-heading-inventory .notebook-art-paper { inset: 6px 5px 6px 1px; background: #f4f9e9; border-color: #cfdbbf; transform: rotate(4deg); }
+body .notebook-heading-inventory .notebook-art-primary { width: 64px; height: 76px; right: 17px; top: -5px; transform: rotate(-5deg); }
+body .notebook-heading-inventory .notebook-art-secondary { width: 35px; height: 37px; right: -4px; bottom: 0; transform: rotate(9deg); }
+
+body .notebook-heading-summary { background: linear-gradient(115deg, var(--journal-paper) 58%, #fff2cd); }
+body .notebook-heading-summary .notebook-art-paper { inset: 6px 2px 7px 7px; background: #fff6dd; border-color: #e5ceaa; transform: rotate(7deg); }
+body .notebook-heading-summary .notebook-art-primary { width: 82px; height: 68px; right: 1px; top: -4px; transform: rotate(2deg); }
+body .notebook-heading-summary .notebook-art-secondary { width: 32px; height: 34px; right: -5px; bottom: -2px; transform: rotate(5deg); }
+body .notebook-heading-summary .notebook-art-spark { left: 0; bottom: 5px; }
+
+body .notebook-heading-settings { background: linear-gradient(115deg, var(--journal-paper) 55%, #f8e6ef); }
+body .notebook-heading-settings .notebook-art-paper { inset: 7px 2px 3px 5px; background: #efe6f7; border-color: #d9c6e2; transform: rotate(8deg); }
+body .notebook-heading-settings .notebook-art-primary { width: 78px; height: 77px; right: 7px; top: -4px; transform: rotate(-5deg); }
+body .notebook-heading-settings .notebook-art-secondary { width: 30px; height: 33px; right: -5px; bottom: 0; transform: rotate(8deg); }
+
+/* Reusable paper and a small set of comfortable controls. */
+body .notebook-card { border: 1px solid var(--journal-line); border-radius: var(--journal-radius); background: var(--journal-paper); box-shadow: var(--journal-shadow); min-width: 0; }
+body :is(.pill, .primary, .secondary) {
+  min-height: 44px;
+  border: 1px solid #e3bacb;
+  border-radius: 10px;
+  background: var(--journal-paper);
+  color: #865368;
+  box-shadow: 0 1px 2px #aa7d8d0a;
+  font-family: var(--journal-body-font);
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 8px 12px;
+}
+body .primary, body .page .pill.pink, body .pill.pink { background: #f7c2d4; border-color: #dfa0b8; color: #754154; font-weight: 650; }
+body .secondary { background: var(--journal-paper); }
+body .text-button, body .jump-button { min-height: 44px; font-size: 11px; color: #995c77; }
+body .icon-button, body .week-pager .icon-button { min-width: 44px; width: 44px; height: 44px; min-height: 44px; border: 1px solid var(--journal-line); background: var(--journal-paper); color: #a16880; border-radius: 10px; }
+body :is(button, a, summary):focus-visible { outline: 2px solid #a95479; outline-offset: 3px; }
+body button:active { transform: translateY(1px); }
+body .danger, body .pill.danger { color: #9e4257; background: #fff6f5; border-color: #e5c0c5; }
+body .notice { background: #fff4d6; border-color: #e7d3a6; border-radius: var(--journal-radius); line-height: 1.7; padding: 10px 12px; }
+
+/* Editors are little paper pockets too; form sizing keeps iOS from zooming. */
+body dialog {
+  border: 1px solid #dfb6c8;
+  background-color: var(--journal-paper);
+  background-image: radial-gradient(circle, #edc5d11c .65px, transparent .9px);
+  background-size: 9px 9px;
+  border-radius: 18px;
+  box-shadow: 0 15px 65px #704b6426;
+  max-width: calc(100% - 24px);
+  max-height: calc(100dvh - 32px);
+}
+body dialog::backdrop { background: #714f5655; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+body .sheet-content { padding: 18px; }
+body .sheet-head { gap: 8px; border-bottom: 1px dashed #e6bbc9; padding-bottom: 9px; margin-bottom: 9px; }
+body .sheet-head h2 { font-size: 20px; min-width: 0; overflow-wrap: anywhere; }
+body .sheet-subtitle { font-size: 11px; margin-bottom: 15px; color: #94717e; line-height: 1.7; }
+body .close-button { width: 44px; height: 44px; min-width: 44px; min-height: 44px; background: #fff3f7; border: 1px solid #e8c6d2; border-radius: 11px; color: #a7788c; font-size: 22px; }
+body .form-field { font-size: 12px; margin: 13px 0; }
+body .form-field :is(input, select, textarea), body .resource-row :is(input, select) { min-height: 44px; font-size: 16px; color: var(--journal-ink); background: #fffef9; border: 1px solid #e5c3cf; border-radius: 10px; padding: 10px 11px; max-width: 100%; }
+body .form-field :is(input, select, textarea):focus { border-color: #cd87a3; box-shadow: 0 0 0 3px #efb9ce30; }
+body .form-field textarea { line-height: 1.6; }
+body .field-hint { font-size: 11px; color: #92717c; }
+body .detail-note { padding: 12px; border-radius: 10px; border-color: #e8c5d1; background: #fff8e6; color: var(--journal-ink); font-size: 13px; line-height: 1.75; }
+body .action-grid { gap: 8px; margin-top: 15px; }
+body .action-grid button { min-height: 44px; padding: 8px; border: 1px solid #e6c0ce; border-radius: 10px; background: #fffdf4; font-size: 12px; }
+body .action-grid button.pink { background: #ffe5ef; }
+body .form-buttons { margin-top: 17px; gap: 8px; }
+body .form-error { color: #94384e; background: #ffecef; border: 1px solid #efc5cc; border-radius: 9px; font-size: 12px; line-height: 1.7; }
+body .confirm-message { font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
+body #toast { border: 1px solid #e5b7c9; border-radius: 12px; background: #885565f7; box-shadow: 0 3px 10px #94576b26; font-size: 12px; padding: 11px 16px; }
+
+/* A cream-paper bookmark rail, rather than browser-like tabs. */
+body .bottom-nav {
+  z-index: 10;
+  bottom: 0;
+  width: min(748px, calc(100% - 16px));
+  max-width: 748px;
+  border: 1px solid #e6c1cf;
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
+  background: #fffdf4;
+  background-image: radial-gradient(circle, #f0d5de3c .7px, transparent .9px);
+  background-size: 10px 10px;
+  box-shadow: 0 -2px 12px #9968790a;
+  gap: 4px;
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+}
+body .bottom-nav::before { content: ""; display: block; position: absolute; inset: 4px 12px auto; border-top: 1px dashed #ead0d8; pointer-events: none; }
+body .bottom-nav button { flex: 1; min-width: 0; min-height: 55px; padding: 5px 2px; gap: 3px; color: #a47b88; border: 1px solid transparent; border-radius: 10px; max-width: 160px; transform: none; }
+body .bottom-nav button svg { width: 27px; height: 27px; stroke-width: 1.5; }
+body .bottom-nav button span { font-family: var(--journal-body-font); font-size: 10px; line-height: 15px; letter-spacing: .025em; }
+body .bottom-nav button.active { position: relative; color: #a1577b; background: #fbd6e5; border: 1px solid #eeb7cd; border-radius: 9px 11px 9px 9px; box-shadow: 0 1px 3px #c58aa515; transform: none; font-weight: 650; }
+body .bottom-nav button.active::before { content: ""; display: block; position: absolute; top: -4px; left: calc(50% - 11px); width: 22px; height: 6px; background: #eeb9cca1; transform: rotate(-4deg); pointer-events: none; }
+body .bottom-nav .nav-ribbon { fill: #f0b3ca; stroke: #b27793; }
+
+@media (min-width: 700px) {
+  body .app-shell, body.timeline-mode .app-shell { padding-inline: 22px; }
+  body .notebook-heading { grid-template-columns: minmax(0, 1fr) 120px; padding-left: 29px; }
+  body .notebook-heading .brand { font-size: 33px; }
+  body .notebook-heading .notebook-edition { font-size: 9px; }
+  body .notebook-cover-art { margin-left: 16px; }
+  body .notebook-heading .notebook-cover-label { right: 27px; }
+}
+@media (max-width: 360px) {
+  body .app-shell, body.timeline-mode .app-shell { padding-inline: 11px; }
+  body .notebook-heading { grid-template-columns: minmax(0, 1fr) 73px; height: 100px; padding-inline: 18px 10px; }
+  body .notebook-heading .brand, body.timeline-mode .notebook-heading .brand { font-size: 27px; letter-spacing: .09em; }
+  body .notebook-heading .brand small, body.timeline-mode .notebook-heading .brand small { font-size: 9px; letter-spacing: 0; }
+  body .notebook-heading .notebook-edition { font-size: 7px; letter-spacing: .05em; }
+  body .notebook-cover-art { transform: scale(.86); transform-origin: top left; }
+  body .notebook-heading .notebook-cover-label { right: 10px; bottom: 11px; font-size: 7px; }
+  body .bottom-nav { width: calc(100% - 12px); gap: 2px; padding-inline: 4px; }
+  body .bottom-nav button span { font-size: 10px; }
+  body .sheet-content { padding: 16px; }
+}
+@media (max-width: 600px) {
+  body dialog { width: 100%; max-width: 100%; max-height: 92dvh; margin: auto auto 0; border-radius: 19px 19px 0 0; }
+  body .sheet-content { padding-bottom: calc(21px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body button:active { transform: none; }
+}
