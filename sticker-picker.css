@@ -1,0 +1,37 @@
+/* A little tabbed sticker album, shared by the day page and PNG editor. */
+body .sticker-library-host { display: block; grid-column: 1/-1; min-width: 0; }
+body .sticker-library { min-width: 0; max-width: 100%; padding: 0 1px 4px; color: var(--journal-ink, #714f56); }
+body .sticker-library-selected { position: relative; background: var(--journal-paper, #fffdf4); border: 1px dashed #e4b9ca; border-radius: 10px; padding: 9px; margin-bottom: 9px; }
+body .sticker-library-selected::before { content: ''; position: absolute; top: -4px; left: 16px; width: 28px; height: 7px; background: #efd0dcaa; transform: rotate(-4deg); pointer-events: none; }
+body .sticker-library-selected-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: #9b657d; }
+body .sticker-library-selected-title small { font-size: 10px; color: #a4778a; }
+body .sticker-library-selected-empty { font-size: 11px; color: #a7808f; padding-top: 7px; }
+body .sticker-library-selected-strip { display: flex; align-items: stretch; gap: 6px; margin-top: 7px; }
+body .sticker-library-tabs { display: flex; min-width: 0; max-width: 100%; gap: 5px; overflow-x: auto; padding: 2px 0 7px; scrollbar-width: none; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+body .sticker-library-tabs::-webkit-scrollbar { display: none; }
+body .sticker-library-tabs button { flex: 0 0 auto; min-width: 44px; min-height: 44px; border-radius: 8px 8px 4px 4px; border: 1px solid #edccd8; background: #fffaf3; color: #94697f; padding: 7px 10px; font-family: var(--body-font, sans-serif); font-size: 11px; line-height: 1.25; }
+body .sticker-library-tabs button[aria-pressed=true] { background: #f8cedf; border-color: #dda0ba; color: #a15379; font-weight: 650; }
+body .sticker-library-tabs [data-sticker-group=study] { background-color: #f2ecfa; border-color: #dfd1ed; }
+body .sticker-library-tabs [data-sticker-group=motion] { background-color: #edf5e9; border-color: #cfdfc2; }
+body .sticker-library-tabs [data-sticker-group=life] { background-color: #fff3dd; border-color: #ecdabc; }
+body .sticker-library-tabs [data-sticker-group=study][aria-pressed=true] { background-color: #e2d3f0; color: #826092; }
+body .sticker-library-tabs [data-sticker-group=motion][aria-pressed=true] { background-color: #d6e8c9; color: #667c53; }
+body .sticker-library-tabs [data-sticker-group=life][aria-pressed=true] { background-color: #ffe5b8; color: #96734e; }
+body .sticker-library-caption { display: grid; gap: 3px; padding: 3px 2px 8px; }
+body .sticker-library-caption strong { font-size: 12px; font-weight: 650; color: #9c687e; }
+body .sticker-library-caption small { font-size: 10px; color: #9b7b88; line-height: 1.5; }
+body .sticker-library-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 0; }
+body .sticker-library .sticker-picker-item { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; min-height: 76px; padding: 6px 3px; gap: 4px; border: 1px solid #efd2de; border-radius: 9px; background: #fffaf5; color: #926c80; font-family: var(--body-font, sans-serif); font-size: 10px; line-height: 1.4; }
+body .sticker-library .sticker-picker-item img { width: 38px; height: 38px; object-fit: contain; flex: none; filter: drop-shadow(0 1px 1px #ab7b8a0b); }
+body .sticker-library .sticker-picker-item > span { overflow-wrap: anywhere; text-align: center; }
+body .sticker-library-selected-strip .sticker-picker-item { flex: 1; min-height: 72px; max-width: 100px; background: #ffe7f0; border-color: #e5b1c6; color: #9b5c7a; }
+body .sticker-picker-item i { position: absolute; top: 2px; right: 5px; font: 13px/1 sans-serif; color: #b17995; }
+body .sticker-library-empty { grid-column: 1/-1; min-height: 44px; padding: 13px 8px; text-align: center; font-size: 11px; color: #a17d8d; border: 1px dashed #e8c6d6; border-radius: 8px; background: #fffaf4; }
+body .sticker-library-help { font-size: 10px; line-height: 1.6; color: #997386; padding-top: 8px; }
+body .sticker-library-credit { text-align: right; font-size: 9px; line-height: 1.5; color: #a18491; margin-top: 4px; }
+body .sticker-library-credit a { text-decoration: underline; text-underline-offset: 2px; }
+@media (max-width: 350px) {
+  body .sticker-library-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body .sticker-library .sticker-picker-item { min-height: 75px; }
+  body .sticker-library-tabs button { padding-inline: 8px; }
+}

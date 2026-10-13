@@ -1,6 +1,8 @@
 import { parseDate } from './model.js';
 import { wrapCanvasText } from './share-card.js';
 import { STICKER_IDS, getSticker, stickerPath } from './stickers.js';
+import { activeActivityItems } from './activity.js';
+import { getActivityCategory } from './activity-shortcuts.js';
 import { SHARE_THEMES_A, SHARE_LAYOUTS_A } from './share-layouts-a.js';
 import { SHARE_THEMES_B, SHARE_LAYOUTS_B } from './share-layouts-b.js';
 
@@ -20,6 +22,7 @@ const dateLabel = date => `${Number(date.slice(0, 4))}年${Number(date.slice(5, 
 const shortDate = date => `${Number(date.slice(5, 7))}月${Number(date.slice(8))}日`;
 const text = value => typeof value === 'string' ? value.trim() : '';
 const knownMinutes = value => Number.isInteger(value) && value >= 0 && value <= 1440;
+const knownDistance = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100000;
 const stickerSet = new Set(STICKER_IDS);
 
 /** Explicit [] clears sharing stickers; null/omission inherits date record IDs. */
@@ -69,13 +72,19 @@ export function prepareJournalShare(state, options = {}) {
     .slice().sort((a, b) => a.date.localeCompare(b.date) || Object.keys(SLOTS).indexOf(a.slot) - Object.keys(SLOTS).indexOf(b.slot) || String(a.time || '').localeCompare(String(b.time || '')))
     .map(meal => ({ title: text(meal.name), meta: [label(meal.date), SLOTS[meal.slot], meal.slot === 'snack' ? text(meal.time) : '', meal.completed === true ? '已吃' : '已安排'].filter(Boolean).join(' · '), note: '', date: meal.date, groupLabel: SLOTS[meal.slot] }));
   const checkRows = kind => records.filter(record => record[kind]?.checked === true).flatMap(record => {
-    const entries = Array.isArray(record[kind].items) ? record[kind].items : [];
+    const activity = record[kind];
+    const entries = activeActivityItems(activity);
     const fallback = (kind === 'study' ? '学习' : '运动') + '已打卡';
-    if (!entries.length) return [{ title: fallback, meta: label(record.date), note: '', date: record.date, minutes: 0, minutesKnown: false }];
-    return entries.map(item => ({ title: text(item.content) || fallback,
-      meta: [label(record.date), knownMinutes(item.minutes) ? item.minutes + ' 分钟' : ''].filter(Boolean).join(' · '),
+    const categoryName = id => text((activity.items || []).find(item => item.categoryId === id && text(item.categoryName))?.categoryName) || text(getActivityCategory(state, kind, id)?.name) || (kind === 'study' ? '学习类别' : '运动类别');
+    const selected = [...new Set(Array.isArray(activity.categoryIds) ? activity.categoryIds : [])];
+    // A category chip is a real check-in even when optional details have been removed.
+    const missingCategories = selected.filter(id => !entries.some(item => item.categoryId === id));
+    const rows = entries.map(item => ({ title: text(item.content) || (item.categoryId ? categoryName(item.categoryId) : fallback),
+      meta: [label(record.date), knownMinutes(item.minutes) ? item.minutes + ' 分钟' : '', settings.notes && kind === 'exercise' && knownDistance(item.distanceKm) ? item.distanceKm + ' 公里' : ''].filter(Boolean).join(' · '),
       note: settings.notes ? text(item.note) : '', date: record.date,
       minutes: knownMinutes(item.minutes) ? item.minutes : 0, minutesKnown: knownMinutes(item.minutes) }));
+    rows.push(...missingCategories.map(id => ({ title: categoryName(id), meta: label(record.date), note: '', date: record.date, minutes: 0, minutesKnown: false })));
+    return rows.length ? rows : [{ title: fallback, meta: label(record.date), note: '', date: record.date, minutes: 0, minutesKnown: false }];
   });
   const exercises = checkRows('exercise'), studies = checkRows('study');
   const unique = rows => new Set(rows.map(row => row.date)).size;

@@ -1,0 +1,217 @@
+/* Small fridge conveniences use the notebook's existing paper and macaron ink. */
+.inventory-page #inventory-add-zone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 9px;
+  min-width: 0;
+  margin: 12px 0 7px;
+  padding: 3px 1px;
+  scroll-margin-top: 14px;
+}
+.inventory-page #inventory-add-zone h2 {
+  flex: 1 1 140px;
+  min-width: 0;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.inventory-page #inventory-add-zone .fridge-switch {
+  flex: 0 1 auto;
+  margin: 0;
+  min-width: 0;
+}
+.inventory-page #inventory-add-zone .fridge-switch button {
+  min-height: 44px;
+}
+.inventory-page #inventory-add-zone .inventory-toolbar-actions,
+.inventory-page #inventory-add-zone .fridge-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+.inventory-page .inventory-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: 4px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--journal-line, #ebc8d2);
+  border-radius: 9px 12px 9px 9px;
+  background: var(--journal-soft-pink, #ffe8f0);
+  box-shadow: 1px 2px 0 #efd5de55;
+  color: var(--berry, #ad5778);
+  font: 650 12px/1.5 var(--journal-body-font, sans-serif);
+  text-align: center;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+}
+.inventory-page .inventory-add-button:active {
+  background: var(--journal-pink, #f5b4cb);
+  box-shadow: none;
+}
+.inventory-page .inventory-add-button:focus-visible,
+.inventory-page .runway-mode-switch button:focus-visible,
+.ingredient-more-settings > summary:focus-visible {
+  outline: 2px solid var(--berry, #ad5778);
+  outline-offset: 3px;
+}
+
+.inventory-page .runway-mode-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 8px 0;
+  padding: 3px;
+  border: 1px solid var(--journal-line, #ebc8d2);
+  border-radius: 99px;
+  background: var(--journal-paper, #fffdf4);
+  box-shadow: 0 1px 2px #875b6508;
+}
+.inventory-page .runway-mode-switch button {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  padding: 7px 13px;
+  border: 1px solid transparent;
+  border-radius: 99px;
+  background: transparent;
+  color: var(--journal-ink, #714f56);
+  font: 550 12px/1.5 var(--journal-body-font, sans-serif);
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+}
+.inventory-page .runway-mode-switch button[aria-pressed='true'],
+.inventory-page .runway-mode-switch button.active {
+  border-color: #e2b7c6;
+  background: var(--journal-soft-pink, #ffe8f0);
+  color: var(--berry, #ad5778);
+  font-weight: 700;
+}
+.inventory-page .runway-mode-switch button[data-mode='main'][aria-pressed='true'],
+.inventory-page .runway-mode-switch button[data-mode='main'].active {
+  border-color: #c9d8be;
+  background: var(--macaron-pistachio, #dcead8);
+  color: #546646;
+}
+.inventory-page .runway-mode-switch button[data-mode='comprehensive'][aria-pressed='true'],
+.inventory-page .runway-mode-switch button[data-mode='comprehensive'].active {
+  background: var(--journal-soft-pink, #ffe8f0);
+}
+.inventory-page .runway-main-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  margin: 5px 0 7px;
+  color: var(--journal-muted, #a17983);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.inventory-page .runway-main-breakdown strong {
+  color: #627052;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.ingredient-more-settings {
+  min-width: 0;
+  margin: 12px 0 8px;
+  border: 1px dashed var(--journal-line, #ebc8d2);
+  border-radius: var(--journal-radius, 12px);
+  background: var(--journal-paper, #fffdf4);
+}
+.ingredient-more-settings > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  color: var(--berry, #ad5778);
+  font: 550 12px/1.5 var(--journal-body-font, sans-serif);
+  cursor: pointer;
+  list-style: none;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+}
+.ingredient-more-settings > summary::-webkit-details-marker { display: none; }
+.ingredient-more-settings > summary::after {
+  content: '⌄';
+  flex: none;
+  width: 16px;
+  color: var(--journal-muted, #a17983);
+  text-align: center;
+  font-size: 16px;
+  line-height: 1;
+}
+.ingredient-more-settings[open] > summary {
+  border-bottom: 1px dashed var(--journal-line, #ebc8d2);
+}
+.ingredient-more-settings[open] > summary::after { transform: rotate(180deg); }
+.ingredient-more-settings .ingredient-more-fields,
+.ingredient-more-settings .form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+.ingredient-more-settings .ingredient-more-fields { padding: 0 12px 10px; }
+.ingredient-more-settings .ingredient-more-fields > .form-field:has(textarea) {
+  grid-column: 1 / -1;
+}
+.ingredient-more-settings > .form-field,
+.ingredient-more-settings > .form-row { margin-inline: 12px; }
+.ingredient-more-settings .form-field {
+  min-width: 0;
+  margin-block: 10px 0;
+}
+.ingredient-more-settings > .form-field:last-child,
+.ingredient-more-settings > .form-row:last-child { margin-bottom: 12px; }
+.ingredient-more-settings .form-field input,
+.ingredient-more-settings .form-field select,
+.ingredient-more-settings .form-field textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+.ingredient-more-settings .field-hint { overflow-wrap: anywhere; }
+
+@media (max-width: 360px) {
+  .inventory-page #inventory-add-zone { gap: 6px; }
+  .inventory-page #inventory-add-zone h2 { flex-basis: 100%; }
+  .inventory-page #inventory-add-zone > .inventory-add-button { flex: 1 1 120px; }
+  .inventory-page #inventory-add-zone .inventory-toolbar-actions,
+  .inventory-page #inventory-add-zone .fridge-toolbar-actions { flex: 1 1 100%; justify-content: space-between; }
+  .inventory-page .inventory-add-button { padding-inline: 10px; font-size: 11px; }
+  .inventory-page .runway-mode-switch { width: 100%; }
+  .inventory-page .runway-mode-switch button { padding-inline: 8px; font-size: 11px; }
+  .ingredient-more-settings .ingredient-more-fields { grid-template-columns: minmax(0, 1fr); }
+  .ingredient-more-settings .ingredient-more-fields > .form-field { grid-column: auto; }
+  .ingredient-more-settings .ingredient-more-fields,
+  .ingredient-more-settings > .form-row { margin-inline: 0; padding-inline: 10px; }
+}
+
+.inventory-page .inventory-add-again { display:flex; margin:10px auto; }
+.timeline-activity-retained { display:block; font-size:10px; color:var(--journal-muted); }
+.timeline-activity-items .is-retained { opacity:.75; }
+.timeline-activity-category { padding:1px 5px; border-radius:4px; background:var(--journal-lilac); font-size:10px; }
+.timeline-activity-section[data-kind="exercise"] .timeline-activity-category { background:var(--journal-mint); }
+.timeline-activity-category-summary { margin:3px 0; font-size:11px; overflow-wrap:anywhere; }
+.ingredient-more-settings:not([open]) .more-open,
+.ingredient-more-settings[open] .more-closed { display:none; }
+.ingredient-more-settings > summary small { margin-left:auto; color:var(--journal-muted); font-weight:400; }
+.inventory-page .runway-note > .runway-counts { margin:7px 0; padding:7px 0; border-top:1px dashed #d7ddc9; }
+.inventory-page .runway-note > .runway-counts > span { display:block; line-height:1.6; }
+.inventory-page .runway-note > .runway-counts b { margin:0 3px; font-size:16px; }

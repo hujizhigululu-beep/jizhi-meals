@@ -1,0 +1,97 @@
+/* Quick categories remain small paper tabs. Opening/editing details is separate
+   from the one-tap check-in, so drafts keep their native details/form lifetime. */
+.page .day-checkins .activity-shortcut-groups { display: grid; gap: 4px; margin: 7px 0; }
+.page .day-checkins .activity-shortcut-group { display: flex; align-items: flex-start; gap: 5px; min-width: 0; }
+.page .day-checkins .activity-shortcut-label {
+  flex: 0 0 25px;
+  padding-top: 13px;
+  color: #8d749e;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.page .day-checkins .activity-shortcut-group[data-kind="exercise"] .activity-shortcut-label { color: #638570; }
+.page .day-checkins .activity-shortcut-chips { display: flex; flex: 1; flex-wrap: wrap; align-items: flex-start; gap: 4px; min-width: 0; }
+.page .day-checkins .activity-shortcut-chip,
+.page .day-checkins .activity-shortcut-manage {
+  min-width: 0;
+  min-height: 40px;
+  max-width: 100%;
+  padding: 6px 9px;
+  border: 1px dashed #dbcde8;
+  border-radius: 9px;
+  background: #fcf8ff;
+  color: #856899;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  box-shadow: 0 2px 0 #e6dcee25;
+}
+.page .day-checkins .activity-shortcut-chip[aria-pressed="true"] {
+  border-style: solid;
+  border-color: #c4acd9;
+  background: var(--journal-lilac, #f1eafa);
+  color: #77568e;
+  box-shadow: inset 0 -2px 0 #d1bbe837;
+  font-weight: 600;
+}
+.page .day-checkins .activity-shortcut-group[data-kind="exercise"] .activity-shortcut-chip,
+.page .day-checkins .activity-shortcut-group[data-kind="exercise"] .activity-shortcut-manage { border-color: #c6ded0; background: #f5fcf6; color: #61856f; }
+.page .day-checkins .activity-shortcut-group[data-kind="exercise"] .activity-shortcut-chip[aria-pressed="true"] {
+  background: var(--journal-mint, #eaf5e7);
+  border-color: #accbb9;
+  color: #54755e;
+  box-shadow: inset 0 -2px 0 #c8dfcb4d;
+}
+.page .day-checkins .activity-shortcut-manage { flex: 0 0 36px; padding-inline: 3px; font-size: 18px; font-weight: 400; }
+.page .day-checkins .activity-category-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; min-width: 0; }
+.page .day-checkins .activity-details[data-kind="exercise"] .activity-category-fields { grid-template-columns: minmax(0, 1fr) 82px; }
+.page .day-checkins .activity-form select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid #e0d1e9;
+  border-radius: 8px;
+  background-color: var(--journal-paper, #fffdf7);
+  color: var(--journal-ink, #714f56);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.page .day-checkins .activity-details[data-kind="exercise"] .activity-form select { border-color: #c9ded0; }
+.page .day-checkins .activity-form select:focus-visible { outline: 2px solid #af7593; outline-offset: 2px; }
+.page .day-checkins .activity-entry-category {
+  display: table;
+  max-width: 100%;
+  padding: 1px 6px;
+  margin: 0 0 2px;
+  border-radius: 5px;
+  background: #eee3f6;
+  color: #826594;
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.page .day-checkins .activity-details[data-kind="exercise"] .activity-entry-category { color: #5b7c68; background: #e3f0e6; }
+.page .day-checkins .activity-entry-retained { display: block; color: var(--muted, #896872); font-size: 10px; }
+.page .day-checkins .activity-entry.is-retained { border-bottom-style: dotted; }
+.page .day-checkins .activity-distance { color: #61826d; }
+.page .day-checkins .day-sticker-picker[open] ~ .sticker-credit { display: none; }
+
+/* Optional hooks for the category manager rendered by the main app. */
+.activity-category-manager { display: grid; gap: 9px; min-width: 0; }
+.activity-category-manager .activity-category-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid var(--journal-line, #ead2d6); border-radius: 10px; background: var(--journal-paper, #fffdf7); }
+.activity-category-manager .activity-category-name { flex: 1; min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
+.activity-category-manager .activity-category-actions { display: flex; align-items: center; gap: 3px; }
+.activity-category-manager button { min-height: 40px; }
+.activity-category-manager input { min-height: 44px; min-width: 0; max-width: 100%; font-size: 16px; }
+@media (max-width: 350px) {
+  .page .day-checkins .activity-shortcut-label { flex-basis: 23px; }
+  .page .day-checkins .activity-shortcut-chip { padding-inline: 6px; }
+  .page .day-checkins .activity-shortcut-manage { flex-basis: 32px; }
+  .page .day-checkins .activity-details[data-kind="exercise"] .activity-category-fields { grid-template-columns: minmax(0, 1fr) 75px; }
+}

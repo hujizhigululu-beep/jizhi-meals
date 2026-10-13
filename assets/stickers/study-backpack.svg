@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <title>上学小书包 · 机智定食原创</title>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 28q0-13 22-13t22 13v38q0 6-7 6H25q-7 0-7-6Z" fill="#fffdf3" stroke="#fffdf3" stroke-width="8"/>
+    <path d="M32 16v-5q8-6 16 0v5" fill="none" stroke="#9e8ca7" stroke-width="2.5"/>
+    <path d="M18 28q0-13 22-13t22 13v38q0 6-7 6H25q-7 0-7-6Z" fill="#e6d7f1" stroke="#a08aa5" stroke-width="1.8"/>
+    <path d="M23 31h34v6H23z" fill="#fff6de" stroke="#c9b3b1" stroke-width="1.3"/>
+    <path d="M53 32v6" stroke="#b99bb9" stroke-width="2.2"/>
+    <rect x="25" y="44" width="30" height="22" rx="5" fill="#f8e4ee" stroke="#bc9ead" stroke-width="1.4"/>
+    <path d="M26 49h28" fill="none" stroke="#d4b3c3" stroke-width="1.2"/>
+    <path d="m40 54 2 3 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1Z" fill="#f2d18d" stroke="#c7ad78" stroke-width="1"/>
+    <path d="M15 37v19m50-19v19" stroke="#c2a7c3" stroke-width="2.2"/>
+  </g>
+</svg>

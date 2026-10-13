@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <title>收拾小房间 · 机智定食原创</title>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <g transform="rotate(18 32 42)"><path d="M30 9h6v38h-6Zm-6 32h18l11 29H13Z" fill="#fffdf3" stroke="#fffdf3" stroke-width="8"/>
+      <path d="M30 9h6v38h-6Z" fill="#e9bfd0" stroke="#b88ea0" stroke-width="1.5"/>
+      <path d="M24 41h18l11 29H13Z" fill="#f5dc9e" stroke="#bea477" stroke-width="1.7"/>
+      <path d="m27 49-5 16m11-16v16m6-16 5 16" fill="none" stroke="#cbb07d" stroke-width="1.2"/>
+      <path d="M23 43h20v6H23Z" fill="#cddcc0" stroke="#9caf8c" stroke-width="1.1"/>
+    </g>
+    <path d="M52 52h18l-2 17H49Z" fill="#dcebd2" stroke="#fffdf3" stroke-width="7"/>
+    <path d="M52 52h18l-2 17H49Z" fill="#dcebd2" stroke="#a4b393" stroke-width="1.5"/>
+    <path d="M63 54V41q0-5 5-5" fill="none" stroke="#a4b393" stroke-width="2.2"/>
+    <path d="m54 21 1 5 5 1-5 2-1 4-2-4-4-2 4-1Z" fill="#ead0ed" stroke="#bd9cc2" stroke-width="1"/>
+  </g>
+</svg>

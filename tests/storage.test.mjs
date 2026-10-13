@@ -51,6 +51,7 @@ describe('原 localStorage key、只读加载与首次迁移保护', () => {
     assert.equal(loaded.state.meals[0].completed, true);
     assert.equal(storage.getItem(storageApi.STORAGE_KEY), raw);
     assert.equal(storage.getItem(storageApi.MIGRATION_BACKUP_KEY), null);
+    assert.equal(storage.getItem(storageApi.V15_BACKUP_KEY), null);
     assert.deepEqual(storage.writes, []);
   });
 
@@ -59,13 +60,15 @@ describe('原 localStorage key、只读加载与首次迁移保护', () => {
     const storage = withLegacy(raw);
     const state = storageApi.load(storage).state;
     const saved = storageApi.persist(storage, state);
-    assert.equal(storage.writes.length, 3);
-    assert.equal(storage.writes[0].key, storageApi.V14_BACKUP_KEY);
+    assert.equal(storage.writes.length, 4);
+    assert.equal(storage.writes[0].key, storageApi.V15_BACKUP_KEY);
     assert.equal(storage.writes[0].value, raw);
-    assert.equal(storage.writes[1].key, storageApi.MIGRATION_BACKUP_KEY);
+    assert.equal(storage.writes[1].key, storageApi.V14_BACKUP_KEY);
     assert.equal(storage.writes[1].value, raw);
-    assert.equal(storage.writes[2].key, storageApi.STORAGE_KEY);
-    assert.equal(JSON.parse(storage.writes[2].value).schemaVersion, model.SCHEMA);
+    assert.equal(storage.writes[2].key, storageApi.MIGRATION_BACKUP_KEY);
+    assert.equal(storage.writes[2].value, raw);
+    assert.equal(storage.writes[3].key, storageApi.STORAGE_KEY);
+    assert.equal(JSON.parse(storage.writes[3].value).schemaVersion, model.SCHEMA);
     assert.equal(saved.inventory[0].quantity, 3);
     assert.ok(!Number.isNaN(Date.parse(saved.updatedAt)));
     assert.equal(storage.getItem(storageApi.MIGRATION_BACKUP_KEY), raw);
@@ -73,9 +76,10 @@ describe('原 localStorage key、只读加载与首次迁移保护', () => {
     assert.equal(loaded.locked, false);
     assert.equal(loaded.state.inventory[0].quantity, 3);
     storageApi.persist(storage, loaded.state);
-    assert.equal(storage.writes.length, 4);
-    assert.equal(storage.writes[3].key, storageApi.STORAGE_KEY);
+    assert.equal(storage.writes.length, 5);
+    assert.equal(storage.writes[4].key, storageApi.STORAGE_KEY);
     assert.equal(storage.getItem(storageApi.MIGRATION_BACKUP_KEY), raw);
+    assert.equal(storage.getItem(storageApi.V15_BACKUP_KEY), raw);
   });
 
   test('旧备份写入失败不得更新正式 key；重试成功仍可以迁移', () => {
@@ -86,11 +90,12 @@ describe('原 localStorage key、只读加载与首次迁移保护', () => {
     storage.failKey = storageApi.MIGRATION_BACKUP_KEY;
     assert.throws(() => storageApi.persist(storage, state));
     assert.equal(storage.getItem(storageApi.STORAGE_KEY), raw);
-    assert.deepEqual(storage.writes.map(write => write.key), [storageApi.V14_BACKUP_KEY]);
+    assert.deepEqual(storage.writes.map(write => write.key), [storageApi.V15_BACKUP_KEY, storageApi.V14_BACKUP_KEY]);
     assert.deepEqual(state, before);
     storage.failKey = null;
     storageApi.persist(storage, state);
     assert.equal(storage.getItem(storageApi.MIGRATION_BACKUP_KEY), raw);
+    assert.equal(storage.getItem(storageApi.V15_BACKUP_KEY), raw);
     assert.equal(JSON.parse(storage.getItem(storageApi.STORAGE_KEY)).schemaVersion, model.SCHEMA);
   });
 
@@ -103,6 +108,7 @@ describe('原 localStorage key、只读加载与首次迁移保护', () => {
     assert.throws(() => storageApi.persist(storage, state));
     assert.equal(storage.getItem(storageApi.STORAGE_KEY), raw);
     assert.equal(storage.getItem(storageApi.MIGRATION_BACKUP_KEY), raw);
+    assert.equal(storage.getItem(storageApi.V15_BACKUP_KEY), raw);
     assert.deepEqual(state, before);
     storage.failKey = null;
     storageApi.persist(storage, state);
@@ -115,13 +121,13 @@ describe('原 localStorage key、只读加载与首次迁移保护', () => {
     storage.entries.set(storageApi.MIGRATION_BACKUP_KEY, original);
     storageApi.persist(storage, storageApi.load(storage).state);
     assert.equal(storage.getItem(storageApi.MIGRATION_BACKUP_KEY), original);
-    assert.deepEqual(storage.writes.map(write => write.key), [storageApi.V14_BACKUP_KEY, storageApi.STORAGE_KEY]);
+    assert.deepEqual(storage.writes.map(write => write.key), [storageApi.V15_BACKUP_KEY, storageApi.V14_BACKUP_KEY, storageApi.STORAGE_KEY]);
   });
 });
 
 describe('损坏/未来版本数据与存储失败保护', () => {
   test('损坏 JSON 和未来 schema 只读锁定，保留原始文本以便恢复', () => {
-    const raws = ['{"schemaVersion":1,', JSON.stringify({ schemaVersion: 99, inventory: [], meals: [], diaries: [] })];
+    const raws = ['{"schemaVersion":1,', JSON.stringify({ schemaVersion: 5, inventory: [], meals: [], diaries: [] }), JSON.stringify({ schemaVersion: 99, inventory: [], meals: [], diaries: [] })];
     for (const raw of raws) {
       const storage = withLegacy(raw);
       const loaded = storageApi.load(storage);
@@ -160,6 +166,8 @@ describe('损坏/未来版本数据与存储失败保护', () => {
 
   test('V2 缺少日记列表加载只读，原 JSON 不被覆盖；V1 没有日记不锁定', () => {
     const v2 = model.freshState();
+    v2.schemaVersion = 2;
+    delete v2.dayRecords; delete v2.mealTemplates; delete v2.activityCategories; delete v2.recentStickerIds;
     delete v2.diaries;
     const raw = JSON.stringify(v2);
     const storage = withLegacy(raw);
@@ -176,7 +184,7 @@ describe('损坏/未来版本数据与存储失败保护', () => {
   });
 
   test('明确确认恢复可替换保护原文件，但仍不允许保存只读或异常 state', () => {
-    const raws = ['{broken', JSON.stringify({ schemaVersion: 99, inventory: [], meals: [], diaries: [] })];
+    const raws = ['{broken', JSON.stringify({ schemaVersion: 5, inventory: [], meals: [], diaries: [] }), JSON.stringify({ schemaVersion: 99, inventory: [], meals: [], diaries: [] })];
     for (const raw of raws) {
       for (const action of ['import', 'clear']) {
         const storage = withLegacy(raw);

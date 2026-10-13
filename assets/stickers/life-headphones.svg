@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <title>听首喜欢的歌 · 机智定食原创</title>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 48v-9a26 26 0 0 1 52 0v9" fill="none" stroke="#fffdf3" stroke-width="13"/>
+    <path d="M14 48v-9a26 26 0 0 1 52 0v9" fill="none" stroke="#b38da5" stroke-width="6"/>
+    <path d="M14 46v-7a26 26 0 0 1 52 0v7" fill="none" stroke="#ecc6db" stroke-width="3"/>
+    <rect x="8" y="41" width="17" height="27" rx="7" fill="#f1c4d8" stroke="#fffdf3" stroke-width="8"/>
+    <rect x="8" y="41" width="17" height="27" rx="7" fill="#f1c4d8" stroke="#ae869c" stroke-width="1.7"/>
+    <rect x="55" y="41" width="17" height="27" rx="7" fill="#f1c4d8" stroke="#fffdf3" stroke-width="8"/>
+    <rect x="55" y="41" width="17" height="27" rx="7" fill="#f1c4d8" stroke="#ae869c" stroke-width="1.7"/>
+    <path d="M20 45v18m40-18v18" stroke="#fce6ee" stroke-width="2.2"/>
+    <path d="M42 41v16m0-16 10-3v16" fill="none" stroke="#b4bd94" stroke-width="1.7"/>
+    <ellipse cx="38" cy="57" rx="4" ry="3" fill="#c6d2aa"/><ellipse cx="48" cy="54" rx="4" ry="3" fill="#c6d2aa"/>
+  </g>
+</svg>

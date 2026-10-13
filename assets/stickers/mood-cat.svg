@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <title>小猫陪你 · 机智定食原创</title>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 37 17 13l20 11h6l20-11-2 24q6 7 4 19-3 14-25 14T15 56q-2-12 4-19Z" fill="#fffdf3" stroke="#fffdf3" stroke-width="9"/>
+    <path d="M19 37 17 13l20 11h6l20-11-2 24q6 7 4 19-3 14-25 14T15 56q-2-12 4-19Z" fill="#fff0d8" stroke="#b79782" stroke-width="1.8"/>
+    <path d="m21 20 1 14 10-8m26-6-1 14-10-8" fill="#f2c4c7" stroke="#d7b0a9" stroke-width="1.1"/>
+    <path d="M27 43q3-3 6 0m14 0q3-3 6 0" fill="none" stroke="#a28678" stroke-width="1.7"/>
+    <path d="m37 49 3 3 3-3m-3 3v3m0 0q-4 4-7 0m7 0q4 4 7 0" fill="none" stroke="#a28678" stroke-width="1.4"/>
+    <path d="m24 49-10-2m10 7-10 2m42-7 10-2m-10 7 10 2" stroke="#c5a894" stroke-width="1.1"/>
+    <ellipse cx="24" cy="49" rx="4" ry="2" fill="#efc2c4"/>
+    <ellipse cx="56" cy="49" rx="4" ry="2" fill="#efc2c4"/>
+    <path d="M30 61v7m20-7v7" stroke="#cfb29a" stroke-width="1.4"/>
+    <path d="M69 7c-4-5-10 0 0 7 10-7 4-12 0-7Z" fill="#eab3c9" stroke="#bd8da3" stroke-width="1"/>
+  </g>
+</svg>

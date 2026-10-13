@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <title>举个小哑铃 · 机智定食原创</title>
+  <g transform="rotate(-24 40 40)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 24h13v12h26V24h13v32H53V44H27v12H14Z" fill="#fffdf3" stroke="#fffdf3" stroke-width="9"/>
+    <rect x="25" y="35" width="30" height="10" rx="3" fill="#fff2d6" stroke="#b6ad89" stroke-width="1.8"/>
+    <rect x="14" y="24" width="13" height="32" rx="4" fill="#cde3c1" stroke="#91aa85" stroke-width="1.8"/>
+    <rect x="7" y="29" width="9" height="22" rx="3" fill="#e3efd7" stroke="#91aa85" stroke-width="1.5"/>
+    <rect x="53" y="24" width="13" height="32" rx="4" fill="#cde3c1" stroke="#91aa85" stroke-width="1.8"/>
+    <rect x="64" y="29" width="9" height="22" rx="3" fill="#e3efd7" stroke="#91aa85" stroke-width="1.5"/>
+    <path d="M19 30v17m39-17v17" stroke="#eff7e8" stroke-width="2.5"/>
+  </g>
+  <path d="m62 8 2 4 4 2-4 1-2 5-1-5-4-1 4-2Z" fill="#f1c68a" stroke="#c8a777" stroke-width="1"/>
+</svg>

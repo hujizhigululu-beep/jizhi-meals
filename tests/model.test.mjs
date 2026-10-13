@@ -1,6 +1,7 @@
 import test, { describe } from 'node:test';
 import assert from 'node:assert/strict';
 import * as model from '../model.js';
+import { defaultActivityCategories } from '../schema-extra.js';
 
 const DAY = '2026-10-12';
 const clone = value => structuredClone(value);
@@ -35,12 +36,12 @@ function legacyState() {
   };
 }
 
-describe('V1.4 schema 与旧版记录安全迁移', () => {
-  test('新状态使用 schema 3，主餐与 snack 槽位分别导出', () => {
-    assert.equal(model.SCHEMA, 3);
+describe('V1.5 schema 与旧版记录安全迁移', () => {
+  test('新状态使用 schema 4，主餐与 snack 槽位分别导出且提供快捷记录默认值', () => {
+    assert.equal(model.SCHEMA, 4);
     assert.deepEqual(model.SLOTS, ['breakfast', 'lunch', 'dinner']);
     assert.deepEqual(model.ALL_SLOTS, ['breakfast', 'lunch', 'dinner', 'snack']);
-    assert.deepEqual(model.freshState(), { schemaVersion: 3, inventory: [], meals: [], diaries: [], dayRecords: [], updatedAt: null });
+    assert.deepEqual(model.freshState(), { schemaVersion: 4, inventory: [], meals: [], diaries: [], dayRecords: [], mealTemplates: [], activityCategories: defaultActivityCategories(), recentStickerIds: [], updatedAt: null });
   });
 
   test('旧已吃记录和未来计划迁移时保留原库存、快照、备注与照片引用', () => {
@@ -123,13 +124,15 @@ describe('V1.4 schema 与旧版记录安全迁移', () => {
   });
 
   test('未知未来 schema、非备份对象拒绝解析', () => {
-    for (const raw of [null, [], {}, { ...legacyState(), schemaVersion: 99 }]) {
+    for (const raw of [null, [], {}, { ...legacyState(), schemaVersion: 5 }, { ...legacyState(), schemaVersion: 99 }]) {
       assert.throws(() => model.normalize(raw));
     }
   });
 
   test('V2 缺失日记列表属于有损数据并锁定，V1 缺失日记正常迁移', () => {
     const v2 = model.freshState();
+    v2.schemaVersion = 2;
+    delete v2.dayRecords; delete v2.mealTemplates; delete v2.activityCategories; delete v2.recentStickerIds;
     delete v2.diaries;
     const raw = clone(v2);
     const result = model.normalize(v2);

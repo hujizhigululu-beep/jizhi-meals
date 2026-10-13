@@ -1,10 +1,239 @@
 [
-  { "id": "milk", "name": "草莓奶盒", "file": "milk.svg", "credit": "机智定食原创插画", "source": "../milk-carton.svg" },
-  { "id": "strawberry", "name": "草莓", "file": "strawberry.svg", "credit": "OpenMoji contributors · CC BY-SA 4.0", "source": "https://openmoji.org/", "license": "https://creativecommons.org/licenses/by-sa/4.0/" },
-  { "id": "book", "name": "小书本", "file": "book.svg", "credit": "机智定食原创贴纸" },
-  { "id": "shoe", "name": "运动鞋", "file": "shoe.svg", "credit": "机智定食原创贴纸" },
-  { "id": "star", "name": "小星星", "file": "star.svg", "credit": "机智定食原创贴纸" },
-  { "id": "heart", "name": "心心", "file": "heart.svg", "credit": "机智定食原创贴纸" },
-  { "id": "bow", "name": "蝴蝶结", "file": "bow.svg", "credit": "机智定食原创贴纸" },
-  { "id": "fork", "name": "小餐具", "file": "fork.svg", "credit": "机智定食原创贴纸" }
+  {
+    "id": "milk",
+    "name": "草莓奶盒",
+    "category": "food",
+    "file": "milk.svg",
+    "credit": "机智定食原创插画",
+    "source": "../milk-carton.svg",
+    "src": "./assets/stickers/milk.svg"
+  },
+  {
+    "id": "strawberry",
+    "name": "草莓",
+    "category": "food",
+    "file": "strawberry.svg",
+    "credit": "OpenMoji contributors · CC BY-SA 4.0",
+    "source": "https://openmoji.org/",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "src": "./assets/stickers/strawberry.svg"
+  },
+  {
+    "id": "book",
+    "name": "小书本",
+    "category": "study",
+    "file": "book.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/book.svg"
+  },
+  {
+    "id": "shoe",
+    "name": "运动鞋",
+    "category": "motion",
+    "file": "shoe.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/shoe.svg"
+  },
+  {
+    "id": "star",
+    "name": "小星星",
+    "category": "decor",
+    "file": "star.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/star.svg"
+  },
+  {
+    "id": "heart",
+    "name": "心心",
+    "category": "mood",
+    "file": "heart.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/heart.svg"
+  },
+  {
+    "id": "bow",
+    "name": "蝴蝶结",
+    "category": "decor",
+    "file": "bow.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/bow.svg"
+  },
+  {
+    "id": "fork",
+    "name": "小餐具",
+    "category": "food",
+    "file": "fork.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/fork.svg"
+  },
+  {
+    "id": "food-croissant",
+    "name": "可颂早餐",
+    "category": "food",
+    "file": "../share-art/strawberry-croissant.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/share-art/strawberry-croissant.svg",
+    "source": "./assets/share-art/strawberry-croissant.svg"
+  },
+  {
+    "id": "food-bento",
+    "name": "小便当",
+    "category": "food",
+    "file": "../share-art/strawberry-bento.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/share-art/strawberry-bento.svg",
+    "source": "./assets/share-art/strawberry-bento.svg"
+  },
+  {
+    "id": "food-pudding",
+    "name": "草莓布丁",
+    "category": "food",
+    "file": "../share-art/strawberry-pudding.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/share-art/strawberry-pudding.svg",
+    "source": "./assets/share-art/strawberry-pudding.svg"
+  },
+  {
+    "id": "study-pencil",
+    "name": "小铅笔",
+    "category": "study",
+    "file": "../share-art/study-pencil.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/share-art/study-pencil.svg",
+    "source": "./assets/share-art/study-pencil.svg"
+  },
+  {
+    "id": "study-backpack",
+    "name": "上学小书包",
+    "category": "study",
+    "file": "study-backpack.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/study-backpack.svg"
+  },
+  {
+    "id": "motion-dumbbell",
+    "name": "举个小哑铃",
+    "category": "motion",
+    "file": "motion-dumbbell.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/motion-dumbbell.svg"
+  },
+  {
+    "id": "motion-route",
+    "name": "散步路牌",
+    "category": "motion",
+    "file": "../share-art/ticket-signpost.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/share-art/ticket-signpost.svg",
+    "source": "./assets/share-art/ticket-signpost.svg"
+  },
+  {
+    "id": "mood-sleepy",
+    "name": "睡个好觉",
+    "category": "mood",
+    "file": "mood-sleepy.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/mood-sleepy.svg"
+  },
+  {
+    "id": "mood-happy",
+    "name": "开心一点",
+    "category": "mood",
+    "file": "mood-happy.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/mood-happy.svg"
+  },
+  {
+    "id": "mood-cat",
+    "name": "小猫陪你",
+    "category": "mood",
+    "file": "mood-cat.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/mood-cat.svg"
+  },
+  {
+    "id": "life-brush",
+    "name": "画画时间",
+    "category": "life",
+    "file": "life-brush.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/life-brush.svg"
+  },
+  {
+    "id": "life-headphones",
+    "name": "听首喜欢的歌",
+    "category": "life",
+    "file": "life-headphones.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/life-headphones.svg"
+  },
+  {
+    "id": "life-shopping",
+    "name": "买点小东西",
+    "category": "life",
+    "file": "life-shopping.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/life-shopping.svg"
+  },
+  {
+    "id": "life-broom",
+    "name": "收拾小房间",
+    "category": "life",
+    "file": "life-broom.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/life-broom.svg"
+  },
+  {
+    "id": "life-laundry",
+    "name": "洗好小衣服",
+    "category": "life",
+    "file": "life-laundry.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/stickers/life-laundry.svg"
+  },
+  {
+    "id": "life-camera",
+    "name": "收藏一张照片",
+    "category": "life",
+    "file": "../share-art/collage-camera.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/share-art/collage-camera.svg",
+    "source": "./assets/share-art/collage-camera.svg"
+  },
+  {
+    "id": "life-fridge",
+    "name": "小冰箱补货",
+    "category": "life",
+    "file": "../notebook-ui/little-fridge.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/notebook-ui/little-fridge.svg",
+    "source": "./assets/notebook-ui/little-fridge.svg"
+  },
+  {
+    "id": "decor-flower",
+    "name": "小花开啦",
+    "category": "decor",
+    "file": "../share-art/collage-flower.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/share-art/collage-flower.svg",
+    "source": "./assets/share-art/collage-flower.svg"
+  },
+  {
+    "id": "decor-stamp",
+    "name": "草莓小邮票",
+    "category": "decor",
+    "file": "../share-art/strawberry-stamp.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/share-art/strawberry-stamp.svg",
+    "source": "./assets/share-art/strawberry-stamp.svg"
+  },
+  {
+    "id": "decor-letter",
+    "name": "寄一封心心信",
+    "category": "decor",
+    "file": "../share-art/badges-envelope.svg",
+    "credit": "机智定食原创贴纸",
+    "src": "./assets/share-art/badges-envelope.svg",
+    "source": "./assets/share-art/badges-envelope.svg"
+  }
 ]

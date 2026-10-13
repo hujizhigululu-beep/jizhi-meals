@@ -15,10 +15,14 @@ export function renderSettingsView(options = {}) {
     hasMigrationBackup = false,
     hasV13Backup = false,
     hasV14Backup = false,
+    hasV15Backup = false,
     mealCount = 0,
     inventoryCount = 0,
     diaryCount = 0,
-    dayRecordCount = 0
+    dayRecordCount = 0,
+    mealTemplateCount = 0,
+    studyCategoryCount = 0,
+    exerciseCategoryCount = 0
   } = options;
 
   return `<section class="page settings-page">
@@ -30,7 +34,7 @@ export function renderSettingsView(options = {}) {
       <div class="settings-actions"><button class="pill pink" data-action="export">导出 JSON 备份</button><button class="pill" data-action="import">导入 / 恢复</button></div>
       <details class="settings-help settings-backup-help"><summary>备份记录与恢复说明</summary><div class="settings-help-content">
         <p class="backup-status">${backupTime ? `最近发起导出：${escape(backupTime)}<br>请确认文件已经保存。` : '还没有发起过导出，记得偶尔存一份哦。'}</p>
-        <p>餐食、库存、日记、学习运动和贴纸都包含在 JSON 备份中，不会每周清空。清理网站数据、卸载浏览器或设备故障可能导致数据丢失，本地保存不能代替备份。请定期将 JSON 存到文件或自己的网盘。</p>
+        <p>餐食、库存、日记、学习运动、贴纸、常用餐食模板和快捷类别都包含在 JSON 备份中，不会每周清空。清理网站数据、卸载浏览器或设备故障可能导致数据丢失，本地保存不能代替备份。请定期将 JSON 存到文件或自己的网盘。</p>
         <p>导入会替换整本手账，确认前会显示内容摘要。不同设备、浏览器和网站地址不会自动同步；切换前先导出，再在新位置导入。</p>
       </div></details>
     </section>
@@ -48,26 +52,33 @@ export function renderSettingsView(options = {}) {
       </div></details>
     </section>
 
+    <section class="settings-card settings-group settings-shortcuts" aria-labelledby="settings-shortcuts-title">
+      <h3 class="settings-group-title" id="settings-shortcuts-title"><span aria-hidden="true">03</span> 我的常用小纸条</h3>
+      <p class="settings-group-intro">把喜欢的搭配和小习惯收好，想用时再选。</p>
+      <div class="settings-actions"><button type="button" class="pill" data-action="manage-meal-templates">常吃餐食模板 · ${escape(mealTemplateCount)}</button><button type="button" class="pill" data-action="manage-study-categories">学习快捷类别 · ${escape(studyCategoryCount)}</button><button type="button" class="pill" data-action="manage-exercise-categories">运动快捷类别 · ${escape(exerciseCategoryCount)}</button></div>
+      <p class="settings-group-intro">整理模板不会改动已有餐食或库存；类别可以改名或停用，过去的记录仍保留。</p>
+    </section>
+
     <details class="settings-card settings-group settings-details settings-rules">
-      <summary class="settings-group-summary"><h3 class="settings-group-title"><span aria-hidden="true">03</span> 手账的小约定</h3><span class="settings-disclosure-mark" aria-hidden="true"></span></summary>
-      <div class="settings-group-content"><p>日期跟随设备当地时间，计划和回忆都留在真实的日子里。</p><p>一周从周一开始，跨月、跨年都按真实日期保存。未吃计划可以编辑、删除、复制、移动；已吃记录修改会重新计算用量，删除或撤销会返还全部食材。每餐可以关联多种库存食材，同一种食材只记一次。</p><p>每次数量最多三位小数。食材数量表示份、个、包或克，不计算营养或热量；发现实际用量不同，请在标记已吃前修改。</p></div>
+      <summary class="settings-group-summary"><h3 class="settings-group-title"><span aria-hidden="true">04</span> 手账的小约定</h3><span class="settings-disclosure-mark" aria-hidden="true"></span></summary>
+      <div class="settings-group-content"><p>日期跟随设备当地时间，计划和回忆都留在真实的日子里。</p><p>一周从周一开始，跨月、跨年都按真实日期保存。未吃计划可以编辑、删除、复制、移动；已吃记录修改会重新计算用量，删除或撤销会返还全部食材。每餐可以关联多种库存食材，同一种食材只记一次。</p><p>每次数量最多三位小数。食材数量表示份、个、包或克，不计算营养或热量；发现实际用量不同，请在标记已吃前修改。</p><p>每天最多收好 3 枚不同的内置贴纸。快捷纸条和打卡都随心使用，没有必须完成的目标。</p></div>
     </details>
 
     <section class="settings-card settings-group settings-data" aria-labelledby="settings-data-title">
-      <h3 class="settings-group-title" id="settings-data-title"><span aria-hidden="true">04</span> 本地数据管理</h3>
+      <h3 class="settings-group-title" id="settings-data-title"><span aria-hidden="true">05</span> 本地数据管理</h3>
       <div class="settings-data-counts"><span><strong>${escape(mealCount)}</strong> 餐记录</span><span><strong>${escape(inventoryCount)}</strong> 种食材</span><span><strong>${escape(diaryCount)}</strong> 篇日记</span></div>
       <p class="settings-group-intro${locked ? ' settings-data-warning' : ''}">${locked ? '原文件已保护，请先保存原文件再恢复。' : `另有 ${escape(dayRecordCount)} 天学习运动 / 贴纸，都收在当前浏览器里。`}</p>
-      ${savedRaw || hasV14Backup || hasV13Backup || hasMigrationBackup ? `<div class="settings-actions settings-backup-actions">${savedRaw ? '<button class="pill" data-action="original">保存当前原文件</button>' : ''}${hasV14Backup ? '<button class="pill" data-action="v14-backup">保存 V1.4 升级前备份</button>' : ''}${hasV13Backup ? '<button class="pill" data-action="v13-backup">保存 V1.3 升级前备份</button>' : ''}${hasMigrationBackup ? '<button class="pill" data-action="migration-backup">保存 V1 原始备份</button>' : ''}</div>` : ''}
+      ${savedRaw || hasV15Backup || hasV14Backup || hasV13Backup || hasMigrationBackup ? `<div class="settings-actions settings-backup-actions">${savedRaw ? '<button class="pill" data-action="original">保存当前原文件</button>' : ''}${hasV15Backup ? '<button class="pill" data-action="v15-backup">保存 V1.5 升级前备份</button>' : ''}${hasV14Backup ? '<button class="pill" data-action="v14-backup">保存 V1.4 升级前备份</button>' : ''}${hasV13Backup ? '<button class="pill" data-action="v13-backup">保存 V1.3 升级前备份</button>' : ''}${hasMigrationBackup ? '<button class="pill" data-action="migration-backup">保存 V1 原始备份</button>' : ''}</div>` : ''}
     </section>
 
     <details class="settings-card settings-group settings-details settings-credits">
-      <summary class="settings-group-summary"><h3 class="settings-group-title"><span aria-hidden="true">05</span> 授权与版权</h3><span class="settings-disclosure-mark" aria-hidden="true"></span></summary>
+      <summary class="settings-group-summary"><h3 class="settings-group-title"><span aria-hidden="true">06</span> 授权与版权</h3><span class="settings-disclosure-mark" aria-hidden="true"></span></summary>
       <div class="settings-group-content credits">食物插画：<a href="https://openmoji.org/" target="_blank" rel="noopener">OpenMoji</a> · <a href="./assets/credits.html" target="_blank" rel="noopener">作者、来源与 CC BY-SA 4.0 授权</a><br>食物插画保留 OpenMoji 官方原图；牛奶纸盒、装订、胶带、导航线稿与其他内置贴纸为本项目原创。</div>
     </details>
 
     <section class="settings-card settings-danger" aria-labelledby="settings-clear-title">
-      <h3 class="settings-group-title" id="settings-clear-title">清空这本手账</h3><p>会删除全部餐食、库存、日记、学习运动和贴纸。这个操作不能撤销，请先导出备份。</p><div class="settings-actions"><button class="pill danger" data-action="clear">清空手账</button></div>
+      <h3 class="settings-group-title" id="settings-clear-title">清空这本手账</h3><p>会删除全部餐食、库存、日记、学习运动、贴纸、常用模板和自定义快捷类别。这个操作不能撤销，请先导出备份。</p><div class="settings-actions"><button class="pill danger" data-action="clear">清空手账</button></div>
     </section>
-    <p class="footer-note">机智定食 V1.4 · 私人生活手账<br>轻轻记下自己的日常 ♡</p>
+    <p class="footer-note">机智定食 V1.5 · 私人生活手账<br>轻轻记下自己的日常 ♡</p>
   </section>`;
 }

@@ -1,14 +1,17 @@
 import { renderSettingsView } from './settings-view.js';
-import { CATEGORIES, portions, stockSummary, predictRunway } from './runway.js';
+import { CATEGORIES, portions, stockSummary, predictRunway, predictMainCourseRunway } from './runway.js';
 import { freshState, uid, round, dateKey, parseDate, addDays, weekDates, SLOTS, ALL_SLOTS, TYPES, forecast, reserved, putMeal, removeMeal, completeMeal, undoComplete, transferMeal, normalize, putDiary, removeDiary } from './model.js';
-import { load, persist, STORAGE_KEY, MIGRATION_BACKUP_KEY, V13_BACKUP_KEY, V14_BACKUP_KEY } from './storage.js';
+import { load, persist, STORAGE_KEY, MIGRATION_BACKUP_KEY, V13_BACKUP_KEY, V14_BACKUP_KEY, V15_BACKUP_KEY } from './storage.js';
 import { renderSummary, shiftSummaryMonth, summaryMonthDate } from './summary.js';
 import { shareImageFile } from './share-card.js';
 import { mountTimeline } from './timeline.js';
 import { renderMonthCalendar, shiftMonth } from './month-calendar.js';
-import { getDayRecord, toggleCheckin, putActivity, removeActivity, setDayStickers } from './activity.js';
+import { getDayRecord, toggleCheckin, toggleCategoryCheckin, putActivity, removeActivity, setDayStickers } from './activity.js';
 import { renderDayRecords, CHECKIN_NAMES } from './day-records-view.js';
 import { mountShareEditor } from './share-editor.js';
+import { getActivityCategories, upsertActivityCategory, setActivityCategoryActive, moveActivityCategory } from './activity-shortcuts.js';
+import { MEAL_SCENES, prefillMealTemplate, upsertMealTemplate, removeMealTemplate } from './meal-templates.js';
+import { renderMealShortcuts, renderTemplateIngredients } from './meal-shortcuts-view.js';
 import { renderNotebookHeader } from './notebook-header.js';
 
 const $ = selector => document.querySelector(selector);
@@ -41,7 +44,7 @@ let calendarView = 'day';
 let calendarMonth = selectedDate.slice(0, 7), calendarMode = 'all';
 const dayUI = new Map();
 function recordUI(date) {
-  if (!dayUI.has(date)) dayUI.set(date, {study:{content:'',minutes:'',note:'',editing:null,open:false},exercise:{content:'',minutes:'',note:'',editing:null,open:false},stickerOpen:false});
+  if (!dayUI.has(date)) dayUI.set(date, {study:{content:'',minutes:'',note:'',categoryId:'',distanceKm:'',editing:null,open:false},exercise:{content:'',minutes:'',note:'',categoryId:'',distanceKm:'',editing:null,open:false},stickerOpen:false,stickerGroup:'recent'});
   return dayUI.get(date);
 }
 function captureDayUI() {
@@ -50,7 +53,7 @@ function captureDayUI() {
   section.querySelectorAll('.activity-details').forEach(details => {
     const kind = details.dataset.kind; ui[kind].open = details.open;
     const form = details.querySelector('form');
-    for (const name of ['content','minutes','note']) ui[kind][name] = form.elements[name].value;
+    for (const name of ['content','minutes','note','categoryId','distanceKm']) if(form.elements[name])ui[kind][name] = form.elements[name].value;
   });
   ui.stickerOpen = section.querySelector('.day-sticker-picker').open;
 }
@@ -66,7 +69,7 @@ const mealExpandedIds = new Set();
 const diaryExpandedDates = new Set();
 let offlineReady = false;
 let swUpdateReady = false;
-const APP_CACHE = 'jizhi-meals-shell-v1.4-notebook-visual-1';
+const APP_CACHE = 'jizhi-meals-shell-v1.5-shortcuts-1';
 let cardAsset = null;
 let cardPreviewUrl = null;
 let shareGeneration = 0;
@@ -74,8 +77,8 @@ let shareController = null;
 let installPrompt = null;
 let backupTime = '';
 try { backupTime = storage?.getItem('jizhi-last-export') || ''; } catch {}
-let fridgeView = 'list', runwayDaily = 2;
-try { fridgeView = storage?.getItem('jizhi-fridge-view') === 'cards' ? 'cards' : 'list'; runwayDaily = storage?.getItem('jizhi-runway-daily') === '1' ? 1 : 2; } catch {}
+let fridgeView = 'list', runwayDaily = 2, runwayMode = 'comprehensive';
+try { fridgeView = storage?.getItem('jizhi-fridge-view') === 'cards' ? 'cards' : 'list'; runwayDaily = storage?.getItem('jizhi-runway-daily') === '1' ? 1 : 2; runwayMode = storage?.getItem('jizhi-runway-mode') === 'main' ? 'main' : 'comprehensive'; } catch {}
 function preference(key, value) {
   try { storage.setItem(key, String(value)); return true; }
   catch { toast('查看偏好没能保存，请检查浏览器存储空间。'); return false; }
@@ -352,10 +355,11 @@ function ingredientArt(name) {
 }
 function runwayPanel() {
   const summary = stockSummary(state.inventory, today());
-  const prediction = predictRunway(state, today(), runwayDaily);
+  const main = runwayMode === 'main';
+  const prediction = (main ? predictMainCourseRunway : predictRunway)(state, today(), runwayDaily);
   const unclassified = state.inventory.filter(item => !CATEGORIES.includes(item.category)).length;
   const coverage = prediction.last ? dateLabel(prediction.last.date, true).replace(/ 周[日一二三四五六]/, '') + ' · ' + labels[prediction.last.slot] : '尚不能覆盖下一餐';
-  return `<aside class="runway-note"><span class="runway-background-art" aria-hidden="true"></span><h2>餐食续航 <span aria-hidden="true">♡</span></h2><p class="runway-total">当前还能吃 <strong>${summary.total}</strong> 顿</p><p class="runway-coverage"><small>覆盖到</small><strong>${coverage}</strong></p><p class="runway-bottleneck">最先不足 <strong>${summary.bottlenecks.join('、')}</strong></p><details class="runway-details"><summary>展开说明与设置</summary><div class="runway-counts"><span>自己搭配 <b>${summary.combined}</b> 顿</span><span>整套食物 <b>${summary.ready}</b> 顿</span><span>早餐 <b>${summary.breakfast}</b> 次</span></div><label class="runway-default">未安排餐次<select id="runway-daily" aria-label="未安排餐次默认消耗"><option value="1" ${runwayDaily === 1 ? 'selected' : ''}>每天 1 顿 · 晚餐</option><option value="2" ${runwayDaily === 2 ? 'selected' : ''}>每天 2 顿 · 午餐和晚餐</option></select></label>${unclassified ? `<p>${unclassified} 种食材尚未归入五类，编辑确认分类后计入组合。</p>` : ''}${prediction.shortage ? `<p class="runway-shortage">下一次不足：${dateLabel(prediction.shortage.date, true)} · ${labels[prediction.shortage.slot]}<br>${escape(prediction.shortage.reason)}</p>` : '<p>超过 10 年预测范围，请结合实际计划查看。</p>'}<p>每份 = 当前数量 ÷ 每餐默认用量。蛋白质、蔬菜、碳水各 1 份组成一餐；整套食物独立计餐，结果向下取整。早餐单列，未分类不参与组合，负库存按 0 计，保质期当天可用。</p><p>从今天开始，已吃餐次跳过；已有未吃计划优先预留具体用量，无库存关联的餐次跳过。早餐和加餐计划按实际用量计算。空白午晚餐使用余下库存，先搭配、再使用整套食物。预测不扣库存。</p><button class="text-button" data-action="export">存一份 JSON 备份 ↗</button></details></aside>`;
+  return `<aside class="runway-note"><span class="runway-background-art" aria-hidden="true"></span><h2>餐食续航 <span aria-hidden="true">♡</span></h2><div class="runway-mode-switch" role="group" aria-label="餐食续航预测模式">${[['comprehensive','综合预测'],['main','主菜续航']].map(([mode,label])=>`<button type="button" data-runway-mode="${mode}" data-mode="${mode}" aria-pressed="${runwayMode===mode}">${label}</button>`).join('')}</div><p class="runway-total">${main?'主菜还能吃':'当前还能吃'} <strong>${main?prediction.covered:summary.total}</strong> 顿${prediction.capped?' <small>预测范围内</small>':''}</p><p class="runway-coverage"><small>按当前计划覆盖至</small><strong>${coverage}</strong></p>${main?`<div class="runway-counts"><span>蛋白质搭配 <b>${prediction.proteinMeals}</b> 顿</span><span>整套餐食 <b>${prediction.readyMeals}</b> 顿</span></div>`:`<p class="runway-bottleneck">最先不足 <strong>${summary.bottlenecks.join('、')}</strong></p>`}<details class="runway-details"><summary>展开说明与设置</summary><div class="runway-counts">${main?'':`<span>自己搭配 <b>${summary.combined}</b> 顿</span><span>整套食物 <b>${summary.ready}</b> 顿</span>`}<span>早餐 <b>${summary.breakfast}</b> 次 · 单独统计</span></div><label class="runway-default">未安排餐次<select id="runway-daily" aria-label="未安排餐次默认消耗"><option value="1" ${runwayDaily === 1 ? 'selected' : ''}>每天 1 顿 · 晚餐</option><option value="2" ${runwayDaily === 2 ? 'selected' : ''}>每天 2 顿 · 午餐和晚餐</option></select></label>${unclassified ? `<p>${unclassified} 种食材尚未归入五类，编辑确认分类后计入组合。</p>` : ''}${prediction.shortage ? `<p class="runway-shortage">下一次不足：${dateLabel(prediction.shortage.date, true)} · ${labels[prediction.shortage.slot]}<br>${escape(prediction.shortage.reason)}</p>` : '<p>超过 10 年预测范围，请结合实际计划查看。</p>'}<p>${main?'主菜仅用蛋白质与整套食物。蛋白质按当前数量 ÷ 每餐用量组成主菜；同一已安排餐次的多种蛋白质只计一顿，蛋白质与整套同时使用也只计一顿。蔬菜和碳水不限制主菜续航；早餐分类不算午晚餐。':'每份 = 当前数量 ÷ 每餐默认用量。蛋白质、蔬菜、碳水各 1 份组成一餐；整套食物独立计餐，结果向下取整。'}负库存按 0 计，保质期当天可用。</p><p>从今天开始，已吃餐次跳过；所有未吃计划优先预留具体用量，包括过去日期的预留。早餐和加餐按实际用量消耗，不增加午晚餐顿数。空白午晚餐使用余下库存，先搭配、再用整套食物。没有本模式库存关联的计划跳过。切换模式与预测均不修改库存或计划。</p><button class="text-button" data-action="export">存一份 JSON 备份 ↗</button></details></aside>`;
 }
 function renderIngredient(item) {
   const predicted = forecast(state, item.id), planned = reserved(state, item.id);
@@ -367,12 +371,13 @@ function renderIngredient(item) {
   return `<article class="ingredient-card"><div class="ingredient-header"><h2 class="ingredient-name">${escape(item.name)}</h2><span class="ingredient-emoji" aria-hidden="true">${illustration(ingredientArt(item.name))}</span></div>${numbers}${category}${meta}${actions}</article>`;
 }
 function renderInventory() {
-  return `<section class="page inventory-page"><div class="section-heading"><div><div class="eyebrow">MY LITTLE FRIDGE</div><h1>我的食材小冰箱</h1><p class="subheading">${state.inventory.length ? '收好 ' + state.inventory.length + ' 种食材，慢慢安排' : '把喜欢的食材，一份份收好'}</p></div><button class="pill pink" data-action="add-ingredient">＋ 添加</button></div>${runwayPanel()}<div class="fridge-toolbar"><h2>冰箱里的小储备</h2><div class="fridge-switch" role="group" aria-label="食材查看模式"><button class="pill" data-fridge-view="list" aria-pressed="${fridgeView === 'list'}">列表</button><button class="pill" data-fridge-view="cards" aria-pressed="${fridgeView === 'cards'}">卡片</button></div></div>${state.inventory.length ? `<div class="inventory-list ${fridgeView === 'list' ? 'fridge-rows' : ''}">${fridgeView === 'list' ? '<div class="inventory-column-head" aria-hidden="true"><span>食材 · 可吃顿数</span><span class="inventory-column-numbers"><span>当前</span><span>预计</span></span><span></span></div>' : ''}${state.inventory.map(renderIngredient).join('')}</div>` : `<div class="empty-state"><span class="illustration" aria-hidden="true">${illustration('basket')}</span><h2>小冰箱还空着呢 (｡•ᴗ•｡)</h2><p>先收好食材，再安排喜欢的一餐。</p><button class="pill pink" data-action="add-ingredient">＋ 添加第一份食材</button></div>`}<details class="inventory-explanation"><summary>当前库存与预计剩余</summary><p>当前库存是实际剩余；预计剩余减去所有日期尚未吃的计划，包括过去和未来。安排餐食只预留，吃过才扣库存。</p></details><div class="journal-whitespace" aria-hidden="true"></div></section>`;
+  return `<section class="page inventory-page"><div class="section-heading"><div><div class="eyebrow">MY LITTLE FRIDGE</div><h1>我的食材小冰箱</h1><p class="subheading">${state.inventory.length ? '收好 ' + state.inventory.length + ' 种食材，慢慢安排' : '把喜欢的食材，一份份收好'}</p></div></div>${runwayPanel()}<div class="fridge-toolbar" id="inventory-add-zone"><h2>冰箱里的小储备</h2><button class="pill pink inventory-add-button" data-action="add-ingredient">＋ 添加食材</button><div class="fridge-switch" role="group" aria-label="食材查看模式"><button class="pill" data-fridge-view="list" aria-pressed="${fridgeView === 'list'}">列表</button><button class="pill" data-fridge-view="cards" aria-pressed="${fridgeView === 'cards'}">卡片</button></div></div>${state.inventory.length ? `<div class="inventory-list ${fridgeView === 'list' ? 'fridge-rows' : ''}">${fridgeView === 'list' ? '<div class="inventory-column-head" aria-hidden="true"><span>食材 · 可吃顿数</span><span class="inventory-column-numbers"><span>当前</span><span>预计</span></span><span></span></div>' : ''}${state.inventory.map(renderIngredient).join('')}</div>` : `<div class="empty-state"><span class="illustration" aria-hidden="true">${illustration('basket')}</span><h2>小冰箱还空着呢 (｡•ᴗ•｡)</h2><p>先收好食材，再安排喜欢的一餐。</p><button class="pill pink" data-action="add-ingredient">＋ 添加第一份食材</button></div>`}<button class="pill inventory-add-button inventory-add-again" data-action="add-ingredient">＋ 再添一份食材</button><details class="inventory-explanation"><summary>当前库存与预计剩余</summary><p>当前库存是实际剩余；预计剩余减去所有日期尚未吃的计划，包括过去和未来。安排餐食只预留，吃过才扣库存。</p></details><div class="journal-whitespace" aria-hidden="true"></div></section>`;
 }
 function renderSettings() {
   let hasV13Backup = false; try { hasV13Backup = !!storage?.getItem(V13_BACKUP_KEY); } catch {}
+  let hasV15Backup = false; try { hasV15Backup = !!storage?.getItem(V15_BACKUP_KEY); } catch {}
   let hasV14Backup = false; try { hasV14Backup = !!storage?.getItem(V14_BACKUP_KEY); } catch {}
-  return renderSettingsView({ ios: /iPad|iPhone|iPod/.test(navigator.userAgent), offlineReady, swUpdateReady, installPrompt: !!installPrompt, backupTime, locked, savedRaw: !!savedRaw, hasMigrationBackup: !!migrationBackup(), hasV13Backup, hasV14Backup, mealCount: state.meals.length, inventoryCount: state.inventory.length, diaryCount: state.diaries.length, dayRecordCount:state.dayRecords.length });
+  return renderSettingsView({ ios: /iPad|iPhone|iPod/.test(navigator.userAgent), offlineReady, swUpdateReady, installPrompt: !!installPrompt, backupTime, locked, savedRaw: !!savedRaw, hasMigrationBackup: !!migrationBackup(), hasV13Backup, hasV14Backup, hasV15Backup, mealTemplateCount:state.mealTemplates.length,studyCategoryCount:state.activityCategories.study.filter(c=>c.active).length,exerciseCategoryCount:state.activityCategories.exercise.filter(c=>c.active).length, mealCount: state.meals.length, inventoryCount: state.inventory.length, diaryCount: state.diaries.length, dayRecordCount:state.dayRecords.length });
 }
 
 function mealEditor(slot, id = null) {
@@ -380,8 +385,48 @@ function mealEditor(slot, id = null) {
   const existing = state.meals.find(m => m.id === id);
   const meal = existing || { id: uid(), date: selectedDate, slot, name: '', type: slot === 'snack' ? '零食 / 加餐' : '自制便当', protein: '', note: '', resources: [], ...(slot === 'snack' ? { time: '' } : {}) };
   let rows = structuredClone(meal.resources || []);
-  showSheet(existing ? '整理这张餐食小纸条' : '今天又有好吃的啦 🍓', `${dateLabel(meal.date, true)} · ${labels[meal.slot]} ♡`, `<form id="meal-form"><label class="form-field">菜名<input name="name" required maxlength="80" placeholder="例如：牛肉丸便当" value="${escape(meal.name)}" autocomplete="off"></label>${slot === 'snack' ? `<label class="form-field">时间 <span class="muted">（可选）</span><input name="time" type="time" value="${escape(meal.time || '')}"></label>` : ''}<label class="form-field">这餐的类型<select name="type">${TYPES.map(t => `<option ${meal.type === t ? 'selected' : ''}>${t}</option>`).join('')}</select></label><fieldset class="resource-controls"><legend>这餐用到的库存食材 <span class="muted">（可选）</span></legend><p class="field-hint">每份食材独立填写用量；安排时预留，吃过才扣库存。配菜也可以直接写在备注里。</p><div class="resource-list" id="resource-list"></div><button type="button" class="pill" id="add-resource" data-action="add-resource" ${state.inventory.length ? '' : 'disabled'}>＋ 添一种食材</button>${state.inventory.length ? '' : '<p class="resource-empty">小冰箱还空着，可以先保存菜名，再去库存添食材。</p>'}</fieldset><label class="form-field">蛋白质来源 <span class="muted">（可选，不扣库存）</span><input name="protein" maxlength="60" value="${escape(meal.protein)}" placeholder="例如：鸡蛋 / 牛肉"></label><label class="form-field">一点小备注 <span class="muted">（可选）</span><textarea name="note" maxlength="200" placeholder="例如：配菜、解冻提醒">${escape(meal.note)}</textarea></label>${existing?.completed ? '<p class="info-card soft">这餐已吃过。调整食材时会先返还原用量，再扣减新用量，仍保留已吃记录。</p>' : ''}<p class="form-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" type="button" data-close>再想想</button><button class="primary" type="submit">收进手账 ♡</button></div></form>`);
+  let scene = MEAL_SCENES.includes(meal.type) ? meal.type : meal.type==='外出就餐'?'外食':'',selectedTemplateId='';
+  showSheet(existing ? '整理这张餐食小纸条' : '今天又有好吃的啦 🍓', `${dateLabel(meal.date, true)} · ${labels[meal.slot]} ♡`, `<form id="meal-form"><div id="meal-shortcuts-host"></div><p id="meal-template-notices" class="field-hint" hidden></p><label class="form-field">菜名<input name="name" required maxlength="80" placeholder="例如：牛肉丸便当" value="${escape(meal.name)}" autocomplete="off"></label>${slot === 'snack' ? `<label class="form-field">时间 <span class="muted">（可选）</span><input name="time" type="time" value="${escape(meal.time || '')}"></label>` : ''}<label class="form-field">这餐的类型<select name="type">${TYPES.map(t => `<option ${meal.type === t ? 'selected' : ''}>${t}</option>`).join('')}</select></label><div id="meal-component-host"></div><fieldset class="resource-controls"><legend>这餐用到的库存食材 <span class="muted">（可选）</span></legend><p class="field-hint">每份食材独立填写用量；安排时预留，吃过才扣库存。配菜也可以直接写在备注里。</p><div class="resource-list" id="resource-list"></div><button type="button" class="pill" id="add-resource" data-action="add-resource" ${state.inventory.length ? '' : 'disabled'}>＋ 添一种食材</button>${state.inventory.length ? '' : '<p class="resource-empty">小冰箱还空着，可以先保存菜名，再去库存添食材。</p>'}</fieldset><label class="form-field">蛋白质来源 <span class="muted">（可选，不扣库存）</span><input name="protein" maxlength="60" value="${escape(meal.protein)}" placeholder="例如：鸡蛋 / 牛肉"></label><label class="form-field">一点小备注 <span class="muted">（可选）</span><textarea name="note" maxlength="200" placeholder="例如：配菜、解冻提醒">${escape(meal.note)}</textarea></label>${existing?.completed ? '<p class="info-card soft">这餐已吃过。调整食材时会先返还原用量，再扣减新用量，仍保留已吃记录。</p>' : ''}<p class="form-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" type="button" data-close>再想想</button><button class="primary" type="submit">收进手账 ♡</button></div></form>`);
   const form = $('#meal-form');
+  function shortcutControls() {
+    const fold=form.querySelector('.meal-template-fold'),templateName=form.elements.mealTemplateName?.value||'';
+    form.querySelector('#meal-shortcuts-host').innerHTML=renderMealShortcuts(state,meal.date,meal.slot,{scene,selectedTemplateId,templatesOpen:fold?.open,templateName});
+    componentControls();
+  }
+  function componentControls() {
+    const opened=Array.from(form.querySelectorAll('.meal-component-group[open]')).map(el=>el.dataset.component);
+    form.querySelector('#meal-component-host').innerHTML=renderTemplateIngredients(state.inventory,scene,rows.map(row=>row.ingredientId));
+    form.querySelectorAll('.meal-component-group').forEach(el=>el.open=opened.includes(el.dataset.component));
+  }
+  form.addEventListener('click',event=>{
+    const button=event.target.closest('button');if(!button)return;
+    if(button.hasAttribute('data-meal-scene')||button.hasAttribute('data-meal-template')) {
+      const key=button.dataset.mealTemplate||button.dataset.mealScene;
+      try {
+        const draft=prefillMealTemplate(state,key);selectedTemplateId=button.dataset.mealTemplate||'';scene=selectedTemplateId?state.mealTemplates.find(t=>t.id===key).scene:key;
+        form.elements.name.value=draft.name;form.elements.type.value=draft.type;form.elements.note.value=draft.note;form.elements.protein.value='';rows=draft.resources;
+        const notices=form.querySelector('#meal-template-notices');notices.textContent=draft.notices.join(' ');notices.hidden=!draft.notices.length;
+        renderRows();shortcutControls();
+      } catch(error){formError(form,error.message);}return;
+    }
+    if(button.hasAttribute('data-save-meal-template')){
+      try {
+        if(!scene)throw new Error('请先选一种餐食场景，再收为常用组合。');
+        const template={name:form.elements.mealTemplateName.value.trim(),scene,mealName:form.elements.name.value.trim(),note:form.elements.note.value.trim(),resources:readRows()};
+        if(commit(book=>upsertMealTemplate(book,template),'常吃组合收好啦，下次少写几笔 ♡'))shortcutControls();
+      }catch(error){formError(form,error.message);}return;
+    }
+    if(button.hasAttribute('data-manage-meal-templates')){event.stopPropagation();const restore=sheetReturn();mealTemplateManager(button.dataset.manageMealTemplates,()=>{restore();shortcutControls();});}
+  });
+  form.addEventListener('change',event=>{
+    if(event.target.name==='type'){readRows();scene=MEAL_SCENES.includes(event.target.value)?event.target.value:event.target.value==='外出就餐'?'外食':'';selectedTemplateId='';shortcutControls();}
+    if(event.target.hasAttribute('data-template-ingredient')) {
+      readRows();const id=event.target.dataset.templateIngredient,item=state.inventory.find(i=>i.id===id);
+      if(event.target.checked&&item&&!rows.some(r=>r.ingredientId===id))rows.push({ingredientId:id,amount:item.perMeal});
+      if(!event.target.checked)rows=rows.filter(r=>r.ingredientId!==id);
+      renderRows();componentControls();
+    }
+  });
   function readRows() {
     rows = Array.from(form.querySelectorAll('.resource-row')).map(row => ({ ingredientId: row.querySelector('select').value, amount: Number(row.querySelector('input').value) }));
     return rows.filter(r => r.ingredientId);
@@ -395,10 +440,11 @@ function mealEditor(slot, id = null) {
       input.disabled = !select.value; input.required = !!select.value;
       const item = state.inventory.find(i => i.id === select.value);
       const prior = existing?.completed ? (existing.resources || []).find(r => r.ingredientId === select.value)?.amount || 0 : 0;
-      const remaining = item ? round(forecast(state, item.id, id) + prior - (Number.isFinite(rows[index].amount) ? rows[index].amount : 0)) : null;
+      const remaining = item ? round(forecast(state, item.id, id) + prior - (Number.isFinite(Number(input.value)) ? Number(input.value) : 0)) : null;
       row.querySelector('.resource-hint').textContent = item ? `保存后预计剩余 ${remaining} ${item.unit}${remaining < 0 ? ' · 小冰箱快见底啦，记得补货捏 ♡' : ''}` : '不关联这一项库存';
     });
     $('#add-resource').disabled = !state.inventory.some(i => !used.includes(i.id));
+    form.querySelectorAll('[data-template-ingredient]').forEach(input=>input.checked=used.includes(input.dataset.templateIngredient));
   }
   function renderRows() {
     $('#resource-list').innerHTML = rows.map((r, index) => `<div class="resource-row" data-resource-index="${index}"><label class="form-field" for="resource-${index}">食材 ${index + 1}<select id="resource-${index}" class="resource-select" name="ingredient-${index}"><option value="">不关联库存</option>${state.inventory.map(i => `<option value="${escape(i.id)}" ${r.ingredientId === i.id ? 'selected' : ''}>${escape(i.name)} · 当前 ${i.quantity} ${escape(i.unit)}</option>`).join('')}</select></label><label class="form-field" for="amount-${index}">使用数量<input id="amount-${index}" class="resource-amount-input" name="amount-${index}" type="number" min="0.001" max="1000000000" step="0.001" inputmode="decimal" value="${r.amount}"></label><button type="button" class="resource-remove text-button" data-remove-resource="${index}" aria-label="移除食材 ${index + 1}">移除</button><p class="resource-hint field-hint"></p></div>`).join('');
@@ -422,7 +468,7 @@ function mealEditor(slot, id = null) {
     const button = e.target.closest('[data-remove-resource]'); if (!button) return;
     readRows(); rows.splice(Number(button.dataset.removeResource), 1); renderRows();
   });
-  renderRows();
+  renderRows();shortcutControls();
   form.onsubmit = async e => {
     e.preventDefault(); const button = form.querySelector('[type=submit]'); button.disabled = true;
     try {
@@ -481,19 +527,56 @@ async function undoMeal(id) {
   if (await ask('撤销这枚小印章', `将「${meal.name}」恢复为未吃计划${meal.resources.length ? `，并返还：${resourceText(meal)}` : ''}。确定撤销吗？`, '撤销并返还') && commit(s => undoComplete(s, id), '已返还全部用量，这餐恢复为未吃计划。')) closeSheet();
 }
 
+// Temporarily keep the existing editor DOM and listeners while managing shortcuts.
+function sheetReturn() {
+  const nodes=Array.from(sheetContent.childNodes),scroll=sheet.scrollTop,focus=document.activeElement;
+  return ()=>{sheetContent.replaceChildren(...nodes);sheet.scrollTop=scroll;if(!sheet.open)sheet.showModal();if(focus?.isConnected)focus.focus({preventScroll:true});};
+}
+function mealTemplateManager(selectedId='',back=null) {
+  if(readOnlyGuard())return;
+  const templates=state.mealTemplates;
+  showSheet('我的常吃小纸条','模板只做预填，不会安排餐食或扣减库存。新增组合可以从餐食编辑页收为常用。',`<div class="meal-template-manager">${templates.length?templates.map(t=>`<details class="meal-template-edit" ${t.id===selectedId?'open':''}><summary>${escape(t.name)} <small>${escape(t.scene)} · ${t.resources.length} 种食材</small></summary><form data-template-edit="${escape(t.id)}"><label class="form-field">模板名<input name="templateName" required maxlength="60" value="${escape(t.name)}"></label><label class="form-field">场景<select name="scene">${MEAL_SCENES.map(scene=>`<option ${t.scene===scene?'selected':''}>${scene}</option>`).join('')}</select></label><label class="form-field">餐食名称 · 可选<input name="mealName" maxlength="80" value="${escape(t.mealName)}"></label>${t.resources.map((r,index)=>`<label class="form-field">${escape(r.name)} · ${escape(r.unit)}${state.inventory.some(i=>i.id===r.ingredientId)?'':'（库存已移出，预填会跳过）'}<input name="resource-${index}" type="number" min="0.001" max="1000000000" step="0.001" inputmode="decimal" required value="${r.amount}"></label>`).join('')}<label class="form-field">备注<textarea name="note" maxlength="200">${escape(t.note)}</textarea></label><p class="form-error" role="alert" hidden></p><div class="form-buttons"><button type="button" class="secondary danger" data-delete-template="${escape(t.id)}">删除模板</button><button type="submit" class="primary">保存修改</button></div></form></details>`).join(''):'<p class="info-card soft">喜欢的组合可以从餐食编辑页收好，下次就能直接选啦 ♡</p>'}</div>${back?'<button type="button" class="pill" id="shortcut-back">返回餐食草稿</button>':''}`);
+  if(back)$('#shortcut-back').onclick=back;
+  sheetContent.querySelectorAll('[data-template-edit]').forEach(form=>{
+    form.onsubmit=event=>{event.preventDefault();const t=state.mealTemplates.find(row=>row.id===form.dataset.templateEdit);if(!t)return;
+      try {const input={...t,name:form.elements.templateName.value.trim(),scene:form.elements.scene.value,mealName:form.elements.mealName.value.trim(),note:form.elements.note.value.trim(),resources:t.resources.map((r,index)=>({...r,amount:Number(form.elements[`resource-${index}`].value)}))};
+        if(commit(book=>upsertMealTemplate(book,input),'常吃小纸条整理好啦 ♡'))mealTemplateManager(t.id,back);
+      }catch(error){formError(form,error.message);}
+    };
+    form.querySelector('[data-delete-template]').onclick=async()=>{const id=form.dataset.templateEdit;if(await ask('删除这张快捷模板？','仅删除快捷模板，已有餐食、库存和历史记录都保留。','删除模板')&&commit(book=>removeMealTemplate(book,id),'模板已收起来，已有餐食都保留。'))mealTemplateManager('',back);};
+  });
+}
+function activityCategoryManager(kind,draftName='') {
+  if(!Object.hasOwn(CHECKIN_NAMES,kind)||readOnlyGuard())return;
+  const categories=getActivityCategories(state,kind),name=CHECKIN_NAMES[kind];
+  showSheet(`${name}的小标签`,'可以改名、排序或停用。停用只隐藏快捷入口，历史归属和统计都会保留。',`<div class="activity-category-manager" data-kind="${kind}">${categories.map((c,index)=>`<div class="activity-category-row" data-category-row="${escape(c.id)}"><span class="activity-category-name">${escape(c.name)}${c.active?'':' · 已停用'}</span><div class="activity-category-actions"><button class="text-button" type="button" data-category-rename="${escape(c.id)}">改名</button><button class="text-button" type="button" data-category-move="${escape(c.id)}" data-direction="up" aria-label="上移${escape(c.name)}" ${index===0?'disabled':''}>↑</button><button class="text-button" type="button" data-category-move="${escape(c.id)}" data-direction="down" aria-label="下移${escape(c.name)}" ${index===categories.length-1?'disabled':''}>↓</button><button class="text-button" type="button" data-category-active="${escape(c.id)}" data-active="${!c.active}">${c.active?'停用':'启用'}</button></div></div>`).join('')}<form id="category-form"><label class="form-field">新增${name}标签<input name="categoryName" required maxlength="40" placeholder="给常做的小事取个名字" autocomplete="off" value="${escape(draftName)}"></label><p class="form-error" role="alert" hidden></p><button class="primary" type="submit">＋ 收好新标签</button></form></div>`);
+  const form=$('#category-form');form.elements.categoryName.oninput=()=>draftName=form.elements.categoryName.value;form.onsubmit=e=>{e.preventDefault();try{if(commit(book=>upsertActivityCategory(book,kind,{name:form.elements.categoryName.value.trim()}),'新标签收好啦 ♡'))activityCategoryManager(kind);}catch(error){formError(form,error.message);}};
+  sheetContent.querySelectorAll('[data-category-move]').forEach(b=>b.onclick=()=>{if(commit(book=>moveActivityCategory(book,kind,b.dataset.categoryMove,b.dataset.direction)))activityCategoryManager(kind,draftName);});
+  sheetContent.querySelectorAll('[data-category-active]').forEach(b=>b.onclick=()=>{if(commit(book=>setActivityCategoryActive(book,kind,b.dataset.categoryActive,b.dataset.active==='true'),'类别设置已收好，历史记录保留。'))activityCategoryManager(kind,draftName);});
+  sheetContent.querySelectorAll('[data-category-rename]').forEach(b=>b.onclick=()=>{
+    const c=categories.find(c=>c.id===b.dataset.categoryRename);
+    showSheet('给标签换个名字','稳定编号保持不变，之前记录的内容和归属都会保留。',`<form id="rename-category-form"><label class="form-field">标签名称<input name="categoryName" required maxlength="40" value="${escape(c.name)}"></label><p class="form-error" role="alert" hidden></p><div class="form-buttons"><button type="button" class="secondary" id="category-back">返回标签列表</button><button type="submit" class="primary">保存名称</button></div></form>`);
+    $('#category-back').onclick=()=>activityCategoryManager(kind,draftName);const f=$('#rename-category-form');f.onsubmit=e=>{e.preventDefault();try{if(commit(book=>upsertActivityCategory(book,kind,{id:c.id,name:f.elements.categoryName.value.trim()}),'标签名字换好啦 ♡'))activityCategoryManager(kind,draftName);}catch(error){formError(f,error.message);}};
+  });
+}
+
 function ingredientEditor(id = null) {
   if (readOnlyGuard()) return;
   const original = state.inventory.find(i => i.id === id);
   const item = original || { id: uid(), name: '', quantity: 1, unit: '份', perMeal: 1, note: '', expires: '' };
   const linked = state.meals.some(m => m.resources.some(r => r.ingredientId === id));
-  showSheet(original ? '整理这份食材' : '给小冰箱添一份', '当前库存填写实际剩余数量；补货时修改这里就好。', `<form id="ingredient-form"><label class="form-field">食材名字<input name="name" value="${escape(item.name)}" required maxlength="60" placeholder="例如：虾仁 / 鸡腿" autocomplete="off"></label><div class="form-row"><label class="form-field">当前库存<input name="quantity" type="number" required min="${original && item.quantity < 0 ? '-1000000000' : '0'}" max="1000000000" step="0.001" inputmode="decimal" value="${item.quantity}"></label><label class="form-field">单位<input name="unit" required maxlength="12" value="${escape(item.unit)}" placeholder="份 / 个 / 包 / 克" ${linked ? 'readonly' : ''}></label></div>${linked ? '<p class="field-hint">这份食材已关联餐食，单位保持不变，避免历史用量变乱。需要新单位请新建食材。</p>' : ''}<label class="form-field">食材分类<select name="category"><option value="">未分类（暂不参与组合）</option>${item.category && !CATEGORIES.includes(item.category) ? `<option selected>${escape(item.category)}</option>` : ''}${CATEGORIES.map(c => `<option ${item.category === c ? 'selected' : ''}>${c}</option>`).join('')}</select><span class="field-hint">旧分类保留原文；确认后可以重新分类。</span></label><label class="form-field">每餐默认用量<input name="perMeal" type="number" required min="0.001" max="1000000000" step="0.001" inputmode="decimal" value="${item.perMeal}"><span class="field-hint">只作为新计划的默认值，不改变已安排餐食。</span></label><label class="form-field">保质期 <span class="muted">（可选）</span><input name="expires" type="date" value="${escape(item.expires)}"></label><label class="form-field">小备注 <span class="muted">（可选）</span><input name="note" maxlength="200" value="${escape(item.note)}" placeholder="冷冻 / 已腌制 / 尽快吃"></label><p class="form-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" type="button" data-close>再想想</button><button class="primary" type="submit">收好这份食材 ♡</button></div>${original ? '<button type="button" class="text-button danger" id="delete-ingredient" style="display:block;margin:12px auto 0">删除这份食材</button>' : ''}</form>`);
+  showSheet(original ? '整理这份食材' : '给小冰箱添一份', '当前库存填写实际剩余数量；补货时修改这里就好。', `<form id="ingredient-form"><label class="form-field">食材名字<input name="name" value="${escape(item.name)}" required maxlength="60" placeholder="例如：虾仁 / 鸡腿" autocomplete="off"></label><div class="form-row"><label class="form-field">当前库存<input name="quantity" type="number" required min="${original && item.quantity < 0 ? '-1000000000' : '0'}" max="1000000000" step="0.001" inputmode="decimal" value="${item.quantity}"></label><label class="form-field">单位<input name="unit" required maxlength="12" value="${escape(item.unit)}" placeholder="份 / 个 / 包 / 克" ${linked ? 'readonly' : ''}></label></div>${linked ? '<p class="field-hint">这份食材已关联餐食，单位保持不变，避免历史用量变乱。需要新单位请新建食材。</p>' : ''}<label class="form-field">食材分类<select name="category"><option value="">未分类（暂不参与组合）</option>${item.category && !CATEGORIES.includes(item.category) ? `<option selected>${escape(item.category)}</option>` : ''}${CATEGORIES.map(c => `<option ${item.category === c ? 'selected' : ''}>${c}</option>`).join('')}</select><span class="field-hint">${original?'旧分类保留原文；确认后可以重新分类。':'分类会用于餐食续航，也可以之后再补。'}</span></label><details class="ingredient-more-settings"><summary><span class="more-closed">展开更多设置</span><span class="more-open">收起更多设置</span> <small>选填</small></summary><div class="ingredient-more-fields"><label class="form-field">每餐默认用量<input name="perMeal" type="number" required min="0.001" max="1000000000" step="0.001" inputmode="decimal" value="${item.perMeal}"><span class="field-hint">只作为新计划的默认值，不改变已安排餐食。</span></label><label class="form-field">保质期 <span class="muted">（可选）</span><input name="expires" type="date" value="${escape(item.expires)}"></label><label class="form-field">小备注 <span class="muted">（可选）</span><input name="note" maxlength="200" value="${escape(item.note)}" placeholder="冷冻 / 已腌制 / 尽快吃"></label></div></details><p class="form-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" type="button" data-close>再想想</button><button class="primary" type="submit">收好这份食材 ♡</button></div>${original ? '<button type="button" class="text-button danger" id="delete-ingredient" style="display:block;margin:12px auto 0">删除这份食材</button>' : ''}</form>`);
   const form = $('#ingredient-form');
+  const returnScroll = window.scrollY;
+  const anchorId = original?.id;
+  const anchorTop = anchorId ? document.querySelector(`[data-inventory-id="${CSS.escape(anchorId)}"]`)?.getBoundingClientRect().top : null;
+  function returnToInventory() { closeSheet(); requestAnimationFrame(()=> { const row=anchorId?document.querySelector(`[data-inventory-id="${CSS.escape(anchorId)}"]`):null; if(row&&anchorTop!=null)window.scrollBy(0,row.getBoundingClientRect().top-anchorTop);else window.scrollTo(0,returnScroll); }); }
   form.onsubmit = e => {
     e.preventDefault();
     const next = { ...item, category: form.elements.category.value, id: item.id, name: form.elements.name.value.trim(), quantity: round(Number(form.elements.quantity.value)), unit: form.elements.unit.value.trim(), perMeal: round(Number(form.elements.perMeal.value)), expires: form.elements.expires.value, note: form.elements.note.value.trim() };
     if (!next.name || !next.unit || !Number.isFinite(next.quantity) || !Number.isFinite(next.perMeal) || next.perMeal <= 0) { formError(form, '请填好食材名字、数量和单位 ♡'); return; }
     if (next.expires && !parseDate(next.expires)) { formError(form, '保质期日期不太对，请重新选一下。'); return; }
-    if (commit(s => { const index = s.inventory.findIndex(i => i.id === item.id); if (index < 0) s.inventory.push(next); else s.inventory[index] = next; }, '小冰箱整理好啦 ♡')) closeSheet();
+    if (commit(s => { const index = s.inventory.findIndex(i => i.id === item.id); if (index < 0) s.inventory.push(next); else s.inventory[index] = next; }, '小冰箱整理好啦 ♡')) returnToInventory();
   };
   if (original) $('#delete-ingredient').onclick = async () => {
     if (linked) { formError(form, '这份食材关联了餐食记录，暂时保留它哦。吃完可把当前库存设为 0。'); return; }
@@ -527,7 +610,7 @@ $('#import-file').onchange = async e => {
   try { result = normalize(JSON.parse(await file.text())); } catch (error) { toast(error instanceof SyntaxError ? 'JSON 文件没能读懂，请核对备份。原数据没有改变。' : error.message); return; }
   if (result.locked) { toast('备份含有异常记录，未导入也未改变原数据。请保留原文件并核对内容。'); return; }
   const dates = [...result.state.meals.map(m => m.date), ...result.state.diaries.map(d => d.date), ...result.state.dayRecords.map(d=>d.date)].sort();
-  showSheet('把这本手账恢复回来？', '导入会完整替换餐食、库存、日记、学习运动打卡和贴纸。', `<div class="import-summary">文件：${escape(file.name)}<br>${result.state.meals.length} 餐记录 · ${result.state.inventory.length} 种食材 · ${result.state.diaries.length} 篇日记<br>${result.state.dayRecords.length} 天生活打卡 / 贴纸${dates.length ? `<br>日期：${dates[0]} 至 ${dates.at(-1)}` : ''}${result.warnings.length ? `<br><strong class="danger">有 ${result.warnings.length} 项异常：</strong><br>${[...new Set(result.warnings)].map(escape).join('<br>')}` : ''}</div><p class="sheet-subtitle">建议先导出当前数据。恢复后的当前库存直接采用备份数值，不会再次扣减已吃记录。</p><p class="form-error" id="import-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" data-close>取消</button><button class="primary" id="restore-confirm">确认替换并恢复</button></div>`);
+  showSheet('把这本手账恢复回来？', '导入会完整替换餐食、库存、日记、学习运动打卡、模板、快捷类别和贴纸。', `<div class="import-summary">文件：${escape(file.name)}<br>${result.state.meals.length} 餐记录 · ${result.state.inventory.length} 种食材 · ${result.state.diaries.length} 篇日记<br>${result.state.dayRecords.length} 天生活打卡 / 贴纸${dates.length ? `<br>日期：${dates[0]} 至 ${dates.at(-1)}` : ''}${result.warnings.length ? `<br><strong class="danger">有 ${result.warnings.length} 项异常：</strong><br>${[...new Set(result.warnings)].map(escape).join('<br>')}` : ''}</div><p class="sheet-subtitle">建议先导出当前数据。恢复后的当前库存直接采用备份数值，不会再次扣减已吃记录。</p><p class="form-error" id="import-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" data-close>取消</button><button class="primary" id="restore-confirm">确认替换并恢复</button></div>`);
   $('#restore-confirm').onclick = () => {
     try {
       if (!storage) throw new Error('浏览器不允许本地保存，请先开启网站存储。');
@@ -581,6 +664,9 @@ document.addEventListener('click', async e => {
     const kind=button.dataset.checkin;if(!Object.hasOwn(CHECKIN_NAMES,kind))return;
     commit(s=>toggleCheckin(s,selectedDate,kind),`${CHECKIN_NAMES[kind]}${getDayRecord(state,selectedDate)[kind].checked?'打卡已取消，详情仍保留。':'已记下 ♡'}`);return;
   }
+  if(button.dataset.activityCategory){const kind=button.dataset.kind,id=button.dataset.activityCategory;if(Object.hasOwn(CHECKIN_NAMES,kind))commit(book=>toggleCategoryCheckin(book,selectedDate,kind,id),'今天的小积累收好啦 ♡');return;}
+  if(button.dataset.manageActivityCategories){activityCategoryManager(button.dataset.manageActivityCategories);return;}
+  if(button.dataset.dayStickerGroup){recordUI(selectedDate).stickerGroup=button.dataset.dayStickerGroup;render();return;}
   if(button.dataset.daySticker){
     const ids=getDayRecord(state,selectedDate).stickerIds,id=button.dataset.daySticker;
     if(!ids.includes(id)&&ids.length>=3){toast('这一页最多 3 枚，点已选贴纸可移除。');return;}
@@ -588,17 +674,17 @@ document.addEventListener('click', async e => {
   }
   if(button.dataset.activityEdit){
     const kind=button.dataset.kind,item=getDayRecord(state,selectedDate)[kind]?.items.find(row=>row.id===button.dataset.activityEdit);if(!item)return;
-    captureDayUI();Object.assign(recordUI(selectedDate)[kind],{editing:item.id,content:item.content,minutes:item.minutes??'',note:item.note,open:true,conflict:false});render({captureDrafts:false});return;
+    captureDayUI();Object.assign(recordUI(selectedDate)[kind],{editing:item.id,content:item.content,minutes:item.minutes??'',note:item.note,categoryId:item.categoryId||'',distanceKm:item.distanceKm??'',open:true,conflict:false});render({captureDrafts:false});return;
   }
   if(button.dataset.activityCancel){
-    captureDayUI();Object.assign(recordUI(selectedDate)[button.dataset.activityCancel],{editing:null,content:'',minutes:'',note:'',conflict:false});render({captureDrafts:false});return;
+    captureDayUI();Object.assign(recordUI(selectedDate)[button.dataset.activityCancel],{editing:null,content:'',minutes:'',note:'',categoryId:'',distanceKm:'',conflict:false});render({captureDrafts:false});return;
   }
   if(button.dataset.activityDelete){
     const kind=button.dataset.kind,date=selectedDate,id=button.dataset.activityDelete;
     if(!Object.hasOwn(CHECKIN_NAMES,kind)||readOnlyGuard())return;
     if(await ask('收起这项详细记录？','仅删除这项详情，当天打卡状态和其他记录会保留。','删除详情')){
       captureDayUI();const draft=recordUI(date)[kind],previous={...draft},originalItem=getDayRecord(state,date)[kind].items.find(item=>item.id===previous.editing);
-      if(draft.editing===id){Object.assign(draft,{editing:null,content:'',minutes:'',note:'',conflict:false});const form=document.querySelector(`.activity-form[data-kind="${kind}"]`);if(form)for(const name of ['content','minutes','note'])form.elements[name].value='';}
+      if(draft.editing===id){Object.assign(draft,{editing:null,content:'',minutes:'',note:'',categoryId:'',distanceKm:'',conflict:false});const form=document.querySelector(`.activity-form[data-kind="${kind}"]`);if(form)for(const name of ['content','minutes','note','categoryId','distanceKm'])if(form.elements[name])form.elements[name].value='';}
       if(!commit(s=>removeActivity(s,date,kind,id),'这项详情已收起。')){restoreActivityDraft(draft,previous,originalItem,date,kind);render({captureDrafts:false});}
     }return;
   }
@@ -608,11 +694,15 @@ document.addEventListener('click', async e => {
   if (button.dataset.add) return mealEditor(button.dataset.add);
   if (button.dataset.detail) return mealDetail(button.dataset.detail);
   if (button.dataset.editMeal) { const meal = state.meals.find(m => m.id === button.dataset.editMeal); if (meal) return mealEditor(meal.slot, meal.id); return; }
+  if (button.dataset.runwayMode) { if(['comprehensive','main'].includes(button.dataset.runwayMode)&&preference('jizhi-runway-mode',button.dataset.runwayMode)){runwayMode=button.dataset.runwayMode;render();}return; }
   if (button.dataset.fridgeView) { if (preference('jizhi-fridge-view', button.dataset.fridgeView)) { fridgeView = button.dataset.fridgeView; render(); } return; }
   if (button.dataset.ingredient) return ingredientEditor(button.dataset.ingredient);
   if (button.dataset.complete) { button.disabled = true; await markComplete(button.dataset.complete); if (button.isConnected) button.disabled = false; return; }
   if (button.dataset.undo) { button.disabled = true; await undoMeal(button.dataset.undo); if (button.isConnected) button.disabled = false; return; }
   switch (button.dataset.action) {
+    case 'manage-meal-templates': mealTemplateManager();break;
+    case 'manage-study-categories': activityCategoryManager('study');break;
+    case 'manage-exercise-categories': activityCategoryManager('exercise');break;
     case 'today': selectedDate = today(); calendarMonth=selectedDate.slice(0,7); render(); break;
     case 'open-selected-day': openDay(selectedDate);break;
     case 'timeline': calendarView = 'timeline'; render(); window.scrollTo(0, 0); break;
@@ -625,6 +715,7 @@ document.addEventListener('click', async e => {
     case 'prev': case 'next': { const next = addDays(selectedDate, button.dataset.action === 'prev' ? -7 : 7); if (next) {selectedDate=next;render();}else toast('已到日期边界啦。');break;}
     case 'jump': jumpDate(); break;
     case 'v13-backup': download(storage.getItem(V13_BACKUP_KEY), '机智定食-V1.3升级前备份.json'); break;
+    case 'v15-backup': {const raw=storage.getItem(V15_BACKUP_KEY);if(raw)download(raw,'机智定食-V1.5升级前备份.json');break;}
     case 'v14-backup': {const raw=storage.getItem(V14_BACKUP_KEY);if(raw)download(raw,'机智定食-V1.4升级前备份.json');break;}
     case 'add-ingredient': ingredientEditor(); break;
     case 'add-snack': mealEditor('snack'); break;
@@ -664,7 +755,7 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
 document.addEventListener('change', event => { if (event.target.id === 'runway-daily' && preference('jizhi-runway-daily', event.target.value)) { runwayDaily = Number(event.target.value); render(); } });
 
 document.addEventListener('input',event=>{
-  const form=event.target.closest('.activity-form');if(!form||!['content','minutes','note'].includes(event.target.name))return;
+  const form=event.target.closest('.activity-form');if(!form||!['content','minutes','note','categoryId','distanceKm'].includes(event.target.name))return;
   recordUI(form.dataset.date)[form.dataset.kind][event.target.name]=event.target.value;
 });
 document.addEventListener('toggle',event=>{
@@ -679,11 +770,13 @@ document.addEventListener('submit',event=>{
   const date=form.dataset.date,kind=form.dataset.kind,ui=recordUI(date)[kind];
   const content=form.elements.content.value.trim(),note=form.elements.note.value.trim(),value=form.elements.minutes.value.trim();
   const minutes=value===''?null:Number(value);
+  const categoryId=form.elements.categoryId.value, distanceValue=kind==='exercise'?form.elements.distanceKm.value.trim():'',distanceKm=distanceValue===''?null:Number(distanceValue);
+  if(kind==='exercise'&&distanceKm!==null&&(!Number.isFinite(distanceKm)||distanceKm<0||distanceKm>100000)){formError(form,'公里数请填 0–100000 的数字，也可以留空。');return;}
   if(minutes!==null&&(!Number.isInteger(minutes)||minutes<0||minutes>1440)){formError(form,'分钟请填 0–1440 的整数，也可以留空。');return;}
-  if(!content&&!note&&minutes===null&&!ui.editing){formError(form,'详情可以不填，直接一键打卡就好。');return;}
+  if(!content&&!note&&minutes===null&&!categoryId&&distanceKm===null&&!ui.editing){formError(form,'详情可以不填，直接一键打卡就好。');return;}
   if(content.length>200||note.length>1000){formError(form,'内容最多 200 字，备注最多 1000 字。');return;}
-  captureDayUI();const previous={...ui},originalItem=getDayRecord(state,date)[kind].items.find(item=>item.id===previous.editing),item={...(ui.editing?{id:ui.editing}:{}),content,minutes,note};
-  Object.assign(ui,{content:'',minutes:'',note:'',editing:null,conflict:false});for(const key of ['content','minutes','note'])form.elements[key].value='';
+  captureDayUI();const previous={...ui},originalItem=getDayRecord(state,date)[kind].items.find(item=>item.id===previous.editing),item={...(ui.editing?{id:ui.editing}:{}),content,minutes,note,categoryId,...(kind==='exercise'?{distanceKm}:{})};
+  Object.assign(ui,{content:'',minutes:'',note:'',categoryId:'',distanceKm:'',editing:null,conflict:false});for(const key of ['content','minutes','note','categoryId','distanceKm'])if(form.elements[key])form.elements[key].value='';
   const checked=getDayRecord(state,date)[kind].checked;
   if(!commit(s=>putActivity(s,date,kind,item),checked?'详情已收好 ♡':'详情已保存，今天仍未打卡。')){restoreActivityDraft(ui,previous,originalItem,date,kind);render({captureDrafts:false});}
 });

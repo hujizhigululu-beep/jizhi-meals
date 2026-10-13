@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { freshState, normalize, putMeal, putDiary, completeMeal, undoComplete } from '../model.js';
 import { getDayRecord, toggleCheckin, putActivity, removeActivity, setDayStickers, monthStats } from '../activity.js';
 import { STICKERS, STICKER_IDS, getSticker, stickerPath } from '../stickers.js';
-import { STORAGE_KEY, V14_BACKUP_KEY, persist, load } from '../storage.js';
+import { STORAGE_KEY, V14_BACKUP_KEY, V15_BACKUP_KEY, persist, load } from '../storage.js';
 
 const DAY = '2026-10-13';
 const clone = value => structuredClone(value);
@@ -26,7 +26,7 @@ test('空状态与查看历史日期不写演示或创建空记录，返回对�
   const view = getDayRecord(state, '2020-02-29');
   view.study.checked = true; view.stickerIds.push('milk');
   assert.deepEqual(state, before);
-  assert.deepEqual(getDayRecord(state, DAY), { date: DAY, study: { checked: false, items: [] }, exercise: { checked: false, items: [] }, stickerIds: [] });
+  assert.deepEqual(getDayRecord(state, DAY), { date: DAY, study: { checked: false, items: [], categoryIds: [], manualChecked: false }, exercise: { checked: false, items: [], categoryIds: [], manualChecked: false }, stickerIds: [] });
   assert.equal(monthStats(state, '2026-10').mealDays, 0);
   unchangedOnError(state, () => getDayRecord(state, '2026-02-29'));
 });
@@ -85,7 +85,8 @@ test('贴纸只存最多3个白名单ID；安全资源映射拒绝路径与未�
   setDayStickers(state, DAY, ['milk', 'book', 'bow']);
   assert.deepEqual(getDayRecord(state, DAY).stickerIds, ['milk', 'book', 'bow']);
   for (const ids of [['milk', 'milk'], ['milk', 'book', 'bow', 'heart'], ['new-sticker'], ['../milk.svg'], null]) unchangedOnError(state, () => setDayStickers(state, DAY, ids));
-  assert.equal(STICKERS.length, 8); assert.equal(new Set(STICKER_IDS).size, 8);
+  assert.ok(STICKERS.length >= 8); assert.equal(new Set(STICKER_IDS).size, STICKERS.length);
+  for (const id of ['milk', 'strawberry', 'book', 'shoe', 'star', 'heart', 'bow', 'fork']) assert.ok(STICKER_IDS.includes(id));
   assert.equal(stickerPath('book'), './assets/stickers/book.svg');
   assert.equal(getSticker('javascript:alert(1)'), null);
   assert.equal(stickerPath('../milk.svg'), null);
@@ -113,11 +114,11 @@ test('新JSON往返保留库存图片、餐食关联、日记、取消打卡详�
   assert.deepEqual(restored.state.dayRecords, records);
 });
 
-test('schema1/2迁移添加空dayRecords且保持旧JSON与库存原文；schema3缺少列表保护', () => {
+test('schema1/2迁移添加空dayRecords且保持旧JSON与库存原文；当前schema缺少列表保护', () => {
   for (const schemaVersion of [1, 2]) {
     const legacy = pantry(); legacy.schemaVersion = schemaVersion; delete legacy.dayRecords;
     const before = clone(legacy), result = normalize(legacy);
-    assert.equal(result.locked, false); assert.equal(result.state.schemaVersion, 3);
+    assert.equal(result.locked, false); assert.equal(result.state.schemaVersion, 4);
     assert.deepEqual(result.state.dayRecords, []); assert.deepEqual(result.state.inventory, legacy.inventory);
     assert.deepEqual(legacy, before);
   }
@@ -162,9 +163,10 @@ test('V1.4首次写入前备份schema2完整原文，备份失败不覆盖，重
   const state = loaded.state; toggleCheckin(state, DAY, 'study');
   const before = clone(state); storage.failKey = V14_BACKUP_KEY;
   assert.throws(() => persist(storage, state), /V1.4/); assert.deepEqual(state, before);
-  assert.equal(storage.getItem(STORAGE_KEY), raw); assert.deepEqual(storage.writes, []);
+  assert.equal(storage.getItem(STORAGE_KEY), raw); assert.deepEqual(storage.writes, [V15_BACKUP_KEY]);
+  assert.equal(storage.getItem(V15_BACKUP_KEY), raw);
   storage.failKey = null; const saved = persist(storage, state);
-  assert.deepEqual(storage.writes, [V14_BACKUP_KEY, STORAGE_KEY]);
+  assert.deepEqual(storage.writes, [V15_BACKUP_KEY, V14_BACKUP_KEY, STORAGE_KEY]);
   assert.equal(storage.getItem(V14_BACKUP_KEY), raw); assert.equal(saved.dayRecords[0].study.checked, true);
   persist(storage, load(storage).state);
   assert.equal(storage.writes.filter(key => key === V14_BACKUP_KEY).length, 1);
@@ -177,7 +179,7 @@ test('V1.4正式写入失败保留旧数据且备份可恢复；未来schema与�
   toggleCheckin(state, DAY, 'exercise'); storage.failKey = STORAGE_KEY;
   assert.throws(() => persist(storage, state));
   assert.equal(storage.getItem(STORAGE_KEY), raw); assert.equal(storage.getItem(V14_BACKUP_KEY), raw);
-  const futureRaw = JSON.stringify({ ...freshState(), schemaVersion: 4 }), future = new MemoryStorage(futureRaw);
+  const futureRaw = JSON.stringify({ ...freshState(), schemaVersion: 5 }), future = new MemoryStorage(futureRaw);
   assert.equal(load(future).locked, true); assert.throws(() => persist(future, freshState()));
   assert.equal(future.getItem(STORAGE_KEY), futureRaw); assert.deepEqual(future.writes, []);
 });

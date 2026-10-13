@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
+import { SCHEMA } from '../model.js';
 const { chromium, webkit } = createRequire(import.meta.url)('playwright');
 const root = resolve('.');
 const output = process.env.V14_SCREENSHOTS || resolve('tests/ui-previews/v14-app');
@@ -44,6 +45,7 @@ try {
   async function chooseDate(date) { if ((await page.locator('#calendar-month').inputValue()) !== date.slice(0, 7)) await inputDate(page.locator('#calendar-month'), date.slice(0, 7)); await page.locator(`[data-month-date="${date}"]`).click(); }
   async function details(kind) { const locator = page.locator(`.activity-details[data-kind="${kind}"]`); if (await locator.getAttribute('open') === null) await locator.locator('summary').click(); return locator; }
   async function saveItem(kind, content, minutes, note) { const section = await details(kind), form = section.locator('form'); await form.locator('[name="content"]').fill(content); await form.locator('[name="minutes"]').fill(minutes); await form.locator('[name="note"]').fill(note); await form.locator('[type="submit"]').click(); }
+  async function chooseDaySticker(id) { await page.locator('[data-day-sticker-group="common"]').click(); await page.locator(`[data-day-sticker="${id}"]`).click(); }
   async function download(button, label, extension = 'json') {
     const pending = page.waitForEvent('download'); await button.click(); const file = await pending;
     const path = resolve(output, `${engineName}-${label}.${extension}`); await file.saveAs(path);
@@ -69,6 +71,7 @@ try {
   await page.locator('.calendar-page').waitFor();
   assert.equal(await readRaw(), original, 'Opening V1.4 must not rewrite the schema2 source');
   assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.4-upgrade-backup')), null);
+  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.5-upgrade-backup')), null);
   await month();
   assert.equal(await page.locator('.month-grid > *').count(), 35);
   assert.equal(await page.locator('[data-month-date]').count(), 31);
@@ -114,15 +117,16 @@ try {
   assert.match(await page.locator('.activity-details[data-kind="study"] .activity-help').textContent(), /未打卡/);
   await page.locator('[data-checkin="study"]').click();
   await page.locator('.day-sticker-picker summary').click();
-  for (const id of ['milk', 'book', 'shoe']) await page.locator(`[data-day-sticker="${id}"]`).click();
-  const beforeLimit = await readRaw(); await page.locator('[data-day-sticker="heart"]').click();
+  for (const id of ['milk', 'book', 'shoe']) await chooseDaySticker(id);
+  const beforeLimit = await readRaw(); await chooseDaySticker('heart');
   assert.equal(await readRaw(), beforeLimit, 'Fourth sticker must not write data');
   assert.deepEqual((await day('2026-10-04')).stickerIds, ['milk', 'book', 'shoe']);
   assert.equal(await page.locator('.day-sticker-strip img').count(), 3);
   const migrated = await readBook();
-  assert.equal(migrated.schemaVersion, 3);
+  assert.equal(migrated.schemaVersion, SCHEMA);
   assert.deepEqual(migrated.inventory, fixture.inventory); assert.deepEqual(migrated.meals, fixture.meals); assert.deepEqual(migrated.diaries, fixture.diaries);
   assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.4-upgrade-backup')), original);
+  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.5-upgrade-backup')), original);
   const saved = await readRaw(); await page.reload(); await page.locator('.calendar-page').waitFor();
   assert.equal(await readRaw(), saved); await month(); await chooseDate('2026-10-04');
   assert.equal(await page.locator('.day-sticker-strip img').count(), 3);
@@ -201,7 +205,7 @@ try {
   await page.locator('[data-page="settings"]').click();
   const exported = await download(page.locator('[data-action="export"]'), 'backup');
   const exportedBook = JSON.parse(exported.bytes.toString());
-  assert.equal(exportedBook.schemaVersion, 3); assert.equal(exportedBook.dayRecords.length, 2);
+  assert.equal(exportedBook.schemaVersion, SCHEMA); assert.equal(exportedBook.dayRecords.length, 2);
   assert.deepEqual(exportedBook.inventory, fixture.inventory); assert.deepEqual(exportedBook.meals, fixture.meals); assert.deepEqual(exportedBook.diaries, fixture.diaries);
   const upgrade = await download(page.locator('[data-action="v14-backup"]'), 'upgrade-original');
   assert.equal(upgrade.bytes.toString(), original);
@@ -212,8 +216,9 @@ try {
   await page.locator('#restore-confirm').click();
   await page.waitForFunction(() => !document.querySelector('#sheet').open);
   const restored = await readBook();
-  for (const key of ['inventory', 'meals', 'diaries', 'dayRecords']) assert.deepEqual(restored[key], exportedBook[key]);
+  for (const key of ['inventory', 'meals', 'diaries', 'dayRecords', 'mealTemplates', 'activityCategories', 'recentStickerIds']) assert.deepEqual(restored[key], exportedBook[key]);
   assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.4-upgrade-backup')), original);
+  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.5-upgrade-backup')), original);
   const current = await download(page.locator('[data-action="original"]'), 'current-original'); assert.equal(current.bytes.toString(), await readRaw());
   report.checks.push('real JSON export/import, original schema2 download, restoration of new records plus images/inventory/history');
 
@@ -236,7 +241,7 @@ try {
   assert.equal((await day('2026-10-13')).study.checked, false);
   await page.locator('[data-checkin="study"]').click();
   await page.locator('.day-sticker-picker summary').click();
-  for (const id of ['milk', 'book', 'star']) await page.locator(`[data-day-sticker="${id}"]`).click();
+  for (const id of ['milk', 'book', 'star']) await chooseDaySticker(id);
   await page.waitForFunction(() => [...document.querySelectorAll('.day-sticker-strip img')].every(image => image.complete && image.naturalWidth > 0));
   await page.locator('[data-action="share-day"]').click(); await waitPreview();
   const offlineCard = await download(page.locator('#download-card'), 'offline-card', 'png');

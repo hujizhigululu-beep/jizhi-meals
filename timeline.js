@@ -1,5 +1,7 @@
 import { addDays, parseDate, SLOTS } from './model.js';
 import { getSticker } from './stickers.js';
+import { activeActivityItems } from './activity.js';
+import { getActivityCategories } from './activity-shortcuts.js';
 
 const LABELS = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐' };
 const SHORT_LABELS = { breakfast: '早', lunch: '午', dinner: '晚' };
@@ -10,6 +12,7 @@ const MAX_ROWS = 180;
 const controllers = new WeakMap();
 const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const text = value => typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
+const knownDistance = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100000;
 const excerpt = (value, max = 42) => {
   const chars = Array.from(text(value));
   return chars.length > max ? `${chars.slice(0, max).join('')}…` : chars.join('');
@@ -32,11 +35,20 @@ function indexDays(state) {
     if (!record || !parseDate(record.date) || dayRecords.has(record.date)) continue;
     // Index in one pass, rather than searching the complete journal for every date.
     const day = structuredClone(record);
-    const hasActivity = ['study', 'exercise'].some(kind => day[kind]?.checked === true || day[kind]?.items?.some(item => text(item?.content) || text(item?.note) || typeof item?.minutes === 'number' && Number.isFinite(item.minutes)));
+    const hasActivity = ['study', 'exercise'].some(kind => day[kind]?.checked === true || day[kind]?.categoryIds?.length || day[kind]?.items?.some(item => text(item?.content) || text(item?.note) || text(item?.categoryName) || text(item?.categoryId) || typeof item?.minutes === 'number' && Number.isFinite(item.minutes) || kind === 'exercise' && knownDistance(item?.distanceKm)));
     const stickerIds = (day.stickerIds || []).filter(id => getSticker(id));
     if (hasActivity || stickerIds.length) dayRecords.set(record.date, { ...day, stickerIds });
   }
-  return { meals, diaries, dayRecords };
+  const activityCategories = Object.fromEntries(['study', 'exercise'].map(kind => [kind, new Map(getActivityCategories(state || {}, kind).map(category => [category.id, category]))]));
+  return { meals, diaries, dayRecords, activityCategories };
+}
+
+function categoryName(activity, id, categories) {
+  return text(activity.items?.find(item => item.categoryId === id && text(item.categoryName))?.categoryName) || text(categories.get(id)?.name) || '原类别';
+}
+
+function selectedCategoryNames(activity, categories) {
+  return [...new Set(Array.isArray(activity?.categoryIds) ? activity.categoryIds : [])].map(id => categoryName(activity, id, categories));
 }
 
 function daySummary(index, date) {
@@ -83,7 +95,7 @@ export function timelineDates(center, before = INITIAL_RADIUS, after = INITIAL_R
   return dates;
 }
 
-function renderExpandedSections(preview, entry) {
+function renderExpandedSections(preview, entry, categories) {
   const meals = preview.mealCount ? `<section class="timeline-record-section timeline-food-section" aria-label="餐食">
     <h3 class="timeline-section-title">餐食</h3>
     ${preview.mainMeals.length ? `<div class="timeline-meals">${preview.mainMeals.map(meal => `<div class="timeline-meal${meal.completed ? ' is-eaten' : ''}" data-slot="${meal.slot}"><small class="timeline-meal-label">${meal.label}</small><span class="timeline-meal-name">${escape(meal.name)}</span>${meal.completed ? '<small class="timeline-meal-state">已吃</small>' : ''}</div>`).join('')}</div>` : ''}
@@ -103,9 +115,18 @@ function renderExpandedSections(preview, entry) {
   </section>` : '';
   const activities = ['study', 'exercise'].map(kind => {
     const activity = preview[kind];
-    if (!activity || !activity.checked && !activity.items?.length) return '';
+    if (!activity || !activity.checked && !activity.items?.length && !activity.categoryIds?.length) return '';
     const label = kind === 'study' ? '学习' : '运动';
-    return `<section class="timeline-record-section timeline-activity-section" data-kind="${kind}" aria-label="${label}"><h3 class="timeline-section-title">${label}</h3><span class="timeline-activity-state${activity.checked ? '' : ' is-unchecked'}">${activity.checked ? '已打卡' : '未打卡 · 保留详情'}</span>${activity.items?.length ? `<ul class="timeline-activity-items">${activity.items.map(item => `<li class="timeline-activity-item">${text(item.content) ? `<span>${escape(item.content)}</span>` : ''}${typeof item.minutes === 'number' && Number.isFinite(item.minutes) ? ` <small>${escape(item.minutes)} 分钟</small>` : ''}${text(item.note) ? `<p>${escape(item.note)}</p>` : ''}</li>`).join('')}</ul>` : ''}</section>`;
+    const active = new Set(activeActivityItems(activity));
+    const selected = selectedCategoryNames(activity, categories[kind]);
+    const entries = (activity.items || []).map(item => {
+      const retained = !active.has(item);
+      const category = item.categoryId ? categories[kind].get(item.categoryId) : null;
+      const categoryLabel = item.categoryId ? `<small class="timeline-activity-category">${escape(text(item.categoryName) || text(category?.name) || '原类别')}${category?.active === false ? ' · 已停用' : ''}</small> ` : '';
+      const status = retained ? `<small class="timeline-activity-retained">${activity.checked ? '未选类别 · 详情保留' : '未打卡 · 详情保留'}，暂不计入统计</small>` : '';
+      return `<li class="timeline-activity-item${retained ? ' is-retained' : ''}">${categoryLabel}${text(item.content) ? `<span>${escape(item.content)}</span>` : ''}${Number.isInteger(item.minutes) && item.minutes >= 0 && item.minutes <= 1440 ? ` <small>${escape(item.minutes)} 分钟</small>` : ''}${kind === 'exercise' && knownDistance(item.distanceKm) ? ` <small>${escape(item.distanceKm)} 公里</small>` : ''}${status}${text(item.note) ? `<p>${escape(item.note)}</p>` : ''}</li>`;
+    }).join('');
+    return `<section class="timeline-record-section timeline-activity-section" data-kind="${kind}" aria-label="${label}"><h3 class="timeline-section-title">${label}</h3><span class="timeline-activity-state${activity.checked ? '' : ' is-unchecked'}">${activity.checked ? '已打卡' : '未打卡 · 保留详情'}</span>${selected.length ? `<p class="timeline-activity-category-summary"><small>${escape((activity.checked ? '已选类别 · ' : '类别已保留 · ') + selected.join('、'))}</small></p>` : ''}${entries ? `<ul class="timeline-activity-items">${entries}</ul>` : ''}</section>`;
   }).join('');
   const stickers = preview.stickerIds?.length ? `<div class="timeline-sticker-strip" aria-label="当天的小贴纸">${preview.stickerIds.map(id => { const sticker = getSticker(id); return `<img src="${escape(sticker.src)}" alt="${escape(sticker.name)}" width="35" height="35" loading="lazy">`; }).join('')}</div>` : '';
   return meals + activities + feelings + story + stickers;
@@ -120,10 +141,13 @@ function renderRows(index, dates, { selectedDate, today, expandedDates = new Set
     const emptyMessages = ['今天的故事，慢慢写 (｡･ω･｡)ﾉ♡', '留一页给小日子 (˶ᵔ ᵕ ᵔ˶)', '想记的时候再来呀 (´｡• ᵕ •｡`) ♡'];
     const activitySummary = ['study', 'exercise'].flatMap(kind => {
       const activity = preview[kind];
-      if (!activity || !activity.checked && !activity.items?.length) return [];
+      if (!activity || !activity.checked && !activity.items?.length && !activity.categoryIds?.length) return [];
       const label = kind === 'study' ? '学习' : '运动';
-      const content = activity.items?.map(item => text(item.content)).filter(Boolean).join('、');
-      return [`${label}${content ? (activity.checked ? ' · ' : '详情 · ') + content : activity.checked ? '已打卡' : '详情已保留'}`];
+      if (!activity.checked) return [label + '详情已保留'];
+      const active = activeActivityItems(activity), categories = index.activityCategories[kind];
+      const missing = [...new Set(Array.isArray(activity.categoryIds) ? activity.categoryIds : [])].filter(id => !active.some(item => item.categoryId === id));
+      const content = [...new Set([...active.map(item => text(item.content) || (item.categoryId ? categoryName(activity, item.categoryId, categories) : '')).filter(Boolean), ...missing.map(id => categoryName(activity, id, categories))])].join('、');
+      return [`${label}${content ? ' · ' + content : '已打卡'}`];
     }).join('  ');
     const compact = preview.diary?.excerpt || preview.diary?.mood || preview.mainMeals.map(meal => SHORT_LABELS[meal.slot] + ' · ' + meal.name).join('  ') || (preview.snackCount ? '🍓 ' + preview.snacks[0].name : '') || activitySummary || (preview.stickerIds?.length ? '当天的小贴纸' : '');
     const recordMarks = [preview.mealCount || preview.diary ? preview.mealCount + ' 餐' : '', preview.study?.checked ? '学习' : preview.study?.items?.length ? '学习未打卡' : '', preview.exercise?.checked ? '运动' : preview.exercise?.items?.length ? '运动未打卡' : '', preview.diary?.text ? '✎ 小故事' : preview.diary ? '✎ 小记' : '', preview.stickerIds?.length ? '小贴纸' : ''].filter(Boolean).join(' · ');
@@ -131,7 +155,7 @@ function renderRows(index, dates, { selectedDate, today, expandedDates = new Set
       <details class="timeline-day-details" ${expandedDates.has(date) ? 'open' : ''}><summary class="timeline-day-summary" aria-label="${escape(dateLabel + (date === today ? '，今天' : '') + (preview.hasRecords ? '，' + excerpt(compact, 64) : '，留白') + '，展开或收起当天摘要')}">
       <span class="timeline-date"><span class="timeline-calendar-date"><span class="timeline-month">${day.getMonth() + 1}月</span><strong class="timeline-day-number">${day.getDate()}</strong></span><span class="timeline-weekday">${WEEKDAYS[day.getDay()]}</span></span>
       <span class="timeline-preview"><span class="${preview.hasRecords ? 'timeline-compact-line' : 'timeline-empty'}">${escape(preview.hasRecords ? excerpt(compact, 64) : emptyMessages[day.getDate() % emptyMessages.length])}</span><span class="timeline-record-mark">${preview.hasRecords ? recordMarks : '留白'}</span></span><span class="timeline-chevron" aria-hidden="true">⌄</span></summary>
-      <div class="timeline-expanded">${renderExpandedSections(preview, index.diaries.get(date))}<button type="button" class="text-button timeline-open" data-timeline-open="${date}" aria-label="${escape(dateLabel + '，翻开当天记录')}">${preview.hasRecords ? '翻开这一天 ↗' : '写下这一天 ↗'}</button></div>
+      <div class="timeline-expanded">${renderExpandedSections(preview, index.diaries.get(date), index.activityCategories)}<button type="button" class="text-button timeline-open" data-timeline-open="${date}" aria-label="${escape(dateLabel + '，翻开当天记录')}">${preview.hasRecords ? '翻开这一天 ↗' : '写下这一天 ↗'}</button></div>
       </details></article>`;
   }).join('');
 }

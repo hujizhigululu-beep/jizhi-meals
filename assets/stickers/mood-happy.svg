@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <title>开心一点 · 机智定食原创</title>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="40" cy="40" r="24" fill="#fffdf3" stroke="#fffdf3" stroke-width="9"/>
+    <circle cx="40" cy="40" r="24" fill="#fbe7a5" stroke="#c7ae7b" stroke-width="1.7"/>
+    <path d="M28 35q3-5 6 0m12 0q3-5 6 0" fill="none" stroke="#a08b6b" stroke-width="1.8"/>
+    <path d="M31 45q9 13 18 0Z" fill="#fff9e8" stroke="#af9676" stroke-width="1.5"/>
+    <ellipse cx="26" cy="43" rx="4" ry="2.5" fill="#edb6b9"/>
+    <ellipse cx="54" cy="43" rx="4" ry="2.5" fill="#edb6b9"/>
+    <path d="M40 6v5m0 58v5M6 40h5m58 0h5M16 16l4 4m40 40 4 4m0-48-4 4M20 60l-4 4" fill="none" stroke="#ddc185" stroke-width="2.5"/>
+    <path d="M59 6c-4-5-10 0 0 7 10-7 4-12 0-7Z" fill="#efbad0" stroke="#c194a8" stroke-width="1"/>
+  </g>
+</svg>

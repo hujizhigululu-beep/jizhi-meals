@@ -1,0 +1,69 @@
+/* Small paper slips inside the existing meal editor, using notebook tokens. */
+.meal-shortcuts { margin: 0 0 14px; padding: 10px; border: 1px solid var(--journal-line, #ebc8d2); border-radius: var(--journal-radius, 12px); background: var(--journal-paper, #fffdf4); box-shadow: var(--journal-shadow, 0 2px 5px #875b6510); min-width: 0; }
+.meal-shortcuts-heading { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 4px; margin-bottom: 7px; }
+.meal-shortcuts-heading > span { font: 650 13px/1.5 var(--journal-title-font, serif); color: var(--journal-ink, #714f56); }
+.meal-shortcuts-heading small { font-size: 8px; letter-spacing: .09em; color: var(--journal-muted, #a17983); }
+.meal-scene-slips { display: flex; gap: 5px; overflow-x: auto; padding: 2px 1px 7px; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.meal-scene-slip { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 4px; min-height: 44px; max-width: 160px; padding: 5px 8px; border: 1px dashed #e0c5c8; border-radius: 7px; background: #fff8e9; color: var(--journal-ink, #714f56); box-shadow: 0 2px 0 #f1dfd877; font-size: 12px; line-height: 1.4; }
+.meal-scene-slip:nth-child(2n) { background: var(--journal-mint, #eaf5e7); border-color: #c4d6bc; }
+.meal-scene-slip:nth-child(3n) { background: var(--journal-lilac, #f1eafa); border-color: #d6c6e1; }
+.meal-scene-slip img { flex: 0 0 auto; width: 25px; height: 25px; object-fit: contain; }
+.meal-scene-slip[aria-pressed="true"] { background: var(--journal-soft-pink, #ffe8f0); border: 1px solid #cb8faa; box-shadow: inset 0 0 0 2px #fffbf3, 0 2px 0 #efd6df; }
+.meal-template-fold { margin-top: 3px; border-top: 1px dashed #edd4d9; }
+.meal-template-fold > summary, .meal-component-group > summary { display: flex; min-height: 44px; align-items: center; gap: 8px; color: var(--journal-ink, #714f56); cursor: pointer; list-style: none; font-size: 12px; }
+.meal-template-fold > summary::-webkit-details-marker, .meal-component-group > summary::-webkit-details-marker { display: none; }
+.meal-template-fold > summary::after, .meal-component-group > summary::after { content: '⌄'; margin-left: auto; font-size: 15px; color: #ac8793; }
+.meal-template-fold[open] > summary::after, .meal-component-group[open] > summary::after { content: '⌃'; }
+.meal-template-fold > summary small, .meal-component-group > summary small { color: #91717b; font-size: 10px; }
+.meal-template-body { padding: 0 1px 5px; }
+.meal-template-list { list-style: none; margin: 0 0 8px; padding: 0; }
+.meal-template-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 5px; border-top: 1px dotted #e9d3d8; }
+.meal-template-select { display: flex; min-height: 49px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; width: 100%; min-width: 0; padding: 6px 5px; background: transparent; border: 0; border-radius: 5px; text-align: left; color: var(--journal-ink, #714f56); }
+.meal-template-select[aria-pressed="true"] { background: #ffedf2; box-shadow: inset 3px 0 #e9a7bf; }
+.meal-template-name { display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; }
+.meal-template-select small { font-size: 10px; color: #997d80; }
+.meal-template-manage { min-width: 44px; min-height: 44px; font-size: 11px; padding: 3px; }
+.meal-template-save { display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; padding: 9px; border: 1px solid #e9d8b8; border-radius: 7px; background: var(--journal-yellow, #fff2cd); }
+.meal-template-save label { min-width: 0; color: #967950; font-size: 11px; }
+.meal-template-save input { display: block; width: 100%; max-width: 100%; box-sizing: border-box; min-height: 44px; margin-top: 4px; border: 1px solid #decaab; border-radius: 6px; padding: 7px 8px; background: #fffdf6; color: var(--journal-ink, #714f56); font-size: 16px; }
+.meal-template-save button { min-height: 44px; justify-self: end; font-size: 12px; }
+.meal-template-help, .meal-template-empty { margin: 7px 1px 0; font-size: 10px; line-height: 1.7; color: #967b7e; }
+.meal-template-empty { margin: 0 0 8px; }
+.meal-template-library { display: block; min-height: 44px; padding: 5px 0; margin-left: auto; font-size: 11px; }
+.meal-template-ingredients { min-width: 0; margin: 0 0 11px; }
+.meal-component-group { margin: 5px 0; padding: 0 9px; background: #fff7e6; border: 1px solid #e5d7bb; border-radius: 8px; }
+.meal-component-group[data-component="蔬菜"], .meal-component-group[data-component="整套食物"] { background: var(--journal-mint, #eaf5e7); border-color: #ccdaba; }
+.meal-component-group[data-component="碳水"] { background: var(--journal-lilac, #f1eafa); border-color: #dacee4; }
+.meal-component-group > summary > span { font-weight: 600; }
+.meal-component-body { padding: 0 0 9px; }
+.meal-component-label { font-size: 8px; letter-spacing: .1em; color: #a28d7a; }
+.meal-component-body > p { margin: 4px 0; color: #927b79; font-size: 11px; line-height: 1.65; }
+.meal-component-choices { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+.meal-template-ingredient { display: flex; min-height: 44px; min-width: 0; max-width: 100%; align-items: center; gap: 6px; padding: 5px 7px; border: 1px dashed #d5c4b7; border-radius: 6px; background: #fffdf3; box-sizing: border-box; cursor: pointer; }
+.meal-template-ingredient input { flex: 0 0 auto; width: 17px; height: 17px; margin: 0; accent-color: #c7809b; }
+.meal-template-ingredient span { min-width: 0; }
+.meal-template-ingredient strong { display: block; font-size: 12px; line-height: 1.5; font-weight: 600; overflow-wrap: anywhere; color: var(--journal-ink, #714f56); }
+.meal-template-ingredient small { display: block; font-size: 9px; line-height: 1.4; color: #987f81; }
+.meal-shortcuts button:focus-visible, .meal-component-group input:focus-visible, .meal-template-save input:focus-visible { outline: 2px solid #ae6e8b; outline-offset: 2px; }
+
+/* The small library stays folded until a particular paper slip is opened. */
+.meal-template-manager { display: grid; gap: 8px; min-width: 0; margin: 0 0 10px; }
+.meal-template-edit { min-width: 0; max-width: 100%; border: 1px solid var(--journal-line, #ebc8d2); border-radius: 10px; background: var(--journal-paper, #fffdf4); box-shadow: var(--journal-shadow, 0 2px 5px #875b6510); }
+.meal-template-edit:nth-child(3n + 2) { background: #f7faee; border-color: #d6dfc5; }
+.meal-template-edit:nth-child(3n + 3) { background: #fff7e7; border-color: #e6d6b4; }
+.meal-template-edit > summary { position: relative; display: block; min-height: 44px; padding: 9px 29px 9px 11px; border-radius: inherit; list-style: none; font: 600 13px/1.55 var(--journal-title-font, serif); color: var(--journal-ink, #714f56); overflow-wrap: anywhere; cursor: pointer; }
+.meal-template-edit > summary::-webkit-details-marker { display: none; }
+.meal-template-edit > summary::after { content: '⌄'; position: absolute; right: 11px; top: 12px; font: 15px/1.4 var(--journal-body-font, sans-serif); color: #ae8394; }
+.meal-template-edit[open] > summary::after { content: '⌃'; }
+.meal-template-edit > summary small { display: inline-block; max-width: 100%; margin-left: 3px; color: #a28a87; font: 400 10px/1.7 var(--journal-body-font, sans-serif); white-space: normal; overflow-wrap: anywhere; }
+.meal-template-edit > form { min-width: 0; padding: 2px 11px 11px; border-top: 1px dashed #e9d0d5; background: #fffdf78a; border-radius: 0 0 10px 10px; }
+.meal-template-edit .form-field { margin: 9px 0; font-size: 11px; line-height: 1.7; color: #946f77; overflow-wrap: anywhere; }
+.meal-template-edit .form-field :is(input, select, textarea) { display: block; width: 100%; min-width: 0; max-width: 100%; min-height: 44px; box-sizing: border-box; margin-top: 5px; padding: 9px 10px; border: 1px solid #e2c7ca; border-radius: 7px; background: #fffef9; color: var(--journal-ink, #714f56); font-size: 16px; line-height: 1.5; }
+.meal-template-edit .form-field textarea { min-height: 68px; }
+.meal-template-edit .form-buttons { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.meal-template-edit .form-buttons button { flex: 1 1 95px; min-width: 0; min-height: 44px; max-width: 100%; padding: 9px 10px; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.meal-template-edit .form-buttons .secondary { border-color: #e2bdc5; background: #fff9f5; }
+.meal-template-edit .form-error { padding: 7px 8px; margin: 8px 0; font-size: 11px; overflow-wrap: anywhere; }
+.meal-template-manager + #shortcut-back { min-height: 44px; max-width: 100%; margin-top: 4px; font-size: 12px; }
+.meal-template-edit > summary:focus-visible, .meal-template-edit button:focus-visible, .meal-template-edit :is(input, select, textarea):focus-visible { outline: 2px solid #ae6e8b; outline-offset: 2px; }
+@media (min-width: 460px) { .meal-template-save { grid-template-columns: minmax(0, 1fr) auto; align-items: end; } }

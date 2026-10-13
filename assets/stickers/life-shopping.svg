@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <title>买点小东西 · 机智定食原创</title>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 24h40l5 46H15Z" fill="#fffdf3" stroke="#fffdf3" stroke-width="9"/>
+    <path d="M20 24h40l5 46H15Z" fill="#ffe6cf" stroke="#bf9b83" stroke-width="1.7"/>
+    <path d="M25 25 22 69m12-44-1 44m12-44 1 44m9-44 4 44" fill="none" stroke="#f0cfb5" stroke-width="5"/>
+    <path d="M29 30V20q0-13 11-13t11 13v10" fill="none" stroke="#b28a85" stroke-width="2.4"/>
+    <circle cx="29" cy="29" r="2.4" fill="#c49b94"/><circle cx="51" cy="29" r="2.4" fill="#c49b94"/>
+    <rect x="28" y="40" width="24" height="19" rx="3" fill="#fff7e6" stroke="#e0bfa4" stroke-width="1.2"/>
+    <path d="M40 45c-5-6-12 0 0 9 12-9 5-15 0-9Z" fill="#e9b1c6" stroke="#bf8d9f" stroke-width="1"/>
+    <path d="m68 14 1 4 5 1-5 2-1 4-2-4-4-2 4-1Z" fill="#d4debf" stroke="#acbb99" stroke-width="1"/>
+  </g>
+</svg>
