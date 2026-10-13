@@ -2,6 +2,7 @@ import { SCHEMA, freshState, normalize } from './model.js';
 export const STORAGE_KEY = 'jizhi-meals-v1';
 export const MIGRATION_BACKUP_KEY = 'jizhi-meals-v1-migration-backup';
 export const V13_BACKUP_KEY = 'jizhi-meals-v1.3-upgrade-backup';
+export const V14_BACKUP_KEY = 'jizhi-meals-v1.4-upgrade-backup';
 export function load(storage) {
   const raw = storage.getItem(STORAGE_KEY);
   if (raw == null) return { state: freshState(), warnings: [], raw: null, locked: false };
@@ -23,6 +24,10 @@ export function persist(storage, state, { replaceProtected = false } = {}) {
       protectedPrevious = normalize(previous).locked;
     } catch { protectedPrevious = true; }
     if (protectedPrevious && !replaceProtected) throw new Error('原文件格式异常或属于更新版本，已保护原文件；请先导出，再明确确认恢复。');
+    if (!protectedPrevious && [1, 2].includes(previous?.schemaVersion) && storage.getItem(V14_BACKUP_KEY) == null) {
+      try { storage.setItem(V14_BACKUP_KEY, raw); }
+      catch { throw new Error('V1.4 升级备份没能保存，原数据没有改变。请先导出备份或腾出浏览器存储空间。'); }
+    }
     if (previous?.schemaVersion === 1 && SCHEMA > 1 && storage.getItem(MIGRATION_BACKUP_KEY) == null) {
       try { storage.setItem(MIGRATION_BACKUP_KEY, raw); }
       catch { throw new Error('旧版数据的安全备份没能保存，原数据没有改变。请先导出备份或腾出浏览器存储空间。'); }

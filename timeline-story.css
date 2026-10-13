@@ -1,0 +1,255 @@
+/* A compact date line opens into one diary page; paper and strawberry styling stay shared. */
+.timeline-page .timeline-row {
+  min-height: 68px;
+}
+
+.timeline-page .timeline-day-summary {
+  grid-template-columns: 56px minmax(0, 1fr) 18px;
+  gap: 22px;
+  min-height: 68px;
+  padding: 10px 12px 10px 7px;
+  cursor: pointer;
+}
+
+.timeline-page .timeline-day-summary:focus-visible {
+  outline: 2px solid var(--berry);
+  outline-offset: -3px;
+  border-radius: 3px;
+}
+
+.timeline-page .timeline-row::after {
+  left: 76px;
+}
+
+.timeline-page .timeline-date {
+  gap: 2px;
+}
+
+/* Keep the timeline dot on its rule and the today heart inside the date column. */
+.timeline-page .timeline-date::after {
+  right: -17px;
+}
+
+.timeline-page .timeline-row.is-today .timeline-day-number::after {
+  top: -9px;
+  right: 1px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.timeline-calendar-date {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.timeline-page .timeline-month,
+.timeline-page .timeline-weekday {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.timeline-page .timeline-day-number {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.timeline-page .timeline-preview {
+  gap: 2px;
+}
+
+.timeline-page .timeline-compact-line,
+.timeline-page .timeline-empty {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+}
+
+.timeline-page .timeline-record-mark {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.timeline-page .timeline-empty {
+  color: #b9a2ad;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.timeline-page .timeline-row:not(.has-records) .timeline-record-mark {
+  color: #bcaab2;
+}
+
+.timeline-page .timeline-expanded {
+  padding: 0 12px 12px 85px;
+}
+
+/* Open days read as three small diary sections without truncating the user's writing. */
+.timeline-expanded .timeline-record-section {
+  min-width: 0;
+  padding: 8px 0 10px;
+  margin: 0;
+  overflow: visible;
+  white-space: normal;
+}
+
+.timeline-expanded .timeline-record-section + .timeline-record-section {
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+.timeline-expanded .timeline-section-title {
+  margin: 0 0 7px;
+  color: var(--berry);
+  font-family: var(--title-font);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: .4px;
+}
+
+.timeline-expanded .timeline-meals {
+  display: grid;
+  gap: 7px;
+}
+
+.timeline-expanded .timeline-meal {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.timeline-expanded .timeline-meal-name {
+  min-width: 0;
+  color: var(--ink);
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.timeline-expanded .timeline-meal-label,
+.timeline-expanded .timeline-snack-label,
+.timeline-expanded .timeline-snack-time,
+.timeline-expanded .timeline-meal-state,
+.timeline-expanded .timeline-feeling-row > small {
+  color: var(--muted);
+  font-family: var(--body-font);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.timeline-expanded .timeline-meal-state {
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.timeline-expanded .timeline-snacks {
+  max-width: 100%;
+  margin-top: 10px;
+}
+
+.timeline-expanded .timeline-snack-label {
+  margin: 0 0 5px;
+}
+
+.timeline-expanded .timeline-snack-list {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timeline-expanded .timeline-snack-item {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+  line-height: 1.7;
+}
+
+.timeline-expanded .timeline-snack-time,
+.timeline-expanded .timeline-snack-item > .timeline-meal-state {
+  flex: 0 0 auto;
+}
+
+.timeline-expanded .timeline-snack-item > .timeline-meal-name {
+  flex: 1 1 auto;
+}
+
+.timeline-expanded .timeline-feeling-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 7px;
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.timeline-expanded .timeline-feeling-row + .timeline-feeling-row {
+  margin-top: 6px;
+}
+
+.timeline-expanded .timeline-feeling-row > span,
+.timeline-expanded .timeline-story-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.timeline-expanded .timeline-story-text {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.8;
+  font-weight: 400;
+}
+
+.timeline-expanded .timeline-story-text,
+.timeline-expanded .timeline-full-note {
+  white-space: pre-wrap;
+}
+
+.timeline-expanded .timeline-open {
+  margin-top: 2px;
+  font-size: 12px;
+}
+
+@media (max-width: 360px) {
+  .timeline-page .timeline-day-summary {
+    grid-template-columns: 52px minmax(0, 1fr) 16px;
+    gap: 20px;
+    padding-right: 10px;
+  }
+
+  .timeline-page .timeline-row::after {
+    left: 70px;
+  }
+
+  .timeline-page .timeline-date::after {
+    right: -14px;
+  }
+
+  .timeline-page .timeline-expanded {
+    padding-left: 79px;
+  }
+
+  .timeline-expanded .timeline-meal {
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 5px;
+  }
+
+  .timeline-expanded .timeline-feeling-row {
+    gap: 5px;
+  }
+}

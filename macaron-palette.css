@@ -1,0 +1,79 @@
+/* A few auxiliary note colours; the strawberry brand tokens stay unchanged. */
+body {
+  --macaron-pistachio: #dcead8;
+  --macaron-vanilla: #fff0d3;
+  --macaron-blueberry: #e9e1f4;
+  --macaron-peach: #f8dfd7;
+  --macaron-pistachio-paper: #eff5ec;
+  --macaron-blueberry-paper: #f5f0fa;
+  --macaron-vanilla-paper: #fff8e8;
+}
+
+/* Colour follows meaning, rather than alternating across every meal. */
+.calendar-page .meal-card.done {
+  background-color: var(--macaron-pistachio-paper);
+  border-color: #c6d8c0;
+}
+.calendar-page .meal-card.done .done-stamp,
+.calendar-page .meal-card-controls .meal-undo {
+  background-color: var(--macaron-pistachio);
+  border-color: #b8cdb0;
+  color: #496143;
+}
+.calendar-page .diary-joy {
+  background-color: var(--macaron-vanilla);
+  border-left-color: #d9bd81;
+  color: #765c35;
+}
+.calendar-page .diary-mood {
+  background-color: var(--macaron-blueberry-paper);
+  border-color: #ddd2e9;
+  color: #6b587b;
+}
+.calendar-page .diary-heading { border-color: var(--macaron-blueberry); }
+.calendar-page .diary-text {
+  background-image: repeating-linear-gradient(transparent 0 25px, #e8dfef 25px 26px);
+}
+
+/* Only the small category labels change; row paper and the runway stay pink. */
+.inventory-page .category-chip[data-category="蛋白质"] {
+  background-color: var(--macaron-peach);
+  border-color: #e6c4b9;
+  color: #805447;
+}
+.inventory-page .category-chip[data-category="蔬菜"] {
+  background-color: var(--macaron-pistachio);
+  border-color: #c2d5ba;
+  color: #526747;
+}
+.inventory-page .category-chip[data-category="碳水"] {
+  background-color: var(--macaron-vanilla);
+  border-color: #ead3a4;
+  color: #786139;
+}
+.inventory-page .category-chip[data-category="早餐"] {
+  background-color: var(--macaron-blueberry);
+  border-color: #d4c6e3;
+  color: #6b587b;
+}
+.inventory-page .category-chip[data-category="整套食物"] { color: #863c5f; }
+
+/* Keep the meal statistic pink; the diary gets one blueberry paper accent. */
+.summary-page .summary-stat:nth-child(2) {
+  background-color: var(--macaron-blueberry-paper);
+  border-color: #ddd2e9;
+}
+.summary-page .summary-stat:nth-child(2) > span,
+.summary-page .summary-stat:nth-child(2) strong,
+.summary-page .summary-stat:nth-child(2) small {
+  color: #6b587b;
+}
+.summary-page .summary-section.summary-story-catalog {
+  background-color: var(--macaron-vanilla-paper);
+}
+
+/* Backup remains strawberry pink; only the install pocket gets vanilla paper. */
+.settings-page .settings-group.settings-install {
+  background-color: var(--macaron-vanilla-paper);
+  border-color: #ead3a4;
+}

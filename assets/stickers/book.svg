@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" width="72" height="72" role="img" aria-labelledby="title">
+  <title id="title">小书本贴纸</title>
+  <!-- Original artwork for 机智定食. -->
+  <g stroke="#886587" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 17c9-3 18-2 26 2 8-4 17-5 26-2v37c-9-3-18-2-26 2-8-4-17-5-26-2Z" fill="#f0e8f7"/>
+    <path d="M14 21c7-2 14-1 22 2 8-3 15-4 22-2v29c-8-2-15-1-22 2-7-3-14-4-22-2Z" fill="#fffcf5"/>
+    <path d="M36 23v29M19 29l11 2M19 36l11 2M42 31l11-2M42 38l11-2" fill="none" stroke="#c8b6d4"/>
+    <path d="M47 18v15l4-3 4 2V17" fill="#f3bbcf" stroke="#bb839f"/>
+  </g>
+</svg>

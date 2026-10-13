@@ -152,3 +152,30 @@ test('empty state stays gentle and invalid dates do not enter the calendar', () 
   state.meals = [meal('invalid', '2026-02-30'), meal('unknown', '2026-10-12', 'cost')];
   assert.equal(summarize(state, '2026-10-12').week.mealCount, 0);
 });
+
+test('小故事用 CSS 单行省略，完整字符和打开日期保持完整', () => {
+  const state = empty();
+  const text = `${'🍓'.repeat(45)}这句留在完整日记里`;
+  state.diaries = [{ date: '2026-10-12', text, mood: '开心', joy: '' }];
+  const before = structuredClone(state);
+  const html = renderSummary(state, '2026-10-12', 'month', '2026-10-12');
+  assert.ok(html.includes(text));
+  assert.ok(html.includes('summary-story-line'));
+  assert.ok(html.includes('<span class="summary-entry-mood">开心</span>'));
+  assert.ok(html.includes('data-review-date="2026-10-12"'));
+  assert.ok(html.includes('aria-label="10月12日，翻开这一天的小故事"'));
+  assert.deepEqual(state, before);
+});
+
+test('月份主控件保留键盘输入与日期边界保护，空回顾附带装饰草莓', () => {
+  const first = renderSummary(empty(), '0001-01-01', 'month', '2026-10-12');
+  const last = renderSummary(empty(), '9999-12-31', 'month', '2026-10-12');
+  assert.match(first, /data-action="summary-prev-month" aria-label="上个月" disabled/);
+  assert.match(last, /data-action="summary-next-month" aria-label="下个月" disabled/);
+  assert.match(first, /<label for="summary-month">/);
+  assert.match(first, /id="summary-month" type="month" min="0001-01" max="9999-12" value="0001-01" aria-label="选择历史月份"/);
+  assert.ok(first.includes('data-summary-range="week"'));
+  assert.ok(first.includes('data-summary-range="month"'));
+  assert.match(first, /src="\.\/assets\/food\/strawberry\.svg" alt="" aria-hidden="true"/);
+  assert.ok(first.includes('先去记一顿饭吧 ♡'));
+});

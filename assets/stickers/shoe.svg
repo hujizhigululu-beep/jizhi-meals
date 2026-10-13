@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" width="72" height="72" role="img" aria-labelledby="title">
+  <title id="title">运动鞋贴纸</title>
+  <!-- Original artwork for 机智定食. -->
+  <g stroke="#798867" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11 24c6 4 11 4 17 0l10 13c4 5 10 4 18 7 5 2 7 5 7 9H9V36Z" fill="#dcead8"/>
+    <path d="M9 49h54v7c-18 3-36 3-54 0Z" fill="#fffcf5"/>
+    <path d="m29 29 8-2M32 34l9-2M36 39l9-2M14 33v9M50 47h8" fill="none" stroke="#91a682"/>
+    <path d="M16 44h15" fill="none" stroke="#c3d1b5"/>
+  </g>
+</svg>

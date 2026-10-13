@@ -1,0 +1,270 @@
+/* A small review index. Brand colors and paper treatments live in strawberry-ui.css. */
+.summary-page .summary-overview {
+  margin-bottom: 16px;
+}
+.summary-page .summary-month-nav {
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 10px;
+  padding: 14px 10px;
+  margin-bottom: 10px;
+}
+.summary-page .summary-month-nav label {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  min-height: 54px;
+  text-align: center;
+}
+.summary-page .summary-month-nav label > span {
+  display: block;
+}
+.summary-page .summary-month-nav input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 44px;
+  opacity: 0;
+  cursor: pointer;
+}
+.summary-page .summary-month-nav label:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+.summary-page .summary-month-caption {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.summary-page .summary-month-title {
+  font-family: var(--title-font);
+  font-size: 23px;
+  line-height: 1.5;
+}
+.summary-page .summary-month-title > span {
+  display: inline-block;
+  margin-left: 3px;
+  font-size: 13px;
+  vertical-align: 2px;
+}
+.summary-page .summary-range {
+  gap: 7px;
+  margin: 12px 0 6px;
+  align-items: center;
+}
+.summary-page .summary-range button {
+  min-height: 44px;
+}
+.summary-page .summary-range > span {
+  margin-left: auto;
+  font-size: 12px;
+}
+.summary-page .summary-period {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.summary-page .summary-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.summary-page .summary-stat {
+  padding: 14px 13px 12px;
+}
+.summary-page .summary-stat > span {
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.summary-page .summary-stat-value {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.summary-page .summary-stats .summary-stat .summary-stat-value > strong {
+  font-family: var(--body-font);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.summary-page .summary-stat small {
+  margin: 0;
+  font-size: 12px;
+}
+.summary-page .summary-slot-counts {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 7px;
+}
+.summary-page .summary-slot-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 8px 3px;
+  font-size: 12px;
+}
+.summary-page .summary-slot-count > span {
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.summary-page .summary-slot-counts .summary-slot-count > strong {
+  margin-top: 4px;
+  font-family: var(--body-font);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+.summary-page .summary-count-note {
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0 1px 18px;
+}
+.summary-page .summary-section.settings-card {
+  padding: 15px 14px 9px;
+  margin-bottom: 12px;
+}
+.summary-page .summary-section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  margin-bottom: 9px;
+}
+.summary-page .summary-section-heading h2 {
+  font-size: 18px;
+  line-height: 1.5;
+}
+.summary-page .summary-section-heading > span {
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.summary-page .summary-list .summary-entry {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 0;
+  min-height: 68px;
+}
+.summary-page .summary-entry-date {
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  padding: 0;
+  text-align: center;
+  font-family: var(--title-font);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.summary-page .summary-entry-month {
+  font-family: var(--body-font);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.summary-page .summary-entry-day {
+  font-size: 22px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.summary-page .summary-entry-day small {
+  margin-left: 2px;
+  font-family: var(--body-font);
+  font-size: 10px;
+  font-weight: 400;
+}
+.summary-page .summary-entry-content {
+  min-width: 0;
+}
+.summary-page .summary-entry-content .summary-entry-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--body-font);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+.summary-page .summary-entry-meta {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 2px;
+}
+.summary-page .summary-story-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.summary-page .summary-entry-mood {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--accent);
+}
+.summary-page .summary-entry-mood:only-child {
+  max-width: 100%;
+}
+.summary-page .summary-entry-divider {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+.summary-page .summary-entry-content .summary-entry-preview {
+  display: block;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.summary-page .summary-entry-link {
+  align-self: center;
+  font-size: 12px;
+  line-height: 1.8;
+  white-space: nowrap;
+}
+.summary-page .summary-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px 0 17px;
+}
+.summary-page .summary-placeholder img {
+  flex-shrink: 0;
+}
+.summary-page .summary-placeholder .summary-empty {
+  padding: 0;
+  font-size: 12px;
+  line-height: 1.9;
+}
+@media (max-width: 360px) {
+  .summary-page .summary-section.settings-card {
+    padding-inline: 11px;
+  }
+  .summary-page .summary-month-title {
+    font-size: 21px;
+  }
+  .summary-page .summary-list .summary-entry {
+    grid-template-columns: 32px minmax(0, 1fr) 44px;
+    gap: 8px;
+  }
+}

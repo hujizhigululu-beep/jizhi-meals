@@ -1,0 +1,259 @@
+/* A fridge-only visual sample. Other pages keep their current styling until reviewed. */
+body:has(.inventory-page) {
+  --bg: #fff8fa;
+  --paper: #fffdf7;
+  --card: #ffe7ef;
+  --pink: #f6b8cc;
+  --accent: #ef8fae;
+  --berry: #b85c79;
+  --ink: #62494b;
+  --muted: #876971;
+  --line: #e8ccd2;
+  background-color: var(--bg);
+  background-image: radial-gradient(#dcb0bd55 .7px, transparent .9px);
+  background-size: 8px 8px;
+}
+
+body:has(.inventory-page) .brand-header {
+  background: linear-gradient(125deg, #ffe6ee, #f9dce5);
+  border-color: #e6bbc8;
+  border-radius: 5px 15px 5px 5px;
+  box-shadow: 2px 3px 0 #f2e2e1;
+}
+body:has(.inventory-page) .brand-header::before {
+  border-color: #d198ad;
+  border-radius: 3px 11px 3px 3px;
+}
+body:has(.inventory-page) .brand-header::after {
+  display: block;
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 8px;
+  bottom: 8px;
+  width: 10px;
+  background: radial-gradient(ellipse at center, #fff8fa 2.5px, #c694a3 2.8px, #e0b1bf 3.3px, transparent 3.7px) center / 10px 16px repeat-y;
+  pointer-events: none;
+}
+body:has(.inventory-page) .cover-bow {
+  display: block;
+  transform: scale(.6) rotate(-9deg);
+  transform-origin: top right;
+  right: 22px;
+  top: -3px;
+}
+body:has(.inventory-page) .gingham-scrap {
+  opacity: 1;
+  box-shadow: 1px 2px 0 #bd8f9c25;
+}
+body:has(.inventory-page) .cover-berry {
+  width: 34px;
+  height: 34px;
+  left: -4px;
+  bottom: -1px;
+}
+body:has(.inventory-page) .brand { color: #68444f; }
+body:has(.inventory-page) .brand small { color: #8a5d70; }
+
+.inventory-page .eyebrow { color: #af6c84; }
+.inventory-page .section-heading h1 {
+  color: #66454e;
+  font-size: 23px;
+}
+.inventory-page .section-heading .pill.pink {
+  background: #f6b8cc;
+  border: 1px solid #d799b0;
+  border-radius: 5px 10px 5px 5px;
+  box-shadow: 1px 2px 0 #f0d5df;
+  color: #754258;
+}
+
+/* The forecast is a taped keepsake slip, distinct from the stock labels below. */
+.inventory-page .runway-note {
+  position: relative;
+  isolation: isolate;
+  margin-top: 20px;
+  margin-bottom: 19px;
+  padding: 15px 17px 5px;
+  border: 1px solid #e1b9c8;
+  border-radius: 4px 13px 4px 4px;
+  background: linear-gradient(150deg, #ffedf3, #fff7ed 80%);
+  box-shadow: 2px 3px 0 #f1dfdf;
+}
+.inventory-page .runway-note::before {
+  content: "";
+  position: absolute;
+  left: 24px;
+  top: -7px;
+  width: 65px;
+  height: 16px;
+  background-color: #edb5c5a8;
+  background-image: repeating-linear-gradient(90deg, transparent 0 5px, #fffaf560 5px 6px);
+  border-left: 1px dashed #ce90a6;
+  border-right: 1px dashed #ce90a6;
+  transform: rotate(-4deg);
+  pointer-events: none;
+}
+.inventory-page .runway-note::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  z-index: -1;
+  border: 1px solid #f5dfe4;
+  border-radius: 2px 9px 2px 2px;
+  pointer-events: none;
+}
+.inventory-page .runway-note h2 {
+  position: relative;
+  min-height: 24px;
+  padding-right: 33px;
+  font-family: var(--title-font);
+  font-size: 16px;
+  font-weight: 600;
+  color: #936076;
+  margin-bottom: 3px;
+}
+.inventory-page .runway-note h2::after {
+  content: "";
+  position: absolute;
+  right: 1px;
+  top: -2px;
+  width: 29px;
+  height: 29px;
+  background: url('./assets/food/strawberry.svg') center / contain no-repeat;
+  transform: rotate(12deg);
+  filter: drop-shadow(1px 1px 0 #fffdf7);
+  pointer-events: none;
+}
+.inventory-page .runway-note .runway-total {
+  font-size: 15px;
+  color: #77505f;
+  margin-bottom: 8px;
+}
+.inventory-page .runway-note .runway-total > strong {
+  color: #b44773;
+  font-family: var(--body-font);
+  font-size: 39px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-inline: 5px;
+}
+.inventory-page .runway-counts { color: #866571; gap: 3px 12px; }
+.inventory-page .runway-counts b { color: #855269; font-weight: 650; }
+.inventory-page .runway-note .runway-coverage {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px dashed #dfb5c5;
+}
+.inventory-page .runway-coverage small { color: #946d7d; }
+.inventory-page .runway-coverage strong { color: #714c5a; font-size: 15px; }
+.inventory-page .runway-details {
+  margin-top: 10px;
+  border-top: 1px dashed #dfb5c5;
+}
+.inventory-page .runway-details > summary { color: #9a5b78; }
+.inventory-page .runway-details > summary::after { color: #b56486; }
+.inventory-page .runway-default select { border-color: #dfbac9; background: #fffdf7; }
+
+.inventory-page .fridge-toolbar { margin-bottom: 2px; }
+.inventory-page .fridge-toolbar h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #78515f;
+  font-size: 18px;
+}
+.inventory-page .fridge-toolbar h2::before {
+  content: "";
+  width: 20px;
+  height: 12px;
+  flex: none;
+  transform: rotate(-8deg);
+  background: repeating-linear-gradient(90deg, #f4bbcd9c 0 4px, #ffedf3c9 4px 8px);
+  border-inline: 1px dashed #d3a0b4;
+  pointer-events: none;
+}
+.inventory-page .fridge-switch button { border-color: #deb3c4; color: #95667b; }
+.inventory-page .fridge-switch button[aria-pressed="true"] {
+  background: #f6c5d5;
+  border-color: #cc92aa;
+  color: #7c3f59;
+}
+.inventory-page .inventory-explanation { margin-bottom: 9px; }
+.inventory-page .inventory-explanation > summary { color: #a8798d; }
+
+/* Compact rows stay plain enough to scan; only a few receive a corner of tape. */
+.inventory-page .inventory-list { padding-top: 4px; }
+.inventory-page .ingredient-card {
+  position: relative;
+  overflow: visible;
+  border: 1px solid #e2c2cc;
+  border-radius: 4px 10px 4px 4px;
+  background: #fffdf7;
+  box-shadow: 1px 2px 0 #f0e0df;
+}
+.inventory-page .ingredient-card:nth-child(even) { background: #fffbfd; }
+.inventory-page .ingredient-card:nth-child(3n + 1)::before {
+  display: block;
+  content: "";
+  position: absolute;
+  top: -4px;
+  right: 15px;
+  width: 32px;
+  height: 9px;
+  background: repeating-linear-gradient(90deg, #edbac9a8 0 5px, #ffe8f2a8 5px 6px);
+  border-bottom: 1px dashed #d7a1b7;
+  transform: rotate(3deg);
+  pointer-events: none;
+}
+.inventory-page .ingredient-name { color: #654951; font-weight: 650; }
+.inventory-page .category-chip {
+  background: #ffe4ed;
+  border-color: #ecc1d1;
+  border-radius: 3px 6px 3px 3px;
+  color: #a45777;
+}
+.inventory-page .ingredient-category { color: #916479; display: flex; flex-wrap: wrap; align-items: center; gap: 3px 6px; }
+.inventory-page .ingredient-meta { color: #92767b; }
+.inventory-page .stock-numbers small { color: #957580; }
+.inventory-page .stock-numbers strong {
+  font-family: var(--body-font);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: #73505c;
+}
+.inventory-page .stock-numbers .forecast { color: #b7668a; }
+.inventory-page .stock-numbers .low { color: #a35b38; }
+.inventory-page .inventory-actions .text-button { color: #b25e83; font-weight: 600; }
+.inventory-page .ingredient-emoji { border: 1px dashed #dec6ba; background: #fff5e6; border-radius: 5px; transform: rotate(3deg); }
+
+body:has(.inventory-page) .bottom-nav {
+  background: #fff8fa;
+  border-color: #e4bfce;
+  border-radius: 10px 15px 0 0;
+  box-shadow: 0 -2px 10px #ad6c8b08;
+}
+body:has(.inventory-page) .bottom-nav::before {
+  display: block;
+  content: "";
+  position: absolute;
+  inset: 4px 7px auto;
+  border-top: 1px dashed #ecd0dc;
+  pointer-events: none;
+}
+body:has(.inventory-page) .bottom-nav button.active {
+  background: #f8cbdc;
+  border-color: #e4adc3;
+  color: #a34f77;
+  border-radius: 5px 9px 5px 5px;
+  box-shadow: 1px 2px 0 #f0d5df;
+}
+
+@media (max-width: 360px) {
+  .inventory-page .runway-note { padding-inline: 13px; }
+  .inventory-page .section-heading h1 { font-size: 21px; }
+  .inventory-page .fridge-toolbar h2 { font-size: 16px; gap: 5px; }
+  .inventory-page .fridge-toolbar h2::before { width: 13px; }
+  .inventory-page .fridge-switch button { min-width: 54px; padding-inline: 9px; }
+  .inventory-page .stock-numbers strong { font-size: 19px; }
+}

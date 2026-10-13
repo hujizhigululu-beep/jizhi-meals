@@ -1,0 +1,172 @@
+@charset "UTF-8";
+
+/* Short diary slips: content sets the height; actions keep a 44px touch target. */
+.calendar-page .meals {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-inline: 0;
+}
+
+.calendar-page .meal-card,
+.calendar-page .meal-card.snack-card {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 92px;
+  align-items: center;
+  gap: 7px;
+  min-height: 64px;
+  padding: 7px 8px;
+  border-radius: 3px 8px 3px 3px;
+  box-shadow: 0 1px 0 #efe0d9;
+}
+
+.calendar-page .meal-category {
+  gap: 1px;
+  align-self: center;
+}
+
+.calendar-page .meal-category .slot-icon {
+  width: 27px;
+  height: 27px;
+}
+
+.calendar-page .meal-category .slot-icon img {
+  width: 25px;
+  height: 25px;
+}
+
+.calendar-page .meal-category strong {
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.calendar-page .meal-category .meal-time {
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.calendar-page .meal-details {
+  min-height: 44px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.calendar-page .meal-name-line {
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+.calendar-page .meal-name {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.calendar-page .meal-name-line .done-stamp {
+  margin: 0;
+  padding: 0 3px;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.calendar-page .meal-resource-list {
+  gap: 2px 4px;
+  margin-top: 3px;
+  max-height: none;
+  overflow: visible;
+}
+
+.calendar-page .meal-resource-chip {
+  padding: 0 4px;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  border-radius: 3px;
+}
+
+.calendar-page .meal-note,
+.calendar-page .protein-line {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.calendar-page .meal-note {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+/* Stock amounts remain visible; repeated encouragement belongs to the page footer. */
+.calendar-page .meal-caption {
+  display: none;
+}
+
+.calendar-page .empty-label {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.calendar-page .meal-card-controls,
+.calendar-page .snack-card .meal-card-controls {
+  display: grid;
+  grid-template-columns: repeat(2, 44px);
+  gap: 4px;
+  align-items: center;
+}
+
+.calendar-page .meal-card-controls button,
+.calendar-page .snack-card .meal-card-controls button {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 2px;
+  font-size: 11px;
+  line-height: 1.3;
+  border-radius: 6px;
+}
+
+.calendar-page .meal-card-controls .meal-add {
+  grid-column: 2;
+  font-size: 22px;
+}
+
+.calendar-page .snack-section {
+  margin-top: 13px;
+}
+
+.calendar-page .snack-card {
+  margin-bottom: 7px;
+}
+
+@media (min-width: 700px) {
+  .calendar-page .meal-card,
+  .calendar-page .meal-card.snack-card {
+    grid-template-columns: 44px minmax(0, 1fr) 92px;
+    padding-inline: 11px;
+  }
+}
+
+@media (max-width: 360px) {
+  .calendar-page .meal-card,
+  .calendar-page .meal-card.snack-card {
+    grid-template-columns: 34px minmax(0, 1fr) 92px;
+    gap: 5px;
+    padding-inline: 6px;
+  }
+
+  .calendar-page .meal-name {
+    font-size: 14px;
+  }
+}

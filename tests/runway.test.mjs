@@ -64,6 +64,7 @@ test('库存扣减、撤销、重新分类即时改变预测', () => {
 });
 test('旧分类、图片和历史原样保留，升级备份只写一次，备份失败不覆盖原数据', () => {
   const state = pantry(food('旧分类', 5, { photoId: 'photo', image: 'legacy-reference' }));
+  state.schemaVersion = 2; delete state.dayRecords;
   const raw = JSON.stringify(state); const entries = new Map([[STORAGE_KEY, raw]]);
   const storage = { getItem: key => entries.get(key) ?? null, setItem: (key, value) => entries.set(key, value) };
   const normalized = load(storage).state;

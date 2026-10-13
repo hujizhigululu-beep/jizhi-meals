@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 135" fill="none" stroke="#a84973" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Original background linework for 机智定食; no text or external artwork. -->
+  <g transform="translate(120 12) rotate(7 42 53)">
+    <path d="M16 36 34 10h31l16 15v70l-17 15-48-4Z M34 10V5h31v5 M34 10l30 23 17-8 M16 36l48-3v77 M64 33l1-23"/>
+    <path d="M25 52h28v28H25z M29 59c5-5 11-3 14 2 3-5 9-6 12-1 5 8-6 17-13 21-6-4-18-14-13-22Z"/>
+  </g>
+  <path d="M41 71c-19-19-34-7-17 8l20 8m0-1c16-28 35-24 24-5l-20 7m-6-7 8 2-1 10-9-3z M42 94l-11 18m18-18 8 19"/>
+  <path d="M89 111c4-8 14-4 8 3l-8 7-8-7c-6-7 4-11 8-3Z M220 39v7m-4-3h8"/>
+  <path d="M12 126h212" stroke-dasharray="2 7"/>
+</svg>

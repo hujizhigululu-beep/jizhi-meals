@@ -35,12 +35,12 @@ function legacyState() {
   };
 }
 
-describe('V1.1 schema 与旧版记录安全迁移', () => {
-  test('新状态使用 schema 2，主餐与 snack 槽位分别导出', () => {
-    assert.equal(model.SCHEMA, 2);
+describe('V1.4 schema 与旧版记录安全迁移', () => {
+  test('新状态使用 schema 3，主餐与 snack 槽位分别导出', () => {
+    assert.equal(model.SCHEMA, 3);
     assert.deepEqual(model.SLOTS, ['breakfast', 'lunch', 'dinner']);
     assert.deepEqual(model.ALL_SLOTS, ['breakfast', 'lunch', 'dinner', 'snack']);
-    assert.deepEqual(model.freshState(), { schemaVersion: 2, inventory: [], meals: [], diaries: [], updatedAt: null });
+    assert.deepEqual(model.freshState(), { schemaVersion: 3, inventory: [], meals: [], diaries: [], dayRecords: [], updatedAt: null });
   });
 
   test('旧已吃记录和未来计划迁移时保留原库存、快照、备注与照片引用', () => {
@@ -50,7 +50,7 @@ describe('V1.1 schema 与旧版记录安全迁移', () => {
     assert.equal(result.locked, false);
     assert.deepEqual(result.warnings, []);
     assert.deepEqual(raw, before, '读取和迁移不能改动传入的旧备份对象');
-    assert.equal(result.state.schemaVersion, 2);
+    assert.equal(result.state.schemaVersion, model.SCHEMA);
     assert.deepEqual(result.state.diaries, []);
     assert.deepEqual(result.state.inventory, raw.inventory);
     const eaten = result.state.meals.find(row => row.id === 'old-eaten');

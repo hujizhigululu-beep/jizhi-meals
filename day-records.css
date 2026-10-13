@@ -1,0 +1,37 @@
+.calendar-view-switch{display:flex;gap:4px;background:#f8e5ed;padding:4px;border-radius:10px;margin:0 0 12px}
+.calendar-view-switch button{flex:1;min-height:44px;background:transparent;border:0;color:#957381;padding:7px 4px;font:inherit;font-size:13px;border-radius:7px}
+.calendar-view-switch button[aria-pressed=true]{background:#fff9fc;color:#a85172;box-shadow:0 1px 4px #cd789524;font-weight:600}
+.day-checkins{margin:12px 0;background:#fffcf9;padding:12px 14px;border:1px solid #efd5df;border-radius:10px}
+.checkin-heading{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.checkin-heading h2{margin:0;font-family:Georgia,'Songti SC',SimSun,serif;font-size:17px;color:#795563}
+.checkin-heading small{font-size:11px;color:#a48691}
+.checkin-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:7px}
+.checkin-buttons .checkin-button{min-height:44px;background:#f6f0fc;border-color:#e3d5ee;color:#76588c}
+.checkin-buttons [data-checkin=exercise]{background:#f1f7ed;border-color:#cfdfc8;color:#56734c}
+.checkin-buttons [data-checkin=study][aria-pressed=true]{background:#e9e1f4;border-color:#cbb6e0}
+.checkin-buttons [data-checkin=exercise][aria-pressed=true]{background:#dcead8;border-color:#b7cfae}
+.activity-details,.day-sticker-picker{border-top:1px dashed #eacbd9;margin-top:6px}
+.activity-details>summary,.day-sticker-picker>summary{display:flex;align-items:center;gap:5px;list-style:none;min-height:44px;color:#805d72;font-size:12px}
+.activity-details>summary::-webkit-details-marker,.day-sticker-picker>summary::-webkit-details-marker{display:none}
+.activity-details>summary::before{content:'';width:6px;height:6px;border-radius:50%;background:#b79cce}
+.activity-details[data-kind=exercise]>summary::before{background:#9ebb8f}
+.activity-details>summary::after,.day-sticker-picker>summary::after{content:'⌄';font-size:18px;color:#ad7892;margin-left:auto}
+.activity-details[open]>summary::after,.day-sticker-picker[open]>summary::after{transform:rotate(180deg)}
+.activity-details>summary span,.day-sticker-picker>summary span{color:#99818d;font-size:11px}
+.activity-help{font-size:11px;color:#967b89;margin:5px 0 8px}
+.activity-entry{display:flex;align-items:flex-start;gap:6px;padding:6px 0;border-bottom:1px dashed #ecdee5}
+.activity-entry-text{flex:1;min-width:0;font-size:12px;overflow-wrap:anywhere;padding-top:8px}
+.activity-entry-text strong{font-weight:500}.activity-entry-text small{display:block;white-space:pre-line;color:#947d89;font-size:11px}
+.activity-entry-actions{display:flex;flex:none}.activity-entry-actions button{min-height:44px;min-width:44px;padding:4px;font-size:11px}
+.activity-form{padding:8px 0;display:grid;gap:7px}.activity-fields{display:grid;grid-template-columns:minmax(0,1fr) 91px;gap:7px}
+.activity-form label{display:grid;gap:4px;font-size:11px;color:#8b707d}
+.activity-form input,.activity-form textarea{box-sizing:border-box;min-width:0;width:100%;font-size:16px;min-height:44px;border:1px solid #e7d2dc;border-radius:7px;background:#fffdfa;color:#634e59;padding:8px}
+.activity-form-actions{display:flex;gap:8px;align-items:center}.activity-form-actions .pill{min-height:44px;background:#f2eaf9;color:#77578a}
+.activity-details[data-kind=exercise] .activity-form-actions .pill{background:#eaf3e5;color:#54714b}
+.day-sticker-strip{display:flex;gap:12px;align-items:center;padding:7px 2px 3px}.day-sticker-strip img:nth-child(2){transform:rotate(7deg)}
+.day-sticker-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.day-sticker-options button{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:64px;background:#fff8fa;border:1px solid #efd7e2;border-radius:8px;padding:5px 2px;font:inherit;font-size:11px;color:#86677a}
+.day-sticker-options button[aria-pressed=true]{background:#fbe0eb;border-color:#d895b4;color:#a05176}
+.sticker-credit{font-size:11px;color:#a78c98;text-align:right;margin:5px 0 0}.sticker-credit a{color:inherit}
+.month-selected-heading{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:12px}.month-selected-heading h2{font-size:17px;margin:0;font-family:Georgia,'Songti SC',SimSun,serif}.month-meal-status{font-size:12px;line-height:1.5;color:#967783;margin:7px 0}
+@media(max-width:350px){.checkin-heading{display:block}.checkin-heading small{display:block;margin-top:2px}.day-checkins{padding:10px}}

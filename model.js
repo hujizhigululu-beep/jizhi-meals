@@ -1,8 +1,9 @@
-export const SCHEMA = 2;
+import { STICKER_IDS } from './stickers.js';
+export const SCHEMA = 3;
 export const SLOTS = ['breakfast', 'lunch', 'dinner'];
 export const ALL_SLOTS = [...SLOTS, 'snack'];
 export const TYPES = ['自制便当', '公司食堂', '外出就餐', '外卖', '零食 / 加餐', '其他'];
-export const freshState = () => ({ schemaVersion: SCHEMA, inventory: [], meals: [], diaries: [], updatedAt: null });
+export const freshState = () => ({ schemaVersion: SCHEMA, inventory: [], meals: [], diaries: [], dayRecords: [], updatedAt: null });
 export const uid = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 export const round = n => Math.round((n + Number.EPSILON) * 1000) / 1000;
 // Optional future IndexedDB reference; never store image content in localStorage.
@@ -60,13 +61,55 @@ function storedResources(meal) {
     return { ingredientId: resource.ingredientId, name: shortText(resource.name, 60), unit: shortText(resource.unit, 12), amount: round(resource.amount) };
   });
 }
+const objectOK = value => value && typeof value === 'object' && !Array.isArray(value);
+const knownFields = (value, fields) => Object.keys(value).every(key => fields.includes(key));
+/** Strict validation keeps unknown activity/sticker content in the original protected JSON. */
+export function normalizeDayRecords(raw, warnings = []) {
+  const records = [];
+  if (!Array.isArray(raw)) { warnings.push('学习、运动与贴纸记录缺失或格式异常，已保护原文件'); return records; }
+  const dates = new Set();
+  for (const record of raw) {
+    if (!objectOK(record) || !parseDate(record.date) || dates.has(record.date)) {
+      warnings.push('日常打卡的日期异常或重复，已保护原文件'); continue;
+    }
+    dates.add(record.date);
+    if (!knownFields(record, ['date', 'study', 'exercise', 'stickerIds'])) warnings.push('日常打卡含有本版本不认识的内容，已保护原文件');
+    const next = { date: record.date };
+    for (const kind of ['study', 'exercise']) {
+      const activity = record[kind];
+      if (!objectOK(activity) || typeof activity.checked !== 'boolean' || !Array.isArray(activity.items)) {
+        warnings.push('学习或运动的打卡状态、详情格式异常，已保护原文件');
+        next[kind] = { checked: false, items: [] }; continue;
+      }
+      if (!knownFields(activity, ['checked', 'items'])) warnings.push('学习或运动含有本版本不认识的内容，已保护原文件');
+      const itemIds = new Set();
+      const items = [];
+      for (const item of activity.items) {
+        if (!objectOK(item) || !idOK(item.id) || itemIds.has(item.id) || typeof item.content !== 'string' || item.content.length > 200 || typeof item.note !== 'string' || item.note.length > 1000 || !(item.minutes === null || Number.isInteger(item.minutes) && item.minutes >= 0 && item.minutes <= 1440)) {
+          warnings.push('一条学习或运动详情异常或重复，已保护原文件'); continue;
+        }
+        itemIds.add(item.id);
+        if (!knownFields(item, ['id', 'content', 'minutes', 'note'])) warnings.push('学习或运动详情含有本版本不认识的内容，已保护原文件');
+        items.push({ id: item.id, content: item.content, minutes: item.minutes, note: item.note });
+      }
+      next[kind] = { checked: activity.checked, items };
+    }
+    if (!Array.isArray(record.stickerIds) || record.stickerIds.length > 3 || new Set(record.stickerIds).size !== record.stickerIds.length || record.stickerIds.some(id => !STICKER_IDS.includes(id))) {
+      warnings.push('贴纸记录含有未知、重复或超量的贴纸，已保护原文件');
+      next.stickerIds = Array.isArray(record.stickerIds) ? [...new Set(record.stickerIds.filter(id => STICKER_IDS.includes(id)))].slice(0, 3) : [];
+    } else next.stickerIds = [...record.stickerIds];
+    records.push(next);
+  }
+  return records;
+}
 /** Normalize only: inventory quantities already include completed meals. Never replay deductions. */
 export function normalize(raw) {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || ![1, SCHEMA].includes(raw.schemaVersion) || !Array.isArray(raw.inventory) || !Array.isArray(raw.meals)) {
-    throw new Error('这份文件不是支持的机智定食 V1 / V1.1 备份，原有数据没有改变。');
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || ![1, 2, SCHEMA].includes(raw.schemaVersion) || !Array.isArray(raw.inventory) || !Array.isArray(raw.meals)) {
+    throw new Error('这份文件不是支持的机智定食 V1—V1.4 备份，或属于更新版本；原有数据没有改变。');
   }
   const state = freshState();
   const warnings = [];
+  if (!knownFields(raw, ['schemaVersion', 'inventory', 'meals', 'diaries', 'dayRecords', 'inventoryVersion', 'updatedAt', '_readOnly'])) warnings.push('备份含有本版本不认识的新内容，已保护原文件');
   if (raw._readOnly) warnings.push('这份数据已处于保护状态，请保留原文件并恢复有效备份。');
   // Any lossy normalization makes the entire view read-only, even for planned rows.
   const text = (value, max, field) => {
@@ -93,8 +136,11 @@ export function normalize(raw) {
     let resources;
     try { resources = storedResources(meal); }
     catch (error) { warnings.push(error.message); continue; }
+    if (!knownFields(meal, ['id', 'date', 'slot', 'name', 'type', 'protein', 'note', 'resource', 'resources', 'completed', 'completedAt', 'time', 'photoId'])) warnings.push('餐食记录含有本版本不认识的新内容，已保护原文件');
+    if (meal.slot !== 'snack' && meal.time != null && meal.time !== '') warnings.push('餐食的时间记录不属于加餐，已保护原文件');
     for (const resource of resources) {
       const source = rawResources(meal).find(r => r.ingredientId === resource.ingredientId);
+      if (!knownFields(source, ['ingredientId', 'name', 'unit', 'amount'])) warnings.push('餐食关联含有本版本不认识的新内容，已保护原文件');
       text(source.name, 60, '关联食材名称'); text(source.unit, 12, '关联食材单位');
       const item = state.inventory.find(i => i.id === resource.ingredientId);
       if (!item) warnings.push('有餐食关联的食材已缺失，已保护原文件');
@@ -108,11 +154,12 @@ export function normalize(raw) {
     mealIds.add(meal.id); if (meal.slot !== 'snack') positions.add(position);
     state.meals.push({ id: meal.id, date: meal.date, slot: meal.slot, name: text(meal.name, 80, '餐食名称'), type: TYPES.includes(meal.type) ? meal.type : '其他', protein: text(meal.protein, 60, '蛋白质备注'), note: text(meal.note, 200, '餐食备注'), resources, completed: meal.completed === true, completedAt: typeof meal.completedAt === 'string' ? meal.completedAt : null, ...(meal.slot === 'snack' ? { time: timeOK(meal.time) ? meal.time || '' : '' } : {}), ...(photoReference(meal.photoId) ? { photoId: meal.photoId } : {}) });
   }
-  if ((raw.schemaVersion === SCHEMA || raw.diaries !== undefined) && !Array.isArray(raw.diaries)) warnings.push('日记列表缺失或格式异常，已保护原文件');
+  if ((raw.schemaVersion >= 2 || raw.diaries !== undefined) && !Array.isArray(raw.diaries)) warnings.push('日记列表缺失或格式异常，已保护原文件');
   const diaryDates = new Set();
   for (const diary of Array.isArray(raw.diaries) ? raw.diaries : []) {
     if (!diary || !parseDate(diary.date) || diaryDates.has(diary.date)) { warnings.push('一条日记的日期异常或重复，已保护原文件'); continue; }
     diaryDates.add(diary.date);
+    if (!knownFields(diary, ['date', 'mood', 'text', 'joy', 'updatedAt', 'photoIds'])) warnings.push('日记含有本版本不认识的新内容，已保护原文件');
     if (diary.photoIds != null) warnings.push('本版本尚不支持日记照片，请保留原文件');
     if (diary.updatedAt != null && (typeof diary.updatedAt !== 'string' || !Number.isFinite(Date.parse(diary.updatedAt)))) warnings.push('日记的编辑时间格式异常，已保护原文件');
     state.diaries.push({ date: diary.date, mood: text(diary.mood, 100, '日记心情'), text: text(diary.text, 5000, '日记正文'), joy: text(diary.joy, 500, '今日小确幸'), ...(typeof diary.updatedAt === 'string' ? { updatedAt: diary.updatedAt } : {}) });
@@ -120,6 +167,7 @@ export function normalize(raw) {
   if (raw.updatedAt != null && typeof raw.updatedAt !== 'string') warnings.push('保存时间格式异常，已保护原文件');
   if (raw.inventoryVersion != null && raw.inventoryVersion !== 1) warnings.push('食材数据属于未知版本，已保护原文件');
   if (raw.inventoryVersion === 1) state.inventoryVersion = 1;
+  if (raw.schemaVersion === SCHEMA || raw.dayRecords !== undefined) state.dayRecords = normalizeDayRecords(raw.dayRecords, warnings);
   state.updatedAt = typeof raw.updatedAt === 'string' ? raw.updatedAt : null;
   const locked = warnings.length > 0;
   if (locked) state._readOnly = true;
@@ -127,6 +175,9 @@ export function normalize(raw) {
 }
 function assertMutable(state) {
   if (state._readOnly) throw protectedError('原数据已保护，请先保存原文件并恢复有效备份。');
+  const recordWarnings = [];
+  normalizeDayRecords(state.dayRecords === undefined && state.schemaVersion < SCHEMA ? [] : state.dayRecords, recordWarnings);
+  if (recordWarnings.length) throw protectedError('日常打卡或贴纸数据异常，已停止修改，请保留原文件。');
   const inventoryIds = new Set();
   for (const item of state.inventory) {
     if (!item || !idOK(item.id) || inventoryIds.has(item.id) || !numberOK(item.quantity) || !shortText(item.name, 60) || !shortText(item.unit, 12) || !numberOK(item.perMeal) || round(item.perMeal) <= 0) throw protectedError('库存数据异常或重复，已停止修改，请保留原文件。');

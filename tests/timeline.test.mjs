@@ -82,6 +82,74 @@ test('Emoji 日记摘要不切断代理对且保持原文本不变', () => {
   assert.equal(state.diaries[0].text, '🍓'.repeat(50));
 });
 
+test('每日摘要默认收起，可按日期恢复展开，浏览不写入记录', () => {
+  const state = empty(); state.meals = [meal('2026-10-12', 'lunch', '牛肉丸便当')];
+  const before = structuredClone(state);
+  assert.match(renderTimelineRows(state, ['2026-10-12']), /<details class="timeline-day-details" >\s*<summary/);
+  assert.match(renderTimelineRows(state, ['2026-10-12'], { expandedDates: new Set(['2026-10-12']) }), /<details class="timeline-day-details" open>/);
+  assert.deepEqual(state, before);
+});
+
+test('展开记录按餐食、心情小确幸和故事分块，保留全部加餐与当天入口', () => {
+  const state = empty();
+  state.meals = [meal('2026-10-12', 'breakfast', '鸡蛋吐司', true), meal('2026-10-12', 'lunch', '牛肉饭'), meal('2026-10-12', 'dinner', '蔬菜面'), { ...meal('2026-10-12', 'snack', '草莓奶', true), time: '15:30' }, { ...meal('2026-10-12', 'snack', '小蛋糕'), time: '20:10' }];
+  state.diaries = [{ date: '2026-10-12', mood: '开心', joy: '傍晚见到小猫', text: '下班后绕公园走了一圈。' }];
+  const before = structuredClone(state);
+  const html = renderTimelineRows(state, ['2026-10-12'], { expandedDates: new Set(['2026-10-12']) });
+  const headings = [...html.matchAll(/<h3 class="timeline-section-title">([^<]+)<\/h3>/g)].map(match => match[1]);
+  assert.deepEqual(headings, ['餐食', '心情 · 小确幸', '今日小故事']);
+  for (const value of ['鸡蛋吐司', '牛肉饭', '蔬菜面', '草莓奶', '小蛋糕', '15:30', '20:10', '开心', '傍晚见到小猫', '下班后绕公园走了一圈。']) assert.ok(html.includes(value));
+  assert.equal((html.match(/class="timeline-snack-item/g) || []).length, 2);
+  assert.match(html, /data-timeline-open="2026-10-12"/);
+  assert.deepEqual(state, before);
+});
+
+test('空白或仅一种记录的日期不渲染无内容分块', () => {
+  const blank = renderTimelineRows(empty(), ['2026-10-12']);
+  assert.doesNotMatch(blank, /timeline-record-section/);
+  assert.match(blank, /写下这一天/);
+  const state = empty();
+  state.diaries = [{ date: '2026-10-12', mood: '', joy: '早餐很好吃', text: '' }, { date: '2026-10-13', mood: '', joy: '', text: '只有一个小故事。' }];
+  const joy = renderTimelineRows(state, ['2026-10-12']);
+  assert.match(joy, /timeline-feelings-section/);
+  assert.doesNotMatch(joy, /timeline-food-section|timeline-story-section/);
+  const story = renderTimelineRows(state, ['2026-10-13']);
+  assert.match(story, /timeline-story-section/);
+  assert.doesNotMatch(story, /timeline-food-section|timeline-feelings-section/);
+});
+
+test('摘要保留原 API，展开阅读完整日记与小确幸并保留原始换行', () => {
+  const state = empty();
+  const story = '今天绕着公园慢慢走，看见了路边的小花。'.repeat(8) + '\n\n最后一段：小猫也来散步了。\n  留两格写晚安。';
+  const joy = '下班后有好多小确幸。'.repeat(12) + '\n最后一件：收到朋友的明信片。';
+  state.diaries = [{ date: '2026-10-12', mood: '开心', text: story, joy }];
+  const before = structuredClone(state);
+  const summary = summarizeDay(state, '2026-10-12');
+  assert.equal(summary.diary.text, story.replace(/\s+/g, ' ').trim());
+  assert.equal(summary.diary.excerpt, [...story.replace(/\s+/g, ' ').trim()].slice(0, 42).join('') + '…');
+  const html = renderTimelineRows(state, ['2026-10-12']);
+  const compact = html.match(/<summary\b[^>]*>([\s\S]*?)<\/summary>/)[1];
+  const expanded = html.match(/<div class="timeline-expanded">([\s\S]*)<\/div>/)[1];
+  assert.doesNotMatch(compact, /最后一段|留两格|最后一件/);
+  assert.ok(expanded.includes(`<p class="timeline-story-text">${story}</p>`));
+  assert.ok(expanded.includes(`<span class="timeline-full-note">${joy}</span>`));
+  assert.match(compact, /0 餐 · ✎ 小故事/);
+  assert.deepEqual(state, before);
+});
+
+test('长日记后半段仍安全转义，只有正文才标记为小故事', () => {
+  const state = empty();
+  state.diaries = [{ date: '2026-10-12', mood: '', joy: '', text: '记录一点今天的小事情。'.repeat(10) + '\n<script>alert("日记")</script> & \'草莓\'' }, { date: '2026-10-13', mood: '开心', joy: '买到了草莓', text: '' }];
+  const before = structuredClone(state);
+  const html = renderTimelineRows(state, ['2026-10-12']);
+  assert.doesNotMatch(html, /<script|<img|<svg/);
+  assert.match(html, /\n&lt;script&gt;alert\(&quot;日记&quot;\)&lt;\/script&gt; &amp; &#39;草莓&#39;<\/p>/);
+  const moodOnly = renderTimelineRows(state, ['2026-10-13']);
+  assert.doesNotMatch(moodOnly, /✎ 小故事|timeline-story-section/);
+  assert.match(moodOnly, /0 餐 · ✎ 小记/);
+  assert.deepEqual(state, before);
+});
+
 // Geometry-only DOM double: seven visible 60px rows, with browser-like scroll clamping.
 // It exercises date-window/position logic; actual touch and CSS remain browser checks.
 function timelineContainer() {
@@ -173,4 +241,16 @@ test('返回详情后恢复时间轴中心，同容器重挂载移除旧监听�
   second.destroy();
   container.emit('click', { target: container.querySelector('[data-timeline-date="2040-03-01"]') });
   assert.equal(selected, '2040-02-29');
+}));
+
+test('点摘要只展开，只有翻开按钮进入当天；卸载移除折叠监听', () => withFrames(flush => {
+  const container = timelineContainer(); let selected = null;
+  const controller = mountTimeline(container, empty(), { selectedDate: '2026-10-12', onSelect: date => { selected = date; } });
+  flush();
+  const row = container.querySelector('[data-timeline-date="2026-10-12"]');
+  container.emit('click', { target: { closest: selector => selector === '[data-timeline-open]' ? null : row } });
+  assert.equal(selected, null);
+  container.emit('click', { target: { closest: () => ({ closest: () => row }) } });
+  assert.equal(selected, '2026-10-12');
+  controller.destroy(); assert.equal(container.listenerCount('toggle'), 0);
 }));

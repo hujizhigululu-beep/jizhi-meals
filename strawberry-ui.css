@@ -1,0 +1,424 @@
+/* Strawberry milk identity: shared brand tokens, concentrated decorations, readable paper. */
+body {
+  --bg: #fff8fa;
+  --paper: #fffdf7;
+  --card: #ffe7ef;
+  --pink: #f6b8cc;
+  --accent: #ef8fae;
+  --berry: #b85c79;
+  --ink: #62494b;
+  --muted: #876971;
+  --line: #e8ccd2;
+  background-color: var(--bg);
+  background-image: radial-gradient(#dcb0bd36 .7px, transparent .9px);
+  background-size: 8px 8px;
+}
+
+body .brand-header {
+  background: linear-gradient(125deg, #ffe6ee, #f9dce5);
+  border-color: #e6bbc8;
+  border-radius: 5px 15px 5px 5px;
+  box-shadow: 2px 3px 0 #f2e2e1;
+}
+body .brand-header::before {
+  border-color: #d198ad;
+  border-radius: 3px 11px 3px 3px;
+}
+body .brand-header::after {
+  display: block;
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 8px;
+  bottom: 8px;
+  width: 10px;
+  background: radial-gradient(ellipse at center, #fff8fa 2.5px, #c694a3 2.8px, #e0b1bf 3.3px, transparent 3.7px) center / 10px 16px repeat-y;
+  pointer-events: none;
+}
+body .cover-bow {
+  display: block;
+  transform: scale(.6) rotate(-9deg);
+  transform-origin: top right;
+  right: 22px;
+  top: -3px;
+}
+body .gingham-scrap {
+  opacity: 1;
+  box-shadow: 1px 2px 0 #bd8f9c25;
+}
+body .cover-berry {
+  width: 34px;
+  height: 34px;
+  left: -4px;
+  bottom: -1px;
+}
+body .brand { color: #68444f; }
+body .brand small { color: #8a5d70; }
+body.timeline-mode .brand-header { background:linear-gradient(125deg,#ffe6ee,#f9dce5); border-color:#e6bbc8; border-radius:5px 15px 5px 5px; box-shadow:2px 3px 0 #f2e2e1; }
+body.timeline-mode .brand-header::before { border-color:#d198ad; border-radius:3px 11px 3px 3px; }
+body.timeline-mode .brand-header::after { display:block; }
+body.timeline-mode .cover-bow { display:block; }
+body.timeline-mode .gingham-scrap { opacity:1; }
+body.timeline-mode .cover-berry { width:34px; height:34px; left:-4px; bottom:-1px; }
+
+.inventory-page .eyebrow { color: #af6c84; }
+.inventory-page .section-heading h1 {
+  color: #66454e;
+  font-size: 23px;
+}
+.inventory-page .section-heading .pill.pink {
+  background: #f6b8cc;
+  border: 1px solid #d799b0;
+  border-radius: 5px 10px 5px 5px;
+  box-shadow: 1px 2px 0 #f0d5df;
+  color: #754258;
+}
+
+/* The forecast is a taped keepsake slip, distinct from the stock labels below. */
+.inventory-page .runway-note {
+  position: relative;
+  isolation: isolate;
+  margin-top: 20px;
+  margin-bottom: 19px;
+  padding: 15px 17px 5px;
+  border: 1px solid #e1b9c8;
+  border-radius: 4px 13px 4px 4px;
+  background: linear-gradient(150deg, #ffedf3, #fff7ed 80%);
+  box-shadow: 2px 3px 0 #f1dfdf;
+}
+.inventory-page .runway-note::before {
+  content: "";
+  position: absolute;
+  left: 24px;
+  top: -7px;
+  width: 65px;
+  height: 16px;
+  background-color: #edb5c5a8;
+  background-image: repeating-linear-gradient(90deg, transparent 0 5px, #fffaf560 5px 6px);
+  border-left: 1px dashed #ce90a6;
+  border-right: 1px dashed #ce90a6;
+  transform: rotate(-4deg);
+  pointer-events: none;
+}
+.inventory-page .runway-note::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  z-index: -1;
+  border: 1px solid #f5dfe4;
+  border-radius: 2px 9px 2px 2px;
+  pointer-events: none;
+}
+.inventory-page .runway-note h2 {
+  position: relative;
+  min-height: 24px;
+  padding-right: 33px;
+  font-family: var(--title-font);
+  font-size: 16px;
+  font-weight: 600;
+  color: #936076;
+  margin-bottom: 3px;
+}
+.inventory-page .runway-note h2::after {
+  content: "";
+  position: absolute;
+  right: 1px;
+  top: -2px;
+  width: 29px;
+  height: 29px;
+  background: url('./assets/food/strawberry.svg') center / contain no-repeat;
+  transform: rotate(12deg);
+  filter: drop-shadow(1px 1px 0 #fffdf7);
+  pointer-events: none;
+}
+.inventory-page .runway-note .runway-total {
+  font-size: 15px;
+  color: #77505f;
+  margin-bottom: 8px;
+}
+.inventory-page .runway-note .runway-total > strong {
+  color: #b44773;
+  font-family: var(--body-font);
+  font-size: 39px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-inline: 5px;
+}
+.inventory-page .runway-counts { color: #866571; gap: 3px 12px; }
+.inventory-page .runway-counts b { color: #855269; font-weight: 650; }
+.inventory-page .runway-note .runway-coverage {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px dashed #dfb5c5;
+}
+.inventory-page .runway-coverage small { color: #946d7d; }
+.inventory-page .runway-coverage strong { color: #714c5a; font-size: 15px; }
+.inventory-page .runway-details {
+  margin-top: 10px;
+  border-top: 1px dashed #dfb5c5;
+}
+.inventory-page .runway-details > summary { color: #9a5b78; }
+.inventory-page .runway-details > summary::after { color: #b56486; }
+.inventory-page .runway-default select { border-color: #dfbac9; background: #fffdf7; }
+
+.inventory-page .runway-note { margin-top:16px; padding-top:12px; }
+.inventory-page .runway-note .runway-total { margin-bottom:5px; }
+.inventory-page .runway-note .runway-coverage { margin:8px 0 5px; padding-top:8px; }
+.inventory-page .runway-coverage strong { font-size:16px; font-weight:650; }
+.inventory-page .runway-note .runway-bottleneck { margin:5px 0 7px; color:#946779; font-size:12px; }
+.inventory-page .runway-bottleneck strong { color:#93516e; font-weight:650; margin-left:5px; }
+.inventory-page .runway-details { margin-top:7px; }
+.inventory-page .runway-details .runway-counts { grid-template-columns:repeat(3,minmax(0,1fr)); padding:11px 0 7px; gap:7px; }
+.inventory-page .runway-counts span { display:grid; gap:1px; }
+.inventory-page .runway-counts b { font-size:18px; }
+
+.inventory-page .fridge-switch {
+  display:inline-flex;
+  gap:3px;
+  padding:3px;
+  background:#fff1f6;
+  border:1px solid #e3b8c9;
+  border-radius:9px;
+  box-shadow:inset 0 1px 0 #fffdf7;
+}
+.inventory-page .fridge-switch button,
+.inventory-page .fridge-switch button:first-child,
+.inventory-page .fridge-switch button:last-child {
+  min-width:56px;
+  min-height:36px;
+  border:0;
+  border-radius:6px;
+  margin:0;
+  padding:6px 10px;
+  background:transparent;
+  color:#ac8495;
+  font-size:12px;
+  font-weight:500;
+  box-shadow:none;
+}
+.inventory-page .fridge-switch button[aria-pressed="true"] {
+  background:#f6bfd2;
+  color:#863c5f;
+  font-weight:650;
+  box-shadow:0 1px 2px #cf93ab20;
+}
+.inventory-page .fridge-rows .ingredient-card { grid-template-columns:minmax(0,1fr) 140px; padding:10px 12px 3px; gap:2px 10px; }
+.inventory-page .fridge-rows .stock-numbers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.inventory-page .fridge-rows .stock-numbers > div { min-width:0; }
+.inventory-page .fridge-rows .stock-numbers strong { font-size:22px; }
+.inventory-page .inventory-actions .text-button { color:#ab7a91; font-size:12px; font-weight:500; }
+
+/* One compact summary per ingredient; the existing editor lives in its details. */
+.inventory-page .inventory-list.fridge-rows { display:block; gap:0; padding:0 3px; background:#fffdf9; border:0; border-radius:0; box-shadow:none; }
+.inventory-page .ingredient-row { min-width:0; border:0; border-bottom:1px dashed #ddb6c7; border-radius:0; background:transparent; box-shadow:none; }
+.inventory-page .ingredient-row:nth-child(even) { background:transparent; }
+.inventory-page .ingredient-row:last-child { border-bottom:0; }
+.inventory-page .ingredient-row-summary { display:grid; grid-template-columns:minmax(0,1fr) 104px 14px; align-items:center; gap:6px; min-height:44px; padding:6px 3px; list-style:none; cursor:pointer; }
+.inventory-page .ingredient-row-summary::-webkit-details-marker { display:none; }
+.inventory-page .ingredient-row-summary::marker { content:""; }
+.inventory-page .ingredient-row-heading { display:flex; align-items:center; gap:6px; min-width:0; white-space:nowrap; }
+.inventory-page .ingredient-row .ingredient-name { flex:0 1 auto; min-width:0; font-size:14px; font-weight:650; line-height:1.4; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.inventory-page .ingredient-row .ingredient-category { flex:0 0 auto; display:inline-flex; flex-wrap:nowrap; align-items:center; margin:0; gap:4px; font-size:11px; line-height:1.4; white-space:nowrap; }
+.inventory-page .ingredient-row .category-chip { padding:0 3px; font-size:10px; }
+.inventory-page .ingredient-row .ingredient-category > span:last-child { color:#9c8591; font-size:10px; }
+.inventory-page .ingredient-row-summary .stock-numbers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; margin:0; padding:0; border:0; white-space:nowrap; }
+.inventory-page .ingredient-row-summary .stock-numbers > span { min-width:0; text-align:right; }
+.inventory-page .ingredient-row-summary .stock-numbers > span + span { border:0; padding:0; }
+.inventory-page .ingredient-row-summary .stock-numbers small { display:none; }
+.inventory-page .ingredient-row-summary .stock-numbers strong { font-family:var(--body-font); font-size:18px; font-weight:650; line-height:1.2; }
+.inventory-page .ingredient-row-summary .stock-numbers .unit { margin-left:1px; font-size:10px; }
+.inventory-page .ingredient-row-chevron { display:grid; place-items:center; width:14px; height:20px; color:#ac5c80; font-size:0; }
+.inventory-page .ingredient-row-chevron::after { content:""; width:7px; height:7px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:translateY(-2px) rotate(45deg); }
+.inventory-page .ingredient-row[open] .ingredient-row-chevron { transform:rotate(180deg); }
+.inventory-page .ingredient-row[open] .ingredient-row-summary { background:#fff2f780; border-radius:0; }
+.inventory-page .ingredient-row-detail { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 12px; margin:0 7px; padding:3px 0 5px; border-top:0; }
+.inventory-page .ingredient-row-detail .ingredient-meta { margin:0; font-size:12px; line-height:1.7; flex:1 1 145px; }
+.inventory-page .ingredient-row-detail .inventory-actions { margin:0; padding:0; border:0; gap:8px; }
+.inventory-page .ingredient-row-detail .text-button { min-height:44px; padding:6px 2px; font-size:12px; font-weight:500; }
+.inventory-page .ingredient-full-name { display:block; width:100%; margin:3px 0 0; font-size:13px; font-weight:600; color:#73505c; overflow-wrap:anywhere; }
+.inventory-page .inventory-column-head { display:grid; grid-template-columns:minmax(0,1fr) 104px 14px; gap:6px; padding:6px 3px; color:#a0808e; font-size:11px; line-height:1.4; }
+.inventory-page .inventory-column-numbers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; text-align:right; }
+.inventory-page .inventory-column-numbers > span { color:#846271; font-size:12px; font-weight:600; }
+.inventory-page .ingredient-row-summary:focus-visible { outline:2px solid #d98aab; outline-offset:2px; }
+.journal-whitespace { position:relative; height:90px; margin:8px 0 0; pointer-events:none; }
+.journal-whitespace::after { content:""; position:absolute; right:6px; top:0; width:195px; height:90px; background:url('./assets/notebook-whisper.svg') center / contain no-repeat; opacity:.12; pointer-events:none; }
+.runway-background-art { position:absolute; width:106px; height:60px; top:31px; right:13px; background:url('./assets/notebook-whisper.svg') center / contain no-repeat; opacity:.1; pointer-events:none; }
+.inventory-page .section-heading { margin-bottom:10px; }
+.inventory-page .runway-note h2 { min-height:20px; line-height:1.3; font-size:15px; }
+.inventory-page .runway-note .runway-total { line-height:1.1; padding-right:116px; overflow-wrap:anywhere; }
+.inventory-page .runway-coverage small { line-height:1.4; }
+.inventory-page .runway-coverage strong { line-height:1.4; }
+.inventory-page .runway-note .runway-bottleneck { line-height:1.4; margin:3px 0 6px; }
+
+.inventory-page .fridge-toolbar { margin-bottom: 2px; }
+.inventory-page .fridge-toolbar h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #78515f;
+  font-size: 18px;
+}
+.inventory-page .fridge-toolbar h2::before {
+  content: "";
+  width: 20px;
+  height: 12px;
+  flex: none;
+  transform: rotate(-8deg);
+  background: repeating-linear-gradient(90deg, #f4bbcd9c 0 4px, #ffedf3c9 4px 8px);
+  border-inline: 1px dashed #d3a0b4;
+  pointer-events: none;
+}
+.inventory-page .fridge-switch button { border-color: #deb3c4; color: #95667b; }
+.inventory-page .fridge-switch button[aria-pressed="true"] {
+  background: #f6c5d5;
+  border-color: #cc92aa;
+  color: #7c3f59;
+}
+.inventory-page .inventory-explanation { margin-bottom: 9px; }
+.inventory-page .inventory-explanation > summary { color: #a8798d; }
+
+/* Compact rows stay plain enough to scan; only a few receive a corner of tape. */
+.inventory-page .inventory-list { padding-top: 4px; }
+.inventory-page .ingredient-card {
+  position: relative;
+  overflow: visible;
+  border: 1px solid #e2c2cc;
+  border-radius: 4px 10px 4px 4px;
+  background: #fffdf7;
+  box-shadow: 1px 2px 0 #f0e0df;
+}
+.inventory-page .ingredient-card:nth-child(even) { background: #fffbfd; }
+.inventory-page .ingredient-card::before { display:none; }
+.inventory-page .ingredient-name { color: #654951; font-weight: 650; }
+.inventory-page .category-chip {
+  background: #ffe4ed;
+  border-color: #ecc1d1;
+  border-radius: 3px 6px 3px 3px;
+  color: #a45777;
+}
+.inventory-page .ingredient-category { color: #916479; display: flex; flex-wrap: wrap; align-items: center; gap: 3px 6px; }
+.inventory-page .ingredient-meta { color: #92767b; }
+.inventory-page .stock-numbers small { color: #957580; }
+.inventory-page .stock-numbers strong {
+  font-family: var(--body-font);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: #73505c;
+  overflow-wrap:anywhere;
+}
+.inventory-page .stock-numbers .forecast { color: #b7668a; }
+.inventory-page .stock-numbers .low { color: #a35b38; }
+.inventory-page .inventory-actions .text-button { color: #b25e83; font-weight: 600; }
+.inventory-page .ingredient-emoji { border: 1px dashed #dec6ba; background: #fff5e6; border-radius: 5px; transform: rotate(3deg); }
+
+body .bottom-nav {
+  background: #fff8fa;
+  border-color: #e4bfce;
+  border-radius: 10px 15px 0 0;
+  box-shadow: 0 -2px 10px #ad6c8b08;
+}
+body .bottom-nav::before {
+  display: block;
+  content: "";
+  position: absolute;
+  inset: 4px 7px auto;
+  border-top: 1px dashed #ecd0dc;
+  pointer-events: none;
+}
+body .bottom-nav button.active {
+  background: #f8cbdc;
+  border-color: #e4adc3;
+  color: #a34f77;
+  border-radius: 5px 9px 5px 5px;
+  box-shadow: 1px 2px 0 #f0d5df;
+}
+
+@media (max-width: 360px) {
+  .inventory-page .runway-note { padding-inline: 13px; }
+  .inventory-page .section-heading h1 { font-size: 21px; }
+  .inventory-page .fridge-toolbar h2 { font-size: 16px; gap: 5px; }
+  .inventory-page .fridge-toolbar h2::before { width: 13px; }
+  .inventory-page .fridge-switch button { min-width: 54px; padding-inline: 9px; }
+  .inventory-page .stock-numbers strong { font-size: 19px; }
+  .inventory-page .fridge-rows .ingredient-card { grid-template-columns:minmax(0,1fr) 124px; gap:2px 7px; padding-inline:10px; }
+  .inventory-page .fridge-rows .stock-numbers { gap:5px; }
+  .inventory-page .fridge-rows .stock-numbers strong { font-size:20px; }
+  .inventory-page .fridge-switch button { min-width:47px; padding-inline:7px; }
+  .inventory-page .ingredient-row-summary, .inventory-page .inventory-column-head { grid-template-columns:minmax(0,1fr) 96px 14px; gap:4px; padding-inline:1px; }
+  .inventory-page .ingredient-row-heading { gap:4px; }
+  .inventory-page .ingredient-row .ingredient-name { font-size:13px; }
+  .inventory-page .ingredient-row-summary .stock-numbers strong { font-size:17px; }
+  .inventory-page .ingredient-row .ingredient-category { gap:3px; font-size:10px; }
+  .runway-background-art { width:88px; height:53px; right:8px; top:30px; }
+  .inventory-page .runway-note .runway-total { padding-right:98px; }
+}
+
+/* The four chapters share one cover; each kind of paper keeps its own purpose. */
+.page > .section-heading .eyebrow { font-size:10px; letter-spacing:1.2px; color:#ad7088; }
+.page > .section-heading h1 { font-family:var(--title-font); font-size:23px; color:#684851; line-height:1.5; }
+.page > .section-heading .subheading { font-size:12px; color:#a1848e; line-height:1.7; margin-top:4px; }
+.page .pill.pink, .primary { background:#f6b8cc; border-color:#d99aaf; color:#7b3e55; }
+.page .text-button { color:#a66884; }
+.calendar-page .chapter-heading { margin-bottom:12px; }
+.calendar-page .calendar-month { font-family:var(--title-font); font-size:16px; font-weight:600; color:#815264; }
+.calendar-page .day-heading { background:#fffdf7; border-radius:4px 10px 4px 4px; border-color:#e3bfcd; box-shadow:1px 2px 0 #f1dfdf; }
+.calendar-page .day-heading h2 { font-family:var(--title-font); font-size:19px; line-height:1.5; color:#734b59; }
+.calendar-page .day-heading h2::before { content:none; }
+.calendar-page .date-tab { background:#fffdf7; border-color:#e5c6cf; border-radius:4px 5px 8px 5px; }
+.calendar-page .date-tab.active { background:#f6c5d5; border-color:#ce93ab; box-shadow:1px 2px 0 #efd7e0; }
+.calendar-page .date-tab.today { border-color:#da8ba9; }
+.calendar-page .date-tab.active .date-number { color:#944f71; font-weight:650; }
+.calendar-page .date-tab.active::before { display:block; content:""; position:absolute; top:-4px; left:25%; right:25%; height:7px; background:#e5acc18c; pointer-events:none; }
+.calendar-page .meal-card { background:#fffdf7; border-color:#e0c6c5; border-radius:4px 10px 4px 4px; box-shadow:1px 2px 0 #efe0d9; }
+.calendar-page .meal-card::before { display:none; }
+.calendar-page .meal-card.done { background:#f8fbf1; border-color:#d6dfc8; }
+.calendar-page .meal-category .slot-icon { background:#fff4e5; border:1px dashed #e0c7b6; }
+.calendar-page .meal-card.lunch .slot-icon { background:#ffe8f0; border-color:#e6bdcd; }
+.calendar-page .meal-resource-chip { color:#9e5e7b; background:#ffe9f1; }
+.calendar-page .meal-card-controls .meal-complete { background:#f8d5e3; color:#935471; border-color:#e1afc3; }
+.calendar-page .day-tools { border-bottom:1px dashed #e2bece; background:linear-gradient(90deg,#fbe0ea80,transparent); }
+.calendar-page .diary-card { position:relative; background:#fffdf7; border-color:#dfc4c6; border-radius:4px 12px 4px 4px; box-shadow:2px 3px 0 #f0e1dc; }
+.calendar-page .diary-card::before { display:block; content:""; position:absolute; top:-5px; right:22px; width:43px; height:12px; background:#efb5c794; border-inline:1px dashed #d09caf; transform:rotate(3deg); pointer-events:none; }
+.calendar-page .diary-joy { border-left-color:#e4a2bd; background:#fff2e9; }
+.snack-heading h2, .diary-heading h2 { font-family:var(--title-font); color:#85586b; }
+
+.timeline-page .timeline-scroll { background:#fffdf7; border-color:#e1c4cd; border-radius:4px 12px 4px 4px; box-shadow:1px 2px 0 #f0dfdf; }
+.timeline-page .timeline-row.is-selected { background:#fff0f6; border-left-color:#d385a8; }
+.timeline-page .timeline-row.is-today .timeline-day-number { color:#b45c85; font-weight:650; }
+.timeline-page .timeline-row.is-selected .timeline-date::after { background:#d385a8; border-color:#c47599; }
+.timeline-page .timeline-date::after { border-color:#dcafc4; }
+.timeline-page .timeline-row::after { border-color:#edccdb; }
+.timeline-page .timeline-empty { color:#b196a3; }
+.timeline-page .timeline-record-mark { color:#ab7590; }
+.timeline-page .timeline-row.is-weekend { background:#fff8fa; }
+.timeline-page .timeline-toolbar button { border-color:#e0b6c8; background:#fffdf7; color:#986680; }
+
+.summary-page .summary-month-nav { background:linear-gradient(115deg,#ffe8f0,#fff6ed); border-color:#e2bbcc; border-radius:4px 12px 4px 4px; box-shadow:1px 2px 0 #f0e0df; }
+.summary-page .summary-month-title { color:#8b4d69; }
+.summary-page .summary-stat { background:#fff0f6; border-color:#e8c2d2; border-radius:5px 12px 5px 5px; box-shadow:1px 2px 0 #f1e0e5; }
+.summary-page .summary-stat:nth-child(2) { background:#fff8ed; border-color:#ead6c0; }
+.summary-page .summary-stat strong { color:#b15580; font-family:var(--body-font); font-weight:650; }
+.summary-page .summary-slot-count { background:transparent; border:0; border-bottom:1px dashed #dfbacb; border-radius:0; box-shadow:none; }
+.summary-page .summary-slot-count strong { color:#966d83; font-family:var(--body-font); font-weight:600; }
+.summary-page .summary-section.settings-card { position:relative; background:#fffdf7; border-color:#e0c6ca; border-radius:4px 11px 4px 4px; box-shadow:1px 2px 0 #f0e0dc; }
+.summary-page .summary-section:last-of-type { background:#fffbf3; margin-top:22px; }
+.summary-page .summary-section:last-of-type::before { content:""; position:absolute; width:45px; height:12px; top:-6px; left:23px; background:#efb5c798; border-inline:1px dashed #d09caf; transform:rotate(-3deg); pointer-events:none; }
+.summary-page .summary-section-heading h2 { color:#825569; }
+.summary-page .summary-entry { border-bottom:1px solid #f0e1e4; }
+.summary-page .summary-entry-link { color:#b47694; }
+
+.settings-page .settings-group { background:#fffdf7; border-color:#e0c8cb; border-radius:4px 12px 4px 4px; box-shadow:1px 2px 0 #eee0db; }
+.settings-page .settings-group:first-of-type { border-top:3px solid #e6b4c8; background:#fff4f8; }
+.settings-page .settings-group:nth-of-type(2) { background:#fff9ef; border-color:#e7d2bf; }
+.settings-page .settings-group-title { font-family:var(--title-font); color:#7d5364; }
+.settings-page .settings-group-title > span { color:#c083a1; font-family:Georgia,serif; font-size:14px; }
+.settings-page .settings-rules, .settings-page .settings-credits { background:transparent; border:0; border-bottom:1px dashed #e0c2cf; border-radius:0; box-shadow:none; }
+.settings-page .settings-group-summary, .settings-page .settings-help > summary { color:#a5768e; }
+.settings-page .settings-danger { background:#fff8f9; border-color:#e8d1d7; box-shadow:none; }
+.settings-page .settings-danger .danger { color:#a55c6d; border-color:#dfb9c5; background:#fffdf7; }
+
+@media (max-width:360px) {
+  .page > .section-heading h1 { font-size:21px; }
+  .calendar-page .day-heading h2 { font-size:17px; }
+  .calendar-page .calendar-month { font-size:14px; }
+}
