@@ -81,7 +81,7 @@ export function normalize(raw) {
     }
     ids.add(item.id);
     if (item.expires && !parseDate(item.expires)) warnings.push('一条食材的保质期格式异常，已保护原文件');
-    state.inventory.push({ id: item.id, name: text(item.name, 60, '食材名称'), quantity: round(item.quantity), perMeal: round(item.perMeal), unit: text(item.unit, 12, '食材单位'), note: text(item.note, 200, '食材备注'), expires: parseDate(item.expires) ? item.expires : '' });
+    state.inventory.push({ ...item, ...(item.category != null ? { category: text(item.category, 60, '食材分类') } : {}), id: item.id, name: text(item.name, 60, '食材名称'), quantity: round(item.quantity), perMeal: round(item.perMeal), unit: text(item.unit, 12, '食材单位'), note: text(item.note, 200, '食材备注'), expires: parseDate(item.expires) ? item.expires : '' });
   }
   const mealIds = new Set();
   const positions = new Set();
@@ -118,6 +118,8 @@ export function normalize(raw) {
     state.diaries.push({ date: diary.date, mood: text(diary.mood, 100, '日记心情'), text: text(diary.text, 5000, '日记正文'), joy: text(diary.joy, 500, '今日小确幸'), ...(typeof diary.updatedAt === 'string' ? { updatedAt: diary.updatedAt } : {}) });
   }
   if (raw.updatedAt != null && typeof raw.updatedAt !== 'string') warnings.push('保存时间格式异常，已保护原文件');
+  if (raw.inventoryVersion != null && raw.inventoryVersion !== 1) warnings.push('食材数据属于未知版本，已保护原文件');
+  if (raw.inventoryVersion === 1) state.inventoryVersion = 1;
   state.updatedAt = typeof raw.updatedAt === 'string' ? raw.updatedAt : null;
   const locked = warnings.length > 0;
   if (locked) state._readOnly = true;

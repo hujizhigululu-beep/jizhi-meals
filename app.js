@@ -1,5 +1,6 @@
+import { CATEGORIES, portions, stockSummary, predictRunway } from './runway.js';
 import { freshState, uid, round, dateKey, parseDate, addDays, weekDates, SLOTS, ALL_SLOTS, TYPES, forecast, reserved, putMeal, removeMeal, completeMeal, undoComplete, transferMeal, normalize, putDiary, removeDiary } from './model.js';
-import { load, persist, STORAGE_KEY, MIGRATION_BACKUP_KEY } from './storage.js';
+import { load, persist, STORAGE_KEY, MIGRATION_BACKUP_KEY, V13_BACKUP_KEY } from './storage.js';
 import { renderSummary, shiftSummaryMonth, summaryMonthDate } from './summary.js';
 import { generateShareCard, shareImageFile } from './share-card.js';
 import { mountTimeline } from './timeline.js';
@@ -34,13 +35,19 @@ let timelineAnchorDate = null;
 let timelineController = null;
 let offlineReady = false;
 let swUpdateReady = false;
-const APP_CACHE = 'jizhi-meals-shell-v1.2-compact-1';
+const APP_CACHE = 'jizhi-meals-shell-v1.3-1';
 let cardAsset = null;
 let cardPreviewUrl = null;
 let shareGeneration = 0;
 let installPrompt = null;
 let backupTime = '';
 try { backupTime = storage?.getItem('jizhi-last-export') || ''; } catch {}
+let fridgeView = 'cards', runwayDaily = 2;
+try { fridgeView = storage?.getItem('jizhi-fridge-view') === 'list' ? 'list' : 'cards'; runwayDaily = storage?.getItem('jizhi-runway-daily') === '1' ? 1 : 2; } catch {}
+function preference(key, value) {
+  try { storage.setItem(key, String(value)); return true; }
+  catch { toast('查看偏好没能保存，请检查浏览器存储空间。'); return false; }
+}
 let toastTimer;
 const sheet = $('#sheet');
 const sheetContent = $('#sheet-content');
@@ -278,8 +285,15 @@ function ingredientArt(name) {
   if (/奶|乳/.test(name)) return 'milk';
   return 'meat';
 }
+function runwayPanel() {
+  const summary = stockSummary(state.inventory, today());
+  const prediction = predictRunway(state, today(), runwayDaily);
+  const unclassified = state.inventory.filter(item => !CATEGORIES.includes(item.category)).length;
+  const coverage = prediction.last ? dateLabel(prediction.last.date, true) + ' · ' + labels[prediction.last.slot] : '尚不能覆盖下一餐';
+  return `<aside class="runway-note"><h2>♡ 餐食续航 · 当前还能吃 <strong>${summary.total}</strong> 顿</h2><div class="runway-counts"><span>自己搭配：${summary.combined} 顿</span><span>整套食物：${summary.ready} 顿</span><span>早餐：${summary.breakfast} 次</span><span>最先不足：${summary.bottlenecks.join('、')}</span></div>${unclassified ? `<p>有 ${unclassified} 种食材尚未归入五类，暂不计入组合；点食材「编辑」确认分类就好 ♡</p>` : ''}<label class="runway-default">未安排餐次<select id="runway-daily" aria-label="未安排餐次默认消耗"><option value="1" ${runwayDaily === 1 ? 'selected' : ''}>每天 1 顿 · 晚餐</option><option value="2" ${runwayDaily === 2 ? 'selected' : ''}>每天 2 顿 · 午餐和晚餐</option></select></label><p><strong>按当前计划预计覆盖到：</strong>${coverage}</p>${prediction.shortage ? `<p class="runway-shortage">下一次不足：${dateLabel(prediction.shortage.date, true)} · ${labels[prediction.shortage.slot]}<br>${escape(prediction.shortage.reason)}</p>` : '<p>超过 10 年预测范围，请结合实际计划查看。</p>'}<details><summary>这张小纸条怎么算？</summary><p>每份 = 当前数量 ÷ 每餐默认用量。蛋白质、蔬菜、碳水各 1 份组成一餐；整套食物独立计餐，结果向下取整。未分类不参与组合，负库存按 0 计，保质期当天可用，过期后不计。</p><p>从今天开始，已吃餐次跳过；已有未吃计划优先预留具体用量，未关联库存的餐次视为外食或无需库存并跳过。早餐和加餐计划照实际用量计算。空白午晚餐按上述设置使用剩余库存，先搭配、再使用整套食物。预测不会扣库存；当前总顿数与计划覆盖顿数可能不同。</p></details><button class="text-button" data-action="export">升级前 / 整理后，存一份 JSON 备份 ↗</button></aside>`;
+}
 function renderInventory() {
-  return `<section class="page"><div class="section-heading"><div><div class="eyebrow">A LITTLE FRIDGE OF HAPPINESS</div><h1>我的食材小冰箱</h1><p class="subheading">${state.inventory.length ? `收好 ${state.inventory.length} 种食材，慢慢安排` : '把喜欢的食材，一份份收好'}</p></div><button class="pill pink" data-action="add-ingredient">＋ 添加</button></div><div class="info-card soft"><strong>当前库存</strong>是实际剩余；<strong>预计剩余</strong>会减去所有日期尚未吃的计划，包括过去和未来。安排餐食不会真正扣库存哦。</div>${state.inventory.length ? `<div class="inventory-list">${state.inventory.map(item => { const predicted = forecast(state, item.id); const planned = reserved(state, item.id); return `<article class="ingredient-card"><div class="ingredient-header"><h2 class="ingredient-name">${escape(item.name)}</h2><span class="ingredient-emoji" aria-hidden="true">${illustration(ingredientArt(item.name))}</span></div><div class="stock-numbers"><div><small>当前库存</small><strong>${item.quantity}</strong><span class="unit">${escape(item.unit)}</span></div><div><small>预计剩余</small><strong class="forecast ${predicted < 0 ? 'low' : ''}">${predicted}</strong><span class="unit">${escape(item.unit)}</span></div></div><div class="ingredient-meta">每餐 ${item.perMeal} ${escape(item.unit)} · 已计划 ${planned} ${escape(item.unit)}${item.note ? `<br>${escape(item.note)}` : ''}${item.expires ? `<br>${item.expires < today() ? '保质期已过，请核对' : '保质期'} · ${escape(item.expires)}` : ''}</div><div class="inventory-actions"><span class="warning-label">${predicted < 0 ? '♡ 计划用量超出库存' : '♡ 慢慢吃，不着急'}</span><button class="text-button" data-ingredient="${escape(item.id)}">编辑 ↗</button></div></article>`; }).join('')}</div>` : `<div class="empty-state"><span class="illustration" aria-hidden="true">${illustration('basket')}</span><h2>小冰箱还空着呢 (｡•ᴗ•｡)</h2><p>虾仁、鸡腿、牛肉饼……<br>先收好食材，再安排喜欢的一餐。</p><button class="pill pink" data-action="add-ingredient">＋ 添加第一份食材</button></div>`}<p class="footer-note">预计不足也可以安排，补货后修改当前库存就好。</p></section>`;
+  return `<section class="page"><div class="section-heading"><div><div class="eyebrow">A LITTLE FRIDGE OF HAPPINESS</div><h1>我的食材小冰箱</h1><p class="subheading">${state.inventory.length ? `收好 ${state.inventory.length} 种食材，慢慢安排` : '把喜欢的食材，一份份收好'}</p></div><button class="pill pink" data-action="add-ingredient">＋ 添加</button></div>${runwayPanel()}<div class="fridge-switch" role="group" aria-label="食材查看模式"><button class="pill" data-fridge-view="cards" aria-pressed="${fridgeView === 'cards'}">卡片</button><button class="pill" data-fridge-view="list" aria-pressed="${fridgeView === 'list'}">列表</button></div><div class="info-card soft"><strong>当前库存</strong>是实际剩余；<strong>预计剩余</strong>会减去所有日期尚未吃的计划，包括过去和未来。安排餐食不会真正扣库存哦。</div>${state.inventory.length ? `<div class="inventory-list ${fridgeView === 'list' ? 'fridge-rows' : ''}">${state.inventory.map(item => { const predicted = forecast(state, item.id); const planned = reserved(state, item.id); return `<article class="ingredient-card"><div class="ingredient-header"><h2 class="ingredient-name">${escape(item.name)}</h2><span class="ingredient-emoji" aria-hidden="true">${illustration(ingredientArt(item.name))}</span></div><div class="stock-numbers"><div><small>当前库存</small><strong>${item.quantity}</strong><span class="unit">${escape(item.unit)}</span></div><div><small>预计剩余</small><strong class="forecast ${predicted < 0 ? 'low' : ''}">${predicted}</strong><span class="unit">${escape(item.unit)}</span></div></div><div class="ingredient-category">${escape(item.category || '未分类')} · 预计可吃 ${Math.floor(Math.max(0, predicted) / item.perMeal + 1e-9)} 顿</div><div class="ingredient-meta">每餐 ${item.perMeal} ${escape(item.unit)} · 已计划 ${planned} ${escape(item.unit)}${item.note ? `<br>${escape(item.note)}` : ''}${item.expires ? `<br>${item.expires < today() ? '保质期已过，请核对' : '保质期'} · ${escape(item.expires)}` : ''}</div><div class="inventory-actions"><span class="warning-label">${predicted < 0 ? '♡ 计划用量超出库存' : '♡ 慢慢吃，不着急'}</span><button class="text-button" data-ingredient="${escape(item.id)}">编辑 ↗</button></div></article>`; }).join('')}</div>` : `<div class="empty-state"><span class="illustration" aria-hidden="true">${illustration('basket')}</span><h2>小冰箱还空着呢 (｡•ᴗ•｡)</h2><p>虾仁、鸡腿、牛肉饼……<br>先收好食材，再安排喜欢的一餐。</p><button class="pill pink" data-action="add-ingredient">＋ 添加第一份食材</button></div>`}<p class="footer-note">预计不足也可以安排，补货后修改当前库存就好。</p></section>`;
 }
 function renderSettings() {
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -287,7 +301,7 @@ function renderSettings() {
     <div class="settings-card"><h3>📦 给手账留一份备份</h3><p>餐食和库存默认保存在此浏览器本地，历史和未来记录都不会每周清空。<strong>清理网站数据、卸载浏览器或设备故障可能导致数据丢失，本地保存不能当作永久可靠备份。</strong>请定期导出 JSON 到文件或自己的网盘。</p><div class="settings-actions"><button class="pill pink" data-action="export">导出 JSON 备份</button><button class="pill" data-action="import">导入 / 恢复</button></div><div class="backup-status">${backupTime ? `最近发起导出：${escape(backupTime)}（请确认文件已保存）` : '还没有导出过备份，记得偶尔存一份哦。'}<br>导入会替换整本手账，确认前会显示内容摘要。</div></div>
     <div class="settings-card"><h3>🍓 装进手机，随时打开</h3><p id="offline-status">${offlineReady ? '✓ 离线资源已缓存；此浏览器断网后也能打开手账。' : '离线缓存尚未就绪，请联网打开 HTTPS 地址，等待缓存成功。'}</p>${swUpdateReady ? '<p>新版本已准备好。请先导出备份，再关闭此网站的所有窗口和主屏幕应用后重新打开。</p>' : ''}<ul><li>安卓：用 Chrome 打开，选择菜单中的「安装应用」或「添加到主屏幕」。</li><li>iPhone：用 Safari 打开，点分享 →「添加到主屏幕」。</li><li>第一次打开需要网络；缓存成功后排餐、库存、备份均可离线操作。</li></ul>${installPrompt ? '<button class="pill pink" data-action="install">安装到主屏幕</button>' : `<p>${ios ? 'iPhone 请通过 Safari 分享菜单安装。' : '若没有安装按钮，可从浏览器菜单添加到主屏幕。'}</p>`}<p style="margin-top:10px">不同设备、浏览器和网站地址不会自动同步。切换前请导出，在新位置导入。iPhone 安装后也请核对记录，必要时重新导入。</p></div>
     <div class="settings-card"><h3>♡ 手账的小约定</h3><p>日期按设备当地时间显示。一周从周一开始，跨月、跨年都按真实日期保存。未吃计划可以编辑、删除、复制、移动；已吃记录修改会重新计算用量，删除或撤销会返还全部食材。每餐可以关联多种库存食材，同一种食材只记一次。</p><p style="margin-top:10px">每次数量最多三位小数。食材数量表示份、个、包或克，不计算营养或热量；发现实际用量不同，请在标记已吃前修改。</p></div>
-    <div class="settings-card"><h3>本地数据管理</h3><p>当前保存 ${state.meals.length} 餐记录、${state.inventory.length} 种食材、${state.diaries.length} 篇日记。${locked ? '原文件已保护，请先保存原文件再恢复。' : '所有操作保存成功后才更新界面。'}</p><div class="settings-actions">${savedRaw ? '<button class="pill" data-action="original">保存当前原文件</button>' : ''}${migrationBackup() ? '<button class="pill" data-action="migration-backup">保存 V1 原始备份</button>' : ''}<button class="pill danger" data-action="clear">清空手账</button></div></div><div class="credits">食物插画：<a href="https://openmoji.org/" target="_blank" rel="noopener">OpenMoji</a> · <a href="./assets/credits.html" target="_blank" rel="noopener">作者、来源与 CC BY-SA 4.0 授权</a><br>食物插画保留 OpenMoji 官方原图；牛奶纸盒、装订、胶带与导航线稿为本项目原创。</div><p class="footer-note">机智定食 V1.2 · 私人生活手账<br>今天也要，好好吃饭 ♡</p></section>`;
+    <div class="settings-card"><h3>本地数据管理</h3><p>当前保存 ${state.meals.length} 餐记录、${state.inventory.length} 种食材、${state.diaries.length} 篇日记。${locked ? '原文件已保护，请先保存原文件再恢复。' : '所有操作保存成功后才更新界面。'}</p><div class="settings-actions">${savedRaw ? '<button class="pill" data-action="original">保存当前原文件</button>' : ''}${storage?.getItem(V13_BACKUP_KEY) ? '<button class="pill" data-action="v13-backup">保存 V1.3 升级前备份</button>' : ''}${migrationBackup() ? '<button class="pill" data-action="migration-backup">保存 V1 原始备份</button>' : ''}<button class="pill danger" data-action="clear">清空手账</button></div></div><div class="credits">食物插画：<a href="https://openmoji.org/" target="_blank" rel="noopener">OpenMoji</a> · <a href="./assets/credits.html" target="_blank" rel="noopener">作者、来源与 CC BY-SA 4.0 授权</a><br>食物插画保留 OpenMoji 官方原图；牛奶纸盒、装订、胶带与导航线稿为本项目原创。</div><p class="footer-note">机智定食 V1.3 · 私人生活手账<br>今天也要，好好吃饭 ♡</p></section>`;
 }
 
 function mealEditor(slot, id = null) {
@@ -401,11 +415,11 @@ function ingredientEditor(id = null) {
   const original = state.inventory.find(i => i.id === id);
   const item = original || { id: uid(), name: '', quantity: 1, unit: '份', perMeal: 1, note: '', expires: '' };
   const linked = state.meals.some(m => m.resources.some(r => r.ingredientId === id));
-  showSheet(original ? '整理这份食材' : '给小冰箱添一份', '当前库存填写实际剩余数量；补货时修改这里就好。', `<form id="ingredient-form"><label class="form-field">食材名字<input name="name" value="${escape(item.name)}" required maxlength="60" placeholder="例如：虾仁 / 鸡腿" autocomplete="off"></label><div class="form-row"><label class="form-field">当前库存<input name="quantity" type="number" required min="${original && item.quantity < 0 ? '-1000000000' : '0'}" max="1000000000" step="0.001" inputmode="decimal" value="${item.quantity}"></label><label class="form-field">单位<input name="unit" required maxlength="12" value="${escape(item.unit)}" placeholder="份 / 个 / 包 / 克" ${linked ? 'readonly' : ''}></label></div>${linked ? '<p class="field-hint">这份食材已关联餐食，单位保持不变，避免历史用量变乱。需要新单位请新建食材。</p>' : ''}<label class="form-field">每餐默认用量<input name="perMeal" type="number" required min="0.001" max="1000000000" step="0.001" inputmode="decimal" value="${item.perMeal}"><span class="field-hint">只作为新计划的默认值，不改变已安排餐食。</span></label><label class="form-field">保质期 <span class="muted">（可选）</span><input name="expires" type="date" value="${escape(item.expires)}"></label><label class="form-field">小备注 <span class="muted">（可选）</span><input name="note" maxlength="200" value="${escape(item.note)}" placeholder="冷冻 / 已腌制 / 尽快吃"></label><p class="form-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" type="button" data-close>再想想</button><button class="primary" type="submit">收好这份食材 ♡</button></div>${original ? '<button type="button" class="text-button danger" id="delete-ingredient" style="display:block;margin:12px auto 0">删除这份食材</button>' : ''}</form>`);
+  showSheet(original ? '整理这份食材' : '给小冰箱添一份', '当前库存填写实际剩余数量；补货时修改这里就好。', `<form id="ingredient-form"><label class="form-field">食材名字<input name="name" value="${escape(item.name)}" required maxlength="60" placeholder="例如：虾仁 / 鸡腿" autocomplete="off"></label><div class="form-row"><label class="form-field">当前库存<input name="quantity" type="number" required min="${original && item.quantity < 0 ? '-1000000000' : '0'}" max="1000000000" step="0.001" inputmode="decimal" value="${item.quantity}"></label><label class="form-field">单位<input name="unit" required maxlength="12" value="${escape(item.unit)}" placeholder="份 / 个 / 包 / 克" ${linked ? 'readonly' : ''}></label></div>${linked ? '<p class="field-hint">这份食材已关联餐食，单位保持不变，避免历史用量变乱。需要新单位请新建食材。</p>' : ''}<label class="form-field">食材分类<select name="category"><option value="">未分类（暂不参与组合）</option>${item.category && !CATEGORIES.includes(item.category) ? `<option selected>${escape(item.category)}</option>` : ''}${CATEGORIES.map(c => `<option ${item.category === c ? 'selected' : ''}>${c}</option>`).join('')}</select><span class="field-hint">旧分类保留原文；确认后可以重新分类。</span></label><label class="form-field">每餐默认用量<input name="perMeal" type="number" required min="0.001" max="1000000000" step="0.001" inputmode="decimal" value="${item.perMeal}"><span class="field-hint">只作为新计划的默认值，不改变已安排餐食。</span></label><label class="form-field">保质期 <span class="muted">（可选）</span><input name="expires" type="date" value="${escape(item.expires)}"></label><label class="form-field">小备注 <span class="muted">（可选）</span><input name="note" maxlength="200" value="${escape(item.note)}" placeholder="冷冻 / 已腌制 / 尽快吃"></label><p class="form-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" type="button" data-close>再想想</button><button class="primary" type="submit">收好这份食材 ♡</button></div>${original ? '<button type="button" class="text-button danger" id="delete-ingredient" style="display:block;margin:12px auto 0">删除这份食材</button>' : ''}</form>`);
   const form = $('#ingredient-form');
   form.onsubmit = e => {
     e.preventDefault();
-    const next = { id: item.id, name: form.elements.name.value.trim(), quantity: round(Number(form.elements.quantity.value)), unit: form.elements.unit.value.trim(), perMeal: round(Number(form.elements.perMeal.value)), expires: form.elements.expires.value, note: form.elements.note.value.trim() };
+    const next = { ...item, category: form.elements.category.value, id: item.id, name: form.elements.name.value.trim(), quantity: round(Number(form.elements.quantity.value)), unit: form.elements.unit.value.trim(), perMeal: round(Number(form.elements.perMeal.value)), expires: form.elements.expires.value, note: form.elements.note.value.trim() };
     if (!next.name || !next.unit || !Number.isFinite(next.quantity) || !Number.isFinite(next.perMeal) || next.perMeal <= 0) { formError(form, '请填好食材名字、数量和单位 ♡'); return; }
     if (next.expires && !parseDate(next.expires)) { formError(form, '保质期日期不太对，请重新选一下。'); return; }
     if (commit(s => { const index = s.inventory.findIndex(i => i.id === item.id); if (index < 0) s.inventory.push(next); else s.inventory[index] = next; }, '小冰箱整理好啦 ♡')) closeSheet();
@@ -477,6 +491,7 @@ document.addEventListener('click', async e => {
   if (button.dataset.add) return mealEditor(button.dataset.add);
   if (button.dataset.detail) return mealDetail(button.dataset.detail);
   if (button.dataset.editMeal) { const meal = state.meals.find(m => m.id === button.dataset.editMeal); if (meal) return mealEditor(meal.slot, meal.id); return; }
+  if (button.dataset.fridgeView) { if (preference('jizhi-fridge-view', button.dataset.fridgeView)) { fridgeView = button.dataset.fridgeView; render(); } return; }
   if (button.dataset.ingredient) return ingredientEditor(button.dataset.ingredient);
   if (button.dataset.complete) { button.disabled = true; await markComplete(button.dataset.complete); if (button.isConnected) button.disabled = false; return; }
   if (button.dataset.undo) { button.disabled = true; await undoMeal(button.dataset.undo); if (button.isConnected) button.disabled = false; return; }
@@ -491,6 +506,7 @@ document.addEventListener('click', async e => {
     }
     case 'prev': case 'next': { const next = addDays(selectedDate, button.dataset.action === 'prev' ? -7 : 7); if (next) { try { if (weekDates(next).some(d => !d)) throw new Error(); selectedDate = next; render(); } catch { toast('已到日期边界啦。'); } } else toast('已到日期边界啦。'); break; }
     case 'jump': jumpDate(); break;
+    case 'v13-backup': download(storage.getItem(V13_BACKUP_KEY), '机智定食-V1.3升级前备份.json'); break;
     case 'add-ingredient': ingredientEditor(); break;
     case 'add-snack': mealEditor('snack'); break;
     case 'edit-diary': diaryEditor(); break;
@@ -525,3 +541,5 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
     if (page === 'settings') render();
   }).catch(() => { offlineReady = false; if (page === 'settings') render(); });
 }
+
+document.addEventListener('change', event => { if (event.target.id === 'runway-daily' && preference('jizhi-runway-daily', event.target.value)) { runwayDaily = Number(event.target.value); render(); } });

@@ -1,6 +1,7 @@
 import { SCHEMA, freshState, normalize } from './model.js';
 export const STORAGE_KEY = 'jizhi-meals-v1';
 export const MIGRATION_BACKUP_KEY = 'jizhi-meals-v1-migration-backup';
+export const V13_BACKUP_KEY = 'jizhi-meals-v1.3-upgrade-backup';
 export function load(storage) {
   const raw = storage.getItem(STORAGE_KEY);
   if (raw == null) return { state: freshState(), warnings: [], raw: null, locked: false };
@@ -11,7 +12,7 @@ export function persist(storage, state, { replaceProtected = false } = {}) {
   if (state?._readOnly) throw new Error('原数据已保护，不能覆盖；请先保存原文件并恢复有效备份。');
   const normalized = normalize(state);
   if (normalized.locked) throw new Error('数据中有异常记录，已停止保存，原文件没有改变。');
-  const next = { ...normalized.state, updatedAt: new Date().toISOString() };
+  const next = { ...normalized.state, inventoryVersion: 1, updatedAt: new Date().toISOString() };
   const encoded = JSON.stringify(next);
   const raw = storage.getItem(STORAGE_KEY);
   if (raw != null) {
@@ -25,6 +26,10 @@ export function persist(storage, state, { replaceProtected = false } = {}) {
     if (previous?.schemaVersion === 1 && SCHEMA > 1 && storage.getItem(MIGRATION_BACKUP_KEY) == null) {
       try { storage.setItem(MIGRATION_BACKUP_KEY, raw); }
       catch { throw new Error('旧版数据的安全备份没能保存，原数据没有改变。请先导出备份或腾出浏览器存储空间。'); }
+    }
+    if (!protectedPrevious && previous?.schemaVersion === 2 && previous.inventoryVersion !== 1 && storage.getItem(V13_BACKUP_KEY) == null) {
+      try { storage.setItem(V13_BACKUP_KEY, raw); }
+      catch { throw new Error('V1.3 升级备份无法保存，原数据没有改变。请先导出备份。'); }
     }
   }
   storage.setItem(STORAGE_KEY, encoded);
