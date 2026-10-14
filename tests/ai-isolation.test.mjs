@@ -62,8 +62,8 @@ test('same-origin formal records never become the test book; save, restore and c
 });
 
 test('all state and preference keys are separate and preference initialization ignores formal values', () => {
-  assert.equal(aiStateKeys.length, 5);
-  assert.equal(new Set(aiStateKeys).size, 5);
+  assert.equal(aiStateKeys.length, 6);
+  assert.equal(new Set(aiStateKeys).size, 6);
   assert.ok(aiStateKeys.every(key => key.startsWith('jizhi-ai-test-') && !FORMAL_KEYS.includes(key)));
   // Exercise the actual startup reads without mounting the rest of the application.
   const initializers = ['backupTime', 'fridgeView'].map(name => {
@@ -132,7 +132,7 @@ function workerHarness({ online = true, hit } = {}) {
     self: { location: { origin }, registration: { scope }, clients: { claim() { claims++; } },
       addEventListener(type, handler) { handlers.set(type, handler); } },
     caches: {
-      async keys() { return ['jizhi-meals-shell-v1.5-adaptive-ui-1', 'jizhi-ai-test-shell-old', 'another-app', 'jizhi-ai-test-shell-v1.5-ai-1']; },
+      async keys() { return ['jizhi-meals-shell-v1.5-adaptive-ui-1', 'jizhi-ai-test-shell-old', 'another-app', 'jizhi-ai-test-shell-v1.5-ai2-1']; },
       async delete(key) { deletions.push(key); return true; },
       async open(key) { opens.push(key); return { async match(request) {
         matches.push(request);
@@ -224,5 +224,5 @@ test('manifest, HTML and rendered page identities distinguish the AI test app', 
     assert.ok(renderNotebookHeader(page).includes(APP_NAME));
     assert.ok(renderNotebookHeader(page).includes('AI 测试版'));
   }
-  assert.ok(renderSettingsView().includes(`${APP_NAME} · V1.5.0-ai.1`));
+  assert.ok(renderSettingsView().includes(`${APP_NAME} · V1.5.0-ai2.1`));
 });

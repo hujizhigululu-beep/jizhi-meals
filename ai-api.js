@@ -1,4 +1,4 @@
-/** A deliberately small, stateless OpenAI-compatible connection probe. */
+/** Lightweight OpenAI-compatible requests. No app state or persistent storage. */
 export const DEFAULT_AI_BASE_URL = 'https://www.jiemomo.com/v1';
 export const AI_TEST_MESSAGE = '你好，请用一句话回复：草莓邮局连接成功';
 
@@ -11,7 +11,7 @@ export class AIConnectionError extends Error {
   }
 }
 
-export function chatCompletionsURL(baseURL) {
+function apiURL(baseURL, target) {
   const value = String(baseURL ?? '').trim();
   let url;
   try { url = new URL(value); }
@@ -20,11 +20,14 @@ export function chatCompletionsURL(baseURL) {
   if (url.username || url.password || value.includes('?') || value.includes('#')) {
     throw new AIConnectionError('config', '接口地址不能包含账号、密码、查询参数或片段。密钥请只填写在密钥框。');
   }
-  const path = url.pathname.replace(/\/+$/, '');
-  // The supplied base already owns its API version; never add another /v1.
-  url.pathname = path.endsWith('/chat/completions') ? path : `${path}/chat/completions`;
+  // The supplied base owns the version prefix; never add another /v1.
+  const path = url.pathname.replace(/\/+$/, '').replace(/\/(?:chat\/completions|models)$/, '');
+  url.pathname = `${path}/${target}`;
   return url.href;
 }
+
+export const chatCompletionsURL = baseURL => apiURL(baseURL, 'chat/completions');
+export const modelsURL = baseURL => apiURL(baseURL, 'models');
 
 export function redactAIText(value, apiKey = '') {
   let text = String(value ?? '');
@@ -42,6 +45,18 @@ export function httpConnectionError(status) {
   return new AIConnectionError('http', `接口返回未成功的状态，请检查服务配置。${suffix}`, status);
 }
 
+function validateKey(apiKey) {
+  const key = String(apiKey ?? '').trim();
+  if (!key || /[\u0000-\u001f\u007f]/.test(key)) throw new AIConnectionError('config', '请填写有效的测试 API Key。');
+  return key;
+}
+
+function validateModel(model) {
+  const id = String(model ?? '').trim();
+  if (!id || id.length > 200 || /[\u0000-\u001f\u007f]/.test(id)) throw new AIConnectionError('config', '请选择或填写有效的模型 ID（最多 200 个字符）。');
+  return id;
+}
+
 function replyText(payload) {
   const content = payload?.choices?.[0]?.message?.content;
   if (typeof content === 'string') return content;
@@ -49,56 +64,74 @@ function replyText(payload) {
   return '';
 }
 
-/** Send only the fixed probe. This module never receives any journal data. */
-export async function testAIConnection({ baseURL, apiKey, model, signal, timeoutMs = 30000, fetchImpl = globalThis.fetch } = {}) {
-  const endpoint = chatCompletionsURL(baseURL);
-  const key = String(apiKey ?? '').trim();
-  const modelID = String(model ?? '').trim();
-  if (!key || /[\u0000-\u001f\u007f]/.test(key)) throw new AIConnectionError('config', '请填写有效的测试 API Key。');
-  if (!modelID || modelID.length > 200 || /[\u0000-\u001f\u007f]/.test(modelID)) throw new AIConnectionError('config', '请手动填写有效的模型 ID（最多 200 个字符）。');
+async function requestJSON({ endpoint, apiKey, method, body, signal, timeoutMs, fetchImpl }) {
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) throw new AIConnectionError('config', '请求超时设置无效。');
   const controller = new AbortController();
   let timedOut = false;
   const abort = () => controller.abort();
-  if (signal?.aborted) throw new AIConnectionError('cancelled', '本次连接测试已取消。');
+  const cancellationError = () => new AIConnectionError(timedOut ? 'timeout' : 'cancelled', timedOut ? '请求超时，已停止本次请求。请检查网络或稍后重试。' : '本次 AI 请求已取消。');
+  if (signal?.aborted) throw cancellationError();
   signal?.addEventListener('abort', abort, { once: true });
   const timer = setTimeout(() => { timedOut = true; abort(); }, timeoutMs);
   let onAbort;
   const aborted = new Promise((_, reject) => {
-    onAbort = () => reject(new AIConnectionError(timedOut ? 'timeout' : 'cancelled', timedOut ? '请求超时，已停止本次测试。请检查网络或稍后重试。' : '本次连接测试已取消。'));
+    onAbort = () => reject(cancellationError());
     controller.signal.addEventListener('abort', onAbort, { once: true });
   });
   try {
     const request = async () => {
-      const response = await fetchImpl(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-        body: JSON.stringify({ model: modelID, messages: [{ role: 'user', content: AI_TEST_MESSAGE }], stream: false }),
-        signal: controller.signal,
-        credentials: 'omit',
-        redirect: 'error',
-        referrerPolicy: 'no-referrer',
-        cache: 'no-store'
-      });
-      // Error bodies can contain credentials or HTML. Do not read or echo them.
+      const headers = { Authorization: `Bearer ${apiKey}` };
+      if (body !== undefined) headers['Content-Type'] = 'application/json';
+      const init = { method, headers, signal: controller.signal, credentials: 'omit', redirect: 'error', referrerPolicy: 'no-referrer', cache: 'no-store' };
+      if (body !== undefined) init.body = JSON.stringify(body);
+      const response = await fetchImpl(endpoint, init);
+      // Error bodies can contain credentials or HTML. Never read or echo them.
       if (!response.ok) throw httpConnectionError(response.status);
       let payload;
       try { payload = await response.json(); }
-      catch { throw new AIConnectionError('protocol', '接口已响应，但返回内容不是有效的 Chat Completions JSON。'); }
-      const rawReply = replyText(payload).trim();
-      if (!rawReply) throw new AIConnectionError('protocol', '接口已响应，但没有可显示的模型文本。请确认模型支持 Chat Completions 文本回复。');
-      const safeReply = redactAIText(rawReply, key);
-      return { text: safeReply.length > 12000 ? `${safeReply.slice(0, 12000)}\n（回复过长，仅显示前 12000 个字符）` : safeReply, status: response.status };
+      catch { throw new AIConnectionError('protocol', '接口已响应，但返回内容不是有效的 OpenAI 兼容 JSON。'); }
+      return { payload, status: response.status };
     };
     return await Promise.race([request(), aborted]);
   } catch (error) {
-    if (controller.signal.aborted) throw new AIConnectionError(timedOut ? 'timeout' : 'cancelled', timedOut ? '请求超时，已停止本次测试。请检查网络或稍后重试。' : '本次连接测试已取消。');
+    if (controller.signal.aborted) throw cancellationError();
     if (error instanceof AIConnectionError) throw error;
-    // Browsers intentionally hide the details of many cross-origin failures.
+    // Browsers hide details of many cross-origin failures; never expose raw errors.
     throw new AIConnectionError('network', '浏览器未能完成请求：可能是中转站的 CORS 跨域限制、网络或 TLS 故障、接口重定向或服务不可达。浏览器无法准确区分这些原因；请检查网络，并向中转站确认是否允许此测试网站直连。');
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener('abort', abort);
     controller.signal.removeEventListener('abort', onAbort);
   }
+}
+
+/** Full natural-language reply. Long prompts and replies are never sliced. */
+export async function chatCompletions({ baseURL, apiKey, model, messages, signal, timeoutMs = 120000, fetchImpl = globalThis.fetch } = {}) {
+  const endpoint = chatCompletionsURL(baseURL);
+  const key = validateKey(apiKey);
+  const modelID = validateModel(model);
+  if (!Array.isArray(messages) || !messages.length || messages.some(row => !row || !['system', 'user', 'assistant'].includes(row.role) || typeof row.content !== 'string') || !messages.some(row => row.content.trim())) {
+    throw new AIConnectionError('config', '请准备有效的提示词和本次发送内容。');
+  }
+  const { payload, status } = await requestJSON({ endpoint, apiKey: key, method: 'POST', body: { model: modelID, messages: messages.map(({ role, content }) => ({ role, content })), stream: false }, signal, timeoutMs, fetchImpl });
+  const rawReply = replyText(payload).trim();
+  if (!rawReply) throw new AIConnectionError('protocol', '接口已响应，但没有可显示的模型文本。请确认模型支持 Chat Completions 文本回复。');
+  return { text: redactAIText(rawReply, key), status, incomplete: payload?.choices?.[0]?.finish_reason === 'length' };
+}
+
+/** Fixed probe never receives journal data; kept separate from letter generation. */
+export async function testAIConnection({ baseURL, apiKey, model, signal, timeoutMs = 30000, fetchImpl = globalThis.fetch } = {}) {
+  const result = await chatCompletions({ baseURL, apiKey, model, signal, timeoutMs, fetchImpl, messages: [{ role: 'user', content: AI_TEST_MESSAGE }] });
+  return { text: result.text, status: result.status };
+}
+
+/** Reads model IDs only. Drops credential echoes and other upstream fields. */
+export async function listAIModels({ baseURL, apiKey, signal, timeoutMs = 30000, fetchImpl = globalThis.fetch } = {}) {
+  const endpoint = modelsURL(baseURL);
+  const key = validateKey(apiKey);
+  const { payload, status } = await requestJSON({ endpoint, apiKey: key, method: 'GET', signal, timeoutMs, fetchImpl });
+  if (!Array.isArray(payload?.data)) throw new AIConnectionError('protocol', '接口已响应，但没有标准的模型列表。你仍可以手动填写模型 ID。');
+  const models = [...new Set(payload.data.map(row => typeof row?.id === 'string' ? row.id.trim() : '').filter(id => id && id.length <= 200 && !/[\u0000-\u001f\u007f]/.test(id) && !id.includes(key)))];
+  if (!models.length) throw new AIConnectionError('model', '接口返回的模型列表为空或不可用。你仍可以手动填写模型 ID。');
+  return { models, status };
 }

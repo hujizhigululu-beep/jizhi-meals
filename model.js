@@ -1,10 +1,11 @@
 import { STICKER_IDS } from './stickers.js';
 import { defaultActivityCategories, normalizeExtras } from './schema-extra.js';
+import { defaultPostOffice, normalizePostOffice } from './post-office.js';
 export const SCHEMA = 4;
 export const SLOTS = ['breakfast', 'lunch', 'dinner'];
 export const ALL_SLOTS = [...SLOTS, 'snack'];
 export const TYPES = ['自制便当', '公司食堂', '面包卡消耗', '外出就餐', '外卖', '零食 / 加餐', '其他'];
-export const freshState = () => ({ schemaVersion: SCHEMA, inventory: [], meals: [], diaries: [], dayRecords: [], mealTemplates: [], activityCategories: defaultActivityCategories(), recentStickerIds: [], updatedAt: null });
+export const freshState = () => ({ schemaVersion: SCHEMA, inventory: [], meals: [], diaries: [], dayRecords: [], mealTemplates: [], activityCategories: defaultActivityCategories(), recentStickerIds: [], postOffice: defaultPostOffice(), updatedAt: null });
 export const uid = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 export const round = n => Math.round((n + Number.EPSILON) * 1000) / 1000;
 // Optional future IndexedDB reference; never store image content in localStorage.
@@ -137,7 +138,7 @@ export function normalize(raw) {
   }
   const state = freshState();
   const warnings = [];
-  if (!knownFields(raw, ['schemaVersion', 'inventory', 'meals', 'diaries', 'dayRecords', 'mealTemplates', 'activityCategories', 'recentStickerIds', 'inventoryVersion', 'updatedAt', '_readOnly'])) warnings.push('备份含有本版本不认识的新内容，已保护原文件');
+  if (!knownFields(raw, ['schemaVersion', 'inventory', 'meals', 'diaries', 'dayRecords', 'mealTemplates', 'activityCategories', 'recentStickerIds', 'postOffice', 'inventoryVersion', 'updatedAt', '_readOnly'])) warnings.push('备份含有本版本不认识的新内容，已保护原文件');
   if (raw._readOnly) warnings.push('这份数据已处于保护状态，请保留原文件并恢复有效备份。');
   // Any lossy normalization makes the entire view read-only, even for planned rows.
   const text = (value, max, field) => {
@@ -196,6 +197,7 @@ export function normalize(raw) {
   if (raw.inventoryVersion != null && raw.inventoryVersion !== 1) warnings.push('食材数据属于未知版本，已保护原文件');
   if (raw.inventoryVersion === 1) state.inventoryVersion = 1;
   Object.assign(state, normalizeExtras(raw, warnings));
+  state.postOffice = normalizePostOffice(raw.postOffice, warnings);
   if (raw.schemaVersion >= 3 || raw.dayRecords !== undefined) state.dayRecords = normalizeDayRecords(raw.dayRecords, warnings, state.activityCategories, raw.schemaVersion);
   state.updatedAt = typeof raw.updatedAt === 'string' ? raw.updatedAt : null;
   const locked = warnings.length > 0;

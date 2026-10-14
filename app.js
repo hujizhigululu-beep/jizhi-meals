@@ -1,7 +1,7 @@
 import { renderSettingsView } from './settings-view.js';
 import { CATEGORIES, portions, stockSummary, predictRunway, predictMainCourseRunway } from './runway.js';
 import { freshState, uid, round, dateKey, parseDate, addDays, weekDates, SLOTS, ALL_SLOTS, TYPES, forecast, reserved, putMeal, removeMeal, completeMeal, undoComplete, transferMeal, normalize, putDiary, removeDiary } from './model.js';
-import { load, persist, STORAGE_KEY, MIGRATION_BACKUP_KEY, V13_BACKUP_KEY, V14_BACKUP_KEY, V15_BACKUP_KEY } from './storage.js';
+import { load, persist, STORAGE_KEY, MIGRATION_BACKUP_KEY, V13_BACKUP_KEY, V14_BACKUP_KEY, V15_BACKUP_KEY, AI_PHASE2_BACKUP_KEY } from './storage.js';
 import { renderSummary, shiftSummaryMonth, summaryMonthDate } from './summary.js';
 import { shareImageFile } from './share-card.js';
 import { mountTimeline } from './timeline.js';
@@ -35,7 +35,9 @@ let locked = loaded.locked;
 let savedRaw = loaded.raw;
 let dataRevision = 0;
 let warnings = loaded.warnings;
-const PAGES = ['calendar', 'inventory', 'summary', 'settings'];
+const PAGES = ['calendar', 'inventory', 'summary', 'settings', 'postoffice'];
+let postOfficeEntry = 0;
+let postOfficeBookEpoch = 0;
 let page = PAGES.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'calendar';
 let summaryRange = 'month';
 let summaryDate = today();
@@ -69,7 +71,7 @@ const mealExpandedIds = new Set();
 const diaryExpandedDates = new Set();
 let offlineReady = false;
 let swUpdateReady = false;
-const APP_CACHE = 'jizhi-ai-test-shell-v1.5-ai-1';
+const APP_CACHE = 'jizhi-ai-test-shell-v1.5-ai2-1';
 let cardAsset = null;
 let cardPreviewUrl = null;
 let shareGeneration = 0;
@@ -189,7 +191,7 @@ function render({captureDrafts=true}={}) {
   document.querySelectorAll('[data-page]').forEach(b => { b.classList.toggle('active', b.dataset.page === page); b.setAttribute('aria-current', b.dataset.page === page ? 'page' : 'false'); });
   const notice = $('#data-notice'); notice.hidden = !warnings.length;
   notice.innerHTML = warnings.length ? `${escape(locked ? '原数据暂时无法读取，已保护原文件，尚未覆盖。' : `发现 ${warnings.length} 项数据异常，正常记录仍可查看。`)}<button data-action="original">保存原文件</button><button data-page="settings">去恢复</button>` : '';
-  $('#main').innerHTML = page === 'calendar' ? (calendarView === 'timeline' ? renderTimelinePage() : calendarView === 'month' ? renderMonthPage() : renderCalendar()) : page === 'inventory' ? renderInventory() : page === 'summary' ? renderSummary(state, summaryDate, summaryRange, today()) : renderSettings();
+  $('#main').innerHTML = page === 'calendar' ? (calendarView === 'timeline' ? renderTimelinePage() : calendarView === 'month' ? renderMonthPage() : renderCalendar()) : page === 'inventory' ? renderInventory() : page === 'summary' ? renderSummary(state, summaryDate, summaryRange, today()) : page === 'postoffice' ? `<div id="post-office-slot" data-entry="${postOfficeEntry}"><p class="footer-note">🍓 正在打开草莓邮局…</p></div>` : renderSettings();
   if (page === 'calendar' && calendarView === 'timeline') {
     sizeTimeline();
     timelineController = mountTimeline($('#date-timeline'), state, {
@@ -262,6 +264,7 @@ function renderCalendar() {
     <div class="date-strip" role="group" aria-label="本周七天">${dates.map((key, index) => { const day = parseDate(key); return `<button class="date-tab ${index > 4 ? 'weekend' : ''} ${key === today() ? 'today' : ''} ${key === selectedDate ? 'active' : ''}" data-date="${key}" aria-pressed="${key === selectedDate}" aria-label="${dateLabel(key, true)}${key === today() ? '，今天' : ''}">${key === today() ? '<span class="today-heart" aria-hidden="true">♥</span>' : ''}<span class="weekday">${weekdays[day.getDay()]}</span><span class="date-number">${day.getDate()}</span>${(state.meals.some(m => m.date === key) || state.diaries.some(d => d.date === key)) ? '<span class="date-dot" aria-hidden="true"></span>' : ''}</button>`; }).join('')}</div>
     <div class="day-heading"><h2>${dateLabel(selectedDate)}</h2><span class="tiny-heart">${selectedDate === today() ? '♡ 就是今天' : '♡ 我的小计划'}</span></div>
     <div class="day-tools"><span class="day-record-label">✎ 今日记录</span><button class="pill" data-action="share-day">🍓 分享卡片</button></div>
+    <div class="post-day-entry"><button class="pill" data-action="postoffice-day">✉ 给这一天寄一封来信</button></div>
     <div class="meals">${SLOTS.map(slot => mealCard(slot)).join('')}</div>
     ${renderSnacks()}
     ${renderDayRecords(state,selectedDate,recordUI(selectedDate))}
@@ -379,7 +382,8 @@ function renderSettings() {
   let hasV13Backup = false; try { hasV13Backup = !!storage?.getItem(V13_BACKUP_KEY); } catch {}
   let hasV15Backup = false; try { hasV15Backup = !!storage?.getItem(V15_BACKUP_KEY); } catch {}
   let hasV14Backup = false; try { hasV14Backup = !!storage?.getItem(V14_BACKUP_KEY); } catch {}
-  return renderSettingsView({ ios: /iPad|iPhone|iPod/.test(navigator.userAgent), offlineReady, swUpdateReady, installPrompt: !!installPrompt, backupTime, locked, savedRaw: !!savedRaw, hasMigrationBackup: !!migrationBackup(), hasV13Backup, hasV14Backup, hasV15Backup, mealTemplateCount:state.mealTemplates.length,studyCategoryCount:state.activityCategories.study.filter(c=>c.active).length,exerciseCategoryCount:state.activityCategories.exercise.filter(c=>c.active).length, mealCount: state.meals.length, inventoryCount: state.inventory.length, diaryCount: state.diaries.length, dayRecordCount:state.dayRecords.length });
+  let hasAIPhase2Backup = false; try { hasAIPhase2Backup = !!storage?.getItem(AI_PHASE2_BACKUP_KEY); } catch {}
+  return renderSettingsView({ hasAIPhase2Backup, letterCount:state.postOffice.letters.length, ios: /iPad|iPhone|iPod/.test(navigator.userAgent), offlineReady, swUpdateReady, installPrompt: !!installPrompt, backupTime, locked, savedRaw: !!savedRaw, hasMigrationBackup: !!migrationBackup(), hasV13Backup, hasV14Backup, hasV15Backup, mealTemplateCount:state.mealTemplates.length,studyCategoryCount:state.activityCategories.study.filter(c=>c.active).length,exerciseCategoryCount:state.activityCategories.exercise.filter(c=>c.active).length, mealCount: state.meals.length, inventoryCount: state.inventory.length, diaryCount: state.diaries.length, dayRecordCount:state.dayRecords.length });
 }
 
 function mealEditor(slot, id = null) {
@@ -629,24 +633,24 @@ $('#import-file').onchange = async e => {
   try { result = normalize(JSON.parse(await file.text())); } catch (error) { toast(error instanceof SyntaxError ? 'JSON 文件没能读懂，请核对备份。原数据没有改变。' : error.message); return; }
   if (result.locked) { toast('备份含有异常记录，未导入也未改变原数据。请保留原文件并核对内容。'); return; }
   const dates = [...result.state.meals.map(m => m.date), ...result.state.diaries.map(d => d.date), ...result.state.dayRecords.map(d=>d.date)].sort();
-  showSheet('把这本手账恢复回来？', '导入会完整替换餐食、库存、日记、学习运动打卡、模板、快捷类别和贴纸。', `<div class="import-summary">文件：${escape(file.name)}<br>${result.state.meals.length} 餐记录 · ${result.state.inventory.length} 种食材 · ${result.state.diaries.length} 篇日记<br>${result.state.dayRecords.length} 天生活打卡 / 贴纸${dates.length ? `<br>日期：${dates[0]} 至 ${dates.at(-1)}` : ''}${result.warnings.length ? `<br><strong class="danger">有 ${result.warnings.length} 项异常：</strong><br>${[...new Set(result.warnings)].map(escape).join('<br>')}` : ''}</div><p class="sheet-subtitle">建议先导出当前数据。恢复后的当前库存直接采用备份数值，不会再次扣减已吃记录。</p><p class="form-error" id="import-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" data-close>取消</button><button class="primary" id="restore-confirm">确认替换并恢复</button></div>`);
+  showSheet('把这本手账恢复回来？', '导入会完整替换餐食、库存、日记、学习运动、模板、贴纸，以及邮局提示词和收藏来信。', `<div class="import-summary">文件：${escape(file.name)}<br>${result.state.meals.length} 餐记录 · ${result.state.inventory.length} 种食材 · ${result.state.diaries.length} 篇日记<br>${result.state.dayRecords.length} 天生活打卡 / 贴纸 · ${result.state.postOffice.letters.length} 封收藏来信${dates.length ? `<br>日期：${dates[0]} 至 ${dates.at(-1)}` : ''}${result.warnings.length ? `<br><strong class="danger">有 ${result.warnings.length} 项异常：</strong><br>${[...new Set(result.warnings)].map(escape).join('<br>')}` : ''}</div><p class="sheet-subtitle">建议先导出当前数据。恢复后的当前库存直接采用备份数值，不会再次扣减已吃记录。</p><p class="form-error" id="import-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" data-close>取消</button><button class="primary" id="restore-confirm">确认替换并恢复</button></div>`);
   $('#restore-confirm').onclick = () => {
     try {
       if (!storage) throw new Error('浏览器不允许本地保存，请先开启网站存储。');
       if (storage.getItem(STORAGE_KEY) !== savedRaw) { refreshFromStorage(); closeSheet(); toast('另一窗口刚更新了手账，请重新选择备份。'); return; }
-      const saved = persist(storage, result.state, { replaceProtected: true }); state = saved; savedRaw = JSON.stringify(saved); locked = false; warnings = result.warnings; dayUI.clear();$('#main').replaceChildren();render(); closeSheet(); toast('手账恢复好啦 (๑•̀ㅂ•́)و✧' + (warnings.length ? ' 部分异常已提示，请保留原备份。' : ''));
+      const saved = persist(storage, result.state, { replaceProtected: true }); state = saved; savedRaw = JSON.stringify(saved); locked = false; warnings = result.warnings; dayUI.clear();postOfficeBookEpoch++;$('#main').replaceChildren();render(); closeSheet(); toast('手账恢复好啦 (๑•̀ㅂ•́)و✧' + (warnings.length ? ' 部分异常已提示，请保留原备份。' : ''));
     } catch { $('#import-error').textContent = '没能写入本地存储，请检查存储权限或剩余空间；原数据未改变。'; $('#import-error').hidden = false; }
   };
 };
 async function clearData() {
-  if (!await ask('确定清空整本手账？', '全部餐食、未来计划、库存、日记、学习运动和贴纸都会被删除。升级前原始备份仍会留下。此操作不能撤销，请先导出备份。', '确认清空全部')) return;
+  if (!await ask('确定清空整本手账？', '全部餐食、库存、日记、学习运动、贴纸、邮局提示词和收藏来信都会被删除。升级前原始备份仍会留下。此操作不能撤销，请先导出备份。', '确认清空全部')) return;
   try {
     if (!storage) throw new Error();
     if (storage.getItem(STORAGE_KEY) !== savedRaw) { refreshFromStorage(); toast('另一窗口刚修改了手账，请检查后重试。'); return; }
-    const next = persist(storage, freshState(), { replaceProtected: true }); state = next; savedRaw = JSON.stringify(next); locked = false; warnings = []; dayUI.clear();$('#main').replaceChildren();render(); toast('手账已清空，可以开始新的小计划。');
+    const next = persist(storage, freshState(), { replaceProtected: true }); state = next; savedRaw = JSON.stringify(next); locked = false; warnings = []; dayUI.clear();postOfficeBookEpoch++;$('#main').replaceChildren();render(); toast('手账已清空，可以开始新的小计划。');
   } catch { toast('暂时没能清空，请检查浏览器存储权限。'); }
 }
-function navigate(nextPage) { if (page !== nextPage || nextPage === 'calendar') { if (nextPage === 'calendar') { calendarView = 'day'; selectedDate = today(); } page = nextPage; location.hash = nextPage; render(); window.scrollTo(0, 0); } }
+function navigate(nextPage) { if (page !== nextPage || nextPage === 'calendar') { if (nextPage === 'postoffice') postOfficeEntry++; if (nextPage === 'calendar') { calendarView = 'day'; selectedDate = today(); } page = nextPage; location.hash = nextPage; render(); window.scrollTo(0, 0); } }
 window.addEventListener('hashchange', () => { const next = location.hash.slice(1); if (PAGES.includes(next)) { if (next === 'calendar' && page !== 'calendar') { calendarView = 'day'; selectedDate = today(); } page = next; render(); } });
 // Reading a paper only changes this session's fold state, never saved records.
 document.addEventListener('toggle', event => {
@@ -723,6 +727,8 @@ document.addEventListener('click', async e => {
     case 'manage-meal-templates': mealTemplateManager();break;
     case 'manage-study-categories': activityCategoryManager('study');break;
     case 'manage-exercise-categories': activityCategoryManager('exercise');break;
+    case 'postoffice-day': navigate('postoffice'); break;
+    case 'ai2-backup': { const raw=storage.getItem(AI_PHASE2_BACKUP_KEY); if(raw)download(raw,'机智定食-ai测试版本-AI第二期升级前备份.json'); break; }
     case 'today': selectedDate = today(); calendarMonth=selectedDate.slice(0,7); render(); break;
     case 'open-selected-day': openDay(selectedDate);break;
     case 'timeline': calendarView = 'timeline'; render(); window.scrollTo(0, 0); break;
@@ -800,3 +806,6 @@ document.addEventListener('submit',event=>{
   const checked=getDayRecord(state,date)[kind].checked;
   if(!commit(s=>putActivity(s,date,kind,item),checked?'详情已收好 ♡':'详情已保存，今天仍未打卡。')){restoreActivityDraft(ui,previous,originalItem,date,kind);render({captureDrafts:false});}
 });
+
+// Narrow bridge for the lazy post-office page; credentials never enter app state.
+export const postOfficeHost = { getState: () => state, getSelectedDate: () => selectedDate, getBookEpoch: () => postOfficeBookEpoch, commit, ask, toast };

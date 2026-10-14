@@ -20,6 +20,7 @@ const HEADERS = Object.freeze({
     english: 'LITTLE LIFE COLLECTION', line: '平凡的小事，也值得收藏 ♡', label: '生活收藏夹',
     primary: './assets/notebook-ui/memory-book.svg', secondary: './assets/share-art/badges-mint-medal.svg',
   },
+  postoffice: { english: 'STRAWBERRY POST OFFICE', line: '第一封来信，写给今天的你 ♡', label: '草莓邮局', primary: './assets/notebook-ui/private-letter.svg', secondary: './assets/share-art/strawberry-stamp.svg' },
   settings: {
     english: 'PRIVATE LITTLE SPACE', line: '把自己的小世界，妥妥收好', label: '私人小角落',
     primary: './assets/notebook-ui/private-letter.svg', secondary: './assets/share-art/badges-bow-pin.svg',

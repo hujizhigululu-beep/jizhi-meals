@@ -1,5 +1,6 @@
 import test, { describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { defaultPostOffice } from '../post-office.js';
 import * as model from '../model.js';
 import { defaultActivityCategories } from '../schema-extra.js';
 
@@ -41,7 +42,7 @@ describe('V1.5 schema 与旧版记录安全迁移', () => {
     assert.equal(model.SCHEMA, 4);
     assert.deepEqual(model.SLOTS, ['breakfast', 'lunch', 'dinner']);
     assert.deepEqual(model.ALL_SLOTS, ['breakfast', 'lunch', 'dinner', 'snack']);
-    assert.deepEqual(model.freshState(), { schemaVersion: 4, inventory: [], meals: [], diaries: [], dayRecords: [], mealTemplates: [], activityCategories: defaultActivityCategories(), recentStickerIds: [], updatedAt: null });
+    assert.deepEqual(model.freshState(), { schemaVersion: 4, inventory: [], meals: [], diaries: [], dayRecords: [], mealTemplates: [], activityCategories: defaultActivityCategories(), recentStickerIds: [], postOffice: defaultPostOffice(), updatedAt: null });
   });
 
   test('旧已吃记录和未来计划迁移时保留原库存、快照、备注与照片引用', () => {

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AI_TEST_MESSAGE, AIConnectionError, chatCompletionsURL, httpConnectionError, redactAIText, testAIConnection } from '../ai-api.js';
+import { AI_TEST_MESSAGE, AIConnectionError, chatCompletionsURL, modelsURL, chatCompletions, listAIModels, httpConnectionError, redactAIText, testAIConnection } from '../ai-api.js';
+import { getAIConfig, setAIConfig, subscribeAIConfig, clearAIKey } from '../ai-session.js';
 
 const fakeKey = 'unit-test-placeholder';
 const options = { baseURL: 'https://example.test/v1', apiKey: fakeKey, model: 'manual-model' };
@@ -76,4 +77,84 @@ test('AI 30 秒机制可终止连接及响应体等待，超时与手动取消�
   await assert.rejects(testAIConnection({ ...options, timeoutMs: 12, fetchImpl: async (_, init) => { internal = init.signal; return new Promise(() => {}); } }), error => error.code === 'timeout');
   assert.equal(internal.aborted, true);
   await assert.rejects(testAIConnection({ ...options, timeoutMs: 12, fetchImpl: async () => ({ ok: true, status: 200, json: () => new Promise(() => {}) }) }), error => error.code === 'timeout');
+});
+
+test('模型地址共用 HTTPS 验证并从完整 chat 地址准确切换，不重复版本路径', () => {
+  for (const base of ['https://example.test/v1', 'https://example.test/v1/', 'https://example.test/v1/chat/completions', 'https://example.test/v1/chat/completions/', 'https://example.test/v1/models/']) assert.equal(modelsURL(base), 'https://example.test/v1/models');
+  assert.equal(modelsURL('https://example.test/custom/api'), 'https://example.test/custom/api/models');
+  assert.equal(chatCompletionsURL('https://example.test/v1/models/'), 'https://example.test/v1/chat/completions');
+  for (const base of ['http://example.test/v1', 'https://user:pw@example.test/v1', 'https://example.test/v1?secret=x', 'https://example.test/v1#x']) assert.throws(() => modelsURL(base), error => error.code === 'config');
+});
+
+test('模型读取只 GET 已配置接口，去重保留中文特殊 ID，并丢弃密钥回显及元数据', async () => {
+  const special = '[芦兰]gemini-3.8-flash②';
+  const malicious = '<img src=x onerror=alert(1)>';
+  const result = await listAIModels({ ...options, fetchImpl: async (url, init) => {
+    assert.equal(url, 'https://example.test/v1/models');
+    assert.equal(init.method, 'GET');
+    assert.equal(init.body, undefined);
+    assert.deepEqual(init.headers, { Authorization: `Bearer ${fakeKey}` });
+    assert.equal(init.credentials, 'omit'); assert.equal(init.redirect, 'error'); assert.equal(init.referrerPolicy, 'no-referrer'); assert.equal(init.cache, 'no-store');
+    return { ok: true, status: 200, json: async () => ({ data: [{ id: special, owner: fakeKey }, { id: special }, { id: ' second ' }, { id: malicious }, { id: `${fakeKey}-echo` }, { id: '' }, { id: 1 }, { id: 'bad\nline' }, { id: 'x'.repeat(201) }] }) };
+  } });
+  assert.deepEqual(result, { models: [special, 'second', malicious], status: 200 });
+  assert.ok(!JSON.stringify(result).includes(fakeKey));
+});
+
+test('模型读取不回显错误响应、无效协议、网络异常，并支持取消及超时', async () => {
+  for (const status of [401, 403, 404, 429, 500]) await assert.rejects(listAIModels({ ...options, fetchImpl: async () => ({ ok: false, status, json: () => assert.fail('no upstream error body') }) }), error => error.status === status && !error.message.includes(fakeKey));
+  for (const payload of [null, {}, { data: [] }, { data: [{ id: fakeKey }] }]) await assert.rejects(listAIModels({ ...options, fetchImpl: async () => ({ ok: true, status: 200, json: async () => payload }) }), error => ['protocol', 'model'].includes(error.code) && !error.message.includes(fakeKey));
+  await assert.rejects(listAIModels({ ...options, fetchImpl: async () => { throw new Error(fakeKey); } }), error => error.code === 'network' && error.message.includes('CORS') && !error.message.includes(fakeKey));
+  const controller = new AbortController();
+  const pending = listAIModels({ ...options, signal: controller.signal, fetchImpl: async () => new Promise(() => {}) });
+  controller.abort();
+  await assert.rejects(pending, error => error.code === 'cancelled');
+  await assert.rejects(listAIModels({ ...options, timeoutMs: 12, fetchImpl: async () => ({ ok: true, status: 200, json: async () => new Promise(() => {}) }) }), error => error.code === 'timeout');
+});
+
+test('来信调用完整保留长预设和长回复，不要求 JSON 或添加生活记录', async () => {
+  const persona = `  现有长预设\n${'用户自己的设定。'.repeat(5000)}\n  `;
+  const content = '本次勾选的日记。\n手工补充。';
+  const text = '完整信件正文'.repeat(5000);
+  const messages = [{ role: 'system', content: persona }, { role: 'user', content }];
+  const before = structuredClone(messages);
+  const result = await chatCompletions({ ...options, messages, fetchImpl: async (_, init) => {
+    assert.deepEqual(JSON.parse(init.body), { model: options.model, messages: before, stream: false });
+    return success(text);
+  } });
+  assert.deepEqual(messages, before);
+  assert.deepEqual(result, { text, status: 200, incomplete: false });
+  assert.ok(result.text.length > 12000);
+});
+
+test('来信报告上游长度截断并完整保留已返回正文，密钥回显被屏蔽', async () => {
+  const result = await chatCompletions({ ...options, messages: [{ role: 'user', content: '请写一封信' }], fetchImpl: async () => ({ ok: true, status: 200, json: async () => ({ choices: [{ finish_reason: 'length', message: { content: `未完信件 ${fakeKey}` } }] }) }) });
+  assert.deepEqual(result, { text: '未完信件 【密钥已隐藏】', status: 200, incomplete: true });
+});
+
+test('来信在无效消息时不请求，错误和取消仍沿用安全处理', async () => {
+  for (const messages of [undefined, [], [{ role: 'tool', content: 'x' }], [{ role: 'user', content: null }], [{ role: 'user', content: '  ' }]]) await assert.rejects(chatCompletions({ ...options, messages, fetchImpl: async () => assert.fail('invalid messages must not send') }), error => error.code === 'config');
+  await assert.rejects(chatCompletions({ ...options, messages: [{ role: 'user', content: 'x' }], fetchImpl: async () => ({ ok: false, status: 401, text: () => assert.fail('must not read error body') }) }), error => error.code === 'auth');
+  const controller = new AbortController();
+  const request = chatCompletions({ ...options, messages: [{ role: 'user', content: 'x' }], signal: controller.signal, fetchImpl: async () => new Promise(() => {}) });
+  controller.abort();
+  await assert.rejects(request, error => error.code === 'cancelled');
+});
+
+test('共享配置仅保留明确的内存字段，返回副本，清 Key 通知订阅者且不影响其他字段', () => {
+  const original = getAIConfig();
+  let notifications = 0;
+  const unsubscribe = subscribeAIConfig(config => { notifications++; assert.equal(config.apiKey, getAIConfig().apiKey); config.model = 'must not mutate'; });
+  const unsubscribeBroken = subscribeAIConfig(() => { throw new Error('subscriber should not disrupt journal'); });
+  try {
+    setAIConfig({ baseURL: options.baseURL, apiKey: fakeKey, model: options.model, arbitrary: 'ignored' });
+    assert.deepEqual(getAIConfig(), options);
+    const copy = getAIConfig(); copy.apiKey = 'changed externally';
+    assert.equal(getAIConfig().apiKey, fakeKey);
+    clearAIKey();
+    assert.equal(getAIConfig().apiKey, '');
+    assert.equal(getAIConfig().model, options.model);
+    assert.equal(getAIConfig().baseURL, options.baseURL);
+    assert.equal(notifications, 2);
+  } finally { unsubscribe(); unsubscribeBroken(); setAIConfig(original); }
 });
