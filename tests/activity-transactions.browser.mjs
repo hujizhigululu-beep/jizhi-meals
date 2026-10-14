@@ -27,10 +27,10 @@ try {
   const errors = [];
   for (const page of [first, second]) page.on('pageerror', error => errors.push(error.message));
   await first.addInitScript(() => {
-    if (localStorage.getItem('jizhi-meals-v1')) return;
+    if (localStorage.getItem('jizhi-ai-test-book-v1')) return;
     const now = new Date();
     const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    localStorage.setItem('jizhi-meals-v1', JSON.stringify({
+    localStorage.setItem('jizhi-ai-test-book-v1', JSON.stringify({
       schemaVersion: 3, inventory: [], meals: [], diaries: [], updatedAt: null,
       dayRecords: [{ date, study: { checked: true, items: [{ id: 'same-item', content: '原版内容', minutes: 30, note: '原备注' }] }, exercise: { checked: false, items: [] }, stickerIds: [] }],
     }));
@@ -39,16 +39,16 @@ try {
   await first.goto(url); await second.goto(url);
   const contentInput = () => first.locator('.activity-form[data-kind="study"] input[name="content"]');
   const saveButton = () => first.locator('.activity-form[data-kind="study"] button[type="submit"]');
-  const readItems = () => first.evaluate(() => JSON.parse(localStorage.getItem('jizhi-meals-v1')).dayRecords[0].study.items);
+  const readItems = () => first.evaluate(() => JSON.parse(localStorage.getItem('jizhi-ai-test-book-v1')).dayRecords[0].study.items);
 
   // A storage event must refresh the book without reusing an outdated editing ID.
   await first.locator('.activity-details[data-kind="study"] summary').click();
   await first.locator('[data-activity-edit="same-item"]').click();
   await contentInput().fill('A窗口未保存修改');
   await second.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem('jizhi-meals-v1'));
+    const state = JSON.parse(localStorage.getItem('jizhi-ai-test-book-v1'));
     state.dayRecords[0].study.items[0].content = 'B窗口新记录';
-    localStorage.setItem('jizhi-meals-v1', JSON.stringify(state));
+    localStorage.setItem('jizhi-ai-test-book-v1', JSON.stringify(state));
   });
   await first.waitForFunction(() => document.querySelector('.activity-entry-text strong')?.textContent === 'B窗口新记录');
   assert.equal(await contentInput().inputValue(), 'A窗口未保存修改');
@@ -62,11 +62,11 @@ try {
   // A failed delete must preserve the stored record and its unsaved editing draft.
   await first.locator('[data-activity-edit="same-item"]').click();
   await contentInput().fill('删除失败前仍未保存的编辑草稿');
-  const beforeDelete = await first.evaluate(() => localStorage.getItem('jizhi-meals-v1'));
+  const beforeDelete = await first.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1'));
   await first.evaluate(() => {
     const original = Storage.prototype.setItem;
     Storage.prototype.setItem = function (key, value) {
-      if (key === 'jizhi-meals-v1') throw new DOMException('quota', 'QuotaExceededError');
+      if (key === 'jizhi-ai-test-book-v1') throw new DOMException('quota', 'QuotaExceededError');
       return original.call(this, key, value);
     };
   });
@@ -75,7 +75,7 @@ try {
   await first.waitForFunction(() => document.querySelector('#toast').textContent.includes('存储空间不足'));
   assert.equal(await contentInput().inputValue(), '删除失败前仍未保存的编辑草稿');
   assert.equal(await saveButton().textContent(), '保存修改');
-  assert.equal(await first.evaluate(() => localStorage.getItem('jizhi-meals-v1')), beforeDelete);
+  assert.equal(await first.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1')), beforeDelete);
 
   // Reload resets the injected quota failure. Updating storage from its initiating
   // page sends no event to that page, exercising the raw-comparison fallback.
@@ -84,9 +84,9 @@ try {
   await first.locator('[data-activity-edit="same-item"]').click();
   await contentInput().fill('storage事件前的旧编辑稿');
   await first.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem('jizhi-meals-v1'));
+    const state = JSON.parse(localStorage.getItem('jizhi-ai-test-book-v1'));
     state.dayRecords[0].study.items[0].content = '另一窗口更新但尚未处理事件';
-    localStorage.setItem('jizhi-meals-v1', JSON.stringify(state));
+    localStorage.setItem('jizhi-ai-test-book-v1', JSON.stringify(state));
   });
   await saveButton().click();
   assert.equal((await readItems()).find(item => item.id === 'same-item').content, '另一窗口更新但尚未处理事件');

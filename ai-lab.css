@@ -1,0 +1,42 @@
+.ai-lab { border: 1px solid #eab8cb; background: #fff9fb; position: relative; }
+.ai-lab-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; cursor: pointer; list-style: none; }
+.ai-lab-summary::-webkit-details-marker { display: none; }
+.ai-lab > summary::after, .ai-lab[open] > summary::after { content: none !important; }
+.ai-lab-heading { min-width: 0; font-size: 16px; font-weight: 650; line-height: 1.65; overflow-wrap: anywhere; }
+.ai-lab-heading small { display: block; margin-top: 4px; color: #a35e7b; font-size: 11px; font-weight: 500; letter-spacing: .025em; }
+.ai-lab-disclosure { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #f8dce7; color: #935a72; }
+.ai-lab-disclosure::after { content: '＋'; }
+.ai-lab[open] .ai-lab-disclosure::after { content: '−'; }
+.ai-lab-content { padding-top: 16px; border-top: 1px dashed #eac9d6; margin-top: 12px; }
+.ai-lab-intro { font-size: 12px; line-height: 1.8; color: #916775; }
+.ai-lab-field { display: block; margin-top: 17px; font-size: 12px; line-height: 1.7; color: #78535f; font-weight: 650; min-width: 0; }
+.ai-lab-field input { display: block; width: 100%; min-width: 0; min-height: 46px; margin-top: 7px; padding: 11px 12px; font-size: 16px; font-weight: 400; background: #fff; border: 1px solid #e7c7d4; border-radius: 12px; color: #60414e; outline: none; }
+.ai-lab-field input:focus { border-color: #c36b91; box-shadow: 0 0 0 3px #f5d1df70; }
+.ai-lab-field input:disabled { background: #fff2f6; color: #785e69; opacity: 1; }
+.ai-lab-hint { display: block; margin-top: 7px; font-size: 11px; line-height: 1.7; color: #97727e; font-weight: 400; }
+.ai-lab-key-row { display: flex; align-items: stretch; gap: 7px; margin-top: 7px; min-width: 0; }
+.ai-lab-key-row input { flex: 1; margin: 0; }
+.ai-lab-key-toggle { flex: none; min-height: 46px; padding: 8px 12px; border: 1px solid #e7c7d4; border-radius: 12px; background: #fff; font-size: 12px; }
+.ai-lab-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.ai-lab-actions button { min-height: 44px; padding: 10px 15px; border-radius: 99px; font-size: 12px; line-height: 1.5; }
+.ai-lab-test { background: #f4c4d6; color: #653c4d; font-weight: 650; border: 1px solid #eaaec5; }
+.ai-lab-cancel, .ai-lab-clear { background: #fff; border: 1px solid #e7c7d4; }
+.ai-lab-result { padding: 13px 14px; margin-top: 17px; background: #fff; border: 1px dashed #e9c6d4; border-radius: 14px; min-width: 0; }
+.ai-lab-result .ai-lab-status { color: #855669; font-weight: 700; font-size: 12px; }
+.ai-lab-result .ai-lab-message { margin-top: 6px; font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+.ai-lab-result[data-status="error"] { border-color: #d8909c; background: #fff1f3; }
+.ai-lab-result[data-status="success"] { border-color: #abc6b0; background: #f6fbf5; }
+.ai-lab-result[data-status="loading"] .ai-lab-status { animation: ai-letter-pulse 1.4s ease-in-out infinite; }
+.ai-lab-reply-wrap { border-top: 1px dashed #ddd0d5; padding-top: 10px; margin-top: 11px; font-size: 11px; color: #826471; }
+.ai-lab-reply { font: inherit; font-size: 13px; line-height: 1.9; color: #654956; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; margin: 7px 0 0; max-height: 360px; overflow-y: auto; }
+.ai-lab-privacy { margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: #fbeef3; font-size: 11px; line-height: 1.8; color: #99717f; }
+.ai-lab-privacy strong { color: #8d596e; font-size: 12px; }
+.ai-lab-privacy p { margin-top: 7px; font-size: 11px; line-height: 1.8; }
+@keyframes ai-letter-pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .ai-lab-result[data-status="loading"] .ai-lab-status { animation: none; } }
+@media (max-width: 360px) { .ai-lab-heading { font-size: 14px; } .ai-lab-actions button { padding: 9px 12px; } .ai-lab-key-toggle { padding: 8px 10px; } .ai-lab-result, .ai-lab-privacy { padding: 11px 12px; } }
+.ai-test-notice { padding: 10px 13px; background: #fce3ed; border: 1px dashed #dea3bc; border-radius: 12px; color: #92536f; font-size: 12px; line-height: 1.7; margin-bottom: 14px; }
+body .notebook-brand-copy { min-width: 0; }
+body .notebook-brand-copy .brand { font-size: clamp(16px, 4.8vw, 23px); line-height: 1.5; overflow-wrap: anywhere; }
+body .notebook-brand-copy .brand > span { display: block; }
+body .notebook-brand-copy .brand small { font-size: 10px; }

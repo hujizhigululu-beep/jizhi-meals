@@ -1,12 +1,12 @@
 {
-  "name": "jizhi-meals",
-  "version": "1.5.0",
+  "name": "jizhi-meals-ai-test",
+  "version": "1.5.0-ai.1",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test --test-isolation=none tests/*.test.mjs",
     "test:browser": "node tests/v14.browser.mjs && node tests/activity-transactions.browser.mjs && node tests/fridge.browser.mjs && node tests/ui.browser.mjs",
-    "check": "node --check app.js && node --check model.js && node --check storage.js && node --check share-card.js && node --check summary.js && node --check timeline.js && node --check sw.js && node --check runway.js && node --check settings-view.js && node --check activity.js && node --check stickers.js && node --check month-calendar.js && node --check day-records-view.js && node --check share-journal.js && node --check share-layouts-a.js && node --check share-layouts-b.js && node --check share-editor.js && node --check share-art-strawberry.js && node --check share-art-badges.js && node --check share-art-collage.js && node --check notebook-header.js && node --check share-art-tickets.js && node --check share-art-study.js && node --check share-art-report.js && node --check schema-extra.js && node --check meal-templates.js && node --check meal-shortcuts-view.js && node --check activity-shortcuts.js && node --check sticker-picker.js",
+    "check": "node --check app.js && node --check model.js && node --check storage.js && node --check share-card.js && node --check summary.js && node --check timeline.js && node --check sw.js && node --check runway.js && node --check settings-view.js && node --check activity.js && node --check stickers.js && node --check month-calendar.js && node --check day-records-view.js && node --check share-journal.js && node --check share-layouts-a.js && node --check share-layouts-b.js && node --check share-editor.js && node --check share-art-strawberry.js && node --check share-art-badges.js && node --check share-art-collage.js && node --check notebook-header.js && node --check share-art-tickets.js && node --check share-art-study.js && node --check share-art-report.js && node --check schema-extra.js && node --check meal-templates.js && node --check meal-shortcuts-view.js && node --check activity-shortcuts.js && node --check sticker-picker.js && node --check ai-entry.js && node --check ai-api.js && node --check ai-lab.js",
     "test:fridge-browser": "node tests/fridge.browser.mjs",
     "test:ui-browser": "node tests/ui.browser.mjs",
     "test:fridge-identity": "node tests/fridge-identity.browser.mjs",
@@ -18,6 +18,7 @@
     "test:notebook-ui": "node tests/notebook-ui.browser.mjs",
     "test:shortcuts-browser": "node tests/shortcuts-v15.browser.mjs",
     "test:meal-ui-browser": "node tests/meal-ui.browser.mjs",
-    "test:adaptive-share-browser": "node tests/share-adaptive.browser.mjs"
+    "test:adaptive-share-browser": "node tests/share-adaptive.browser.mjs",
+    "test:ai-browser": "node tests/ai-lab.browser.mjs"
   }
 }

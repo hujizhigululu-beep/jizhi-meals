@@ -81,11 +81,11 @@ try {
   page.on('response', response => { if (response.status() >= 400) report.errors.push(`${response.status()} ${response.url()}`); });
   await page.clock.setFixedTime(new Date('2026-10-13T04:00:00.000Z'));
   await page.addInitScript(book => {
-    if (!localStorage.getItem('jizhi-meals-v1')) localStorage.setItem('jizhi-meals-v1', JSON.stringify(book));
+    if (!localStorage.getItem('jizhi-ai-test-book-v1')) localStorage.setItem('jizhi-ai-test-book-v1', JSON.stringify(book));
     if (!localStorage.getItem('notebook-keep-marker')) localStorage.setItem('notebook-keep-marker', '原有备份标记，请保留');
   }, fixture);
   const url = `http://127.0.0.1:${server.address().port}/`;
-  const raw = () => page.evaluate(() => localStorage.getItem('jizhi-meals-v1'));
+  const raw = () => page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1'));
   const snapshot = () => page.evaluate(() => JSON.stringify(Object.keys(localStorage).sort().map(key => [key, localStorage.getItem(key)])));
   const nav = target => page.locator(`.bottom-nav [data-page="${target}"]`).click();
   const view = target => page.locator(`[data-calendar-view="${target}"]`).click();
@@ -307,7 +307,7 @@ try {
     const saved = JSON.parse(backup.bytes.toString());
     for (const key of ['inventory', 'meals', 'diaries', 'dayRecords']) assert.deepEqual(saved[key], JSON.parse(beforeBackup)[key]);
     assert.equal(await raw(), beforeBackup, 'Export may update last-export preference only');
-    assert.ok(await page.evaluate(() => localStorage.getItem('jizhi-last-export')));
+    assert.ok(await page.evaluate(() => localStorage.getItem('jizhi-ai-test-last-export')));
   });
 
   await check('80-character names, multiline notes and 5000-character diary stay literal and available after expansion', async () => {
@@ -323,7 +323,7 @@ try {
     boundary.dayRecords[0].study.items[0].content = hostile;
     boundary.dayRecords[0].study.items[0].note = hostile + '\n没有 HTML 节点，只有我的原话。';
     assert.equal(boundary.meals[1].name.length, 80); assert.equal(boundary.diaries[0].text.length, 5000);
-    await page.evaluate(book => { localStorage.setItem('jizhi-meals-v1', JSON.stringify(book)); }, boundary);
+    await page.evaluate(book => { localStorage.setItem('jizhi-ai-test-book-v1', JSON.stringify(book)); }, boundary);
     await page.goto(url + '#calendar'); await page.reload(); await page.locator('.calendar-page').waitFor();
     const before = await snapshot();
     const lunch = page.locator('[data-meal-fold="meal-1"]');
@@ -358,7 +358,7 @@ try {
 
   await check('missing records remain editable without incomplete or failure prompts', async () => {
     const empty = { schemaVersion: 3, inventoryVersion: 1, inventory: [], meals: [], diaries: [], dayRecords: [], updatedAt: null };
-    await page.evaluate(book => localStorage.setItem('jizhi-meals-v1', JSON.stringify(book)), empty);
+    await page.evaluate(book => localStorage.setItem('jizhi-ai-test-book-v1', JSON.stringify(book)), empty);
     await page.goto(url + '#calendar'); await page.reload(); await page.locator('.calendar-page').waitFor();
     const before = await snapshot();
     assert.equal(await page.locator('.meals [data-add]').count(), 3);

@@ -33,7 +33,7 @@ try {
       dayRecords: [{ date: '2026-10-13', study: { checked: true, items: [{ content: '日语动词变化👩‍🎨', minutes: 60, note: '第一行学习摘记\n第二行保留换行' }] }, exercise: { checked: true, items: [{ content: '散步', minutes: null, note: '看见路边开了一朵小花🌼' }, { content: '拉伸', minutes: 10, note: '' }] }, stickerIds: ['milk', 'strawberry', 'heart'] }],
       diaries: [{ date: '2026-10-13', mood: '开心', joy: '看见小花', text: '今天把真实的生活收在手账里。\n第二行👩‍🎨🧑🏽‍🍳' }],
     };
-    localStorage.setItem('jizhi-meals-v1', JSON.stringify(book)); window.savedBook = JSON.stringify(book);
+    localStorage.setItem('jizhi-ai-test-book-v1', JSON.stringify(book)); window.savedBook = JSON.stringify(book);
     const actual = CanvasRenderingContext2D.prototype.fillText;
     window.drawn = [];
     CanvasRenderingContext2D.prototype.fillText = function (text, x, y, ...args) {
@@ -62,7 +62,7 @@ try {
       const dataUrl = await new Promise(resolve => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsDataURL(card.blob); });
       const image = new Image(); image.src = dataUrl; await image.decode();
       const escaped = drawn.filter(row => row.left < -.1 || row.right > row.width + .1 || row.y < 0 || row.bottom > row.height);
-      return { dataUrl, width: card.width, height: card.height, imageWidth: image.naturalWidth, imageHeight: image.naturalHeight, type: card.blob.type, size: card.blob.size, stickerCount: card.stickerCount, text: card.text, escaped, unchanged: JSON.stringify(book) === savedBook && localStorage.getItem('jizhi-meals-v1') === savedBook };
+      return { dataUrl, width: card.width, height: card.height, imageWidth: image.naturalWidth, imageHeight: image.naturalHeight, type: card.blob.type, size: card.blob.size, stickerCount: card.stickerCount, text: card.text, escaped, unchanged: JSON.stringify(book) === savedBook && localStorage.getItem('jizhi-ai-test-book-v1') === savedBook };
     }, { ...template, format });
     assert.equal(result.type, 'image/png'); assert.ok(result.size > 5000);
     assert.equal(result.width, result.imageWidth); assert.equal(result.height, result.imageHeight);

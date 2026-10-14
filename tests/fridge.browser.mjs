@@ -18,16 +18,16 @@ try {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   const seed = { schemaVersion: 2, inventory: ['蛋白质', '蔬菜', '碳水', '整套食物', '早餐'].map((category, i) => ({ id: 'food-' + i, name: ['鸡蛋', '绿叶蔬菜', '米饭', '完整便当', '早餐面包'][i], category, quantity: [9,8,12,3,5][i], unit: '份', perMeal: 1, expires: '', note: '' })), meals: [], diaries: [] };
-  await page.addInitScript(seed => { if (!localStorage.getItem('jizhi-meals-v1')) localStorage.setItem('jizhi-meals-v1', JSON.stringify(seed)); }, seed);
+  await page.addInitScript(seed => { if (!localStorage.getItem('jizhi-ai-test-book-v1')) localStorage.setItem('jizhi-ai-test-book-v1', JSON.stringify(seed)); }, seed);
   await page.goto(`http://127.0.0.1:${server.address().port}/#inventory`);
   await page.locator('.runway-note').waitFor();
   assert.equal(await page.locator('.runway-fold').getAttribute('open'), null);
   await page.locator('.runway-fold > summary').click();
   assert.match(await page.locator('.runway-total').innerText(), /11/);
-  const raw = await page.evaluate(() => localStorage.getItem('jizhi-meals-v1'));
+  const raw = await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1'));
   await page.locator('[data-fridge-view="list"]').click();
   await page.locator('.fridge-rows').waitFor();
-  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1')), raw);
+  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1')), raw);
   await page.reload(); await page.locator('.fridge-rows').waitFor();
   if (await page.locator('.runway-fold').getAttribute('open') === null) await page.locator('.runway-fold > summary').click();
   await page.locator('.runway-details > summary').click();
@@ -45,7 +45,7 @@ try {
   await page.locator('#ingredient-form [type="submit"]').click();
   await page.locator('#sheet').waitFor({ state: 'hidden' });
   assert.match(await page.locator('.runway-total').innerText(), /12/);
-  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.3-upgrade-backup')), raw);
+  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1.3-upgrade-backup')), raw);
   await page.locator('[data-inventory-id="food-3"] > summary').click();
   await page.locator('[data-ingredient="food-3"]').click();
   await page.locator('[name="category"]').selectOption({ label: '早餐' });

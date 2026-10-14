@@ -26,9 +26,9 @@ function legacyBackup() {
 }
 const withLegacy = raw => new MemoryStorage([[storageApi.STORAGE_KEY, raw ?? legacyBackup()]]);
 
-describe('原 localStorage key、只读加载与首次迁移保护', () => {
-  test('仍使用 V1 原 key，空存储 load 不写入也不制造数据', () => {
-    assert.equal(storageApi.STORAGE_KEY, 'jizhi-meals-v1');
+describe('AI 测试版 localStorage key、只读加载与首次迁移保护', () => {
+  test('使用 AI 测试版独立 key，空存储 load 不写入也不制造数据', () => {
+    assert.equal(storageApi.STORAGE_KEY, 'jizhi-ai-test-book-v1');
     assert.ok(storageApi.MIGRATION_BACKUP_KEY);
     assert.notEqual(storageApi.MIGRATION_BACKUP_KEY, storageApi.STORAGE_KEY);
     const storage = new MemoryStorage();

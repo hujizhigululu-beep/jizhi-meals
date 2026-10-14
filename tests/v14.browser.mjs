@@ -36,8 +36,8 @@ try {
   const page = await context.newPage();
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.clock.setFixedTime(new Date('2026-10-13T04:00:00.000Z'));
-  await page.addInitScript(raw => { if (localStorage.getItem('jizhi-meals-v1') === null) localStorage.setItem('jizhi-meals-v1', raw); }, original);
-  const readRaw = () => page.evaluate(() => localStorage.getItem('jizhi-meals-v1'));
+  await page.addInitScript(raw => { if (localStorage.getItem('jizhi-ai-test-book-v1') === null) localStorage.setItem('jizhi-ai-test-book-v1', raw); }, original);
+  const readRaw = () => page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1'));
   const readBook = async () => JSON.parse(await readRaw());
   const day = async date => (await readBook()).dayRecords.find(record => record.date === date);
   async function inputDate(locator, value) { await locator.fill(value); await locator.evaluate(el => { el.dispatchEvent(new Event('change', { bubbles: true })); el.blur(); }); }
@@ -70,8 +70,8 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/#calendar`);
   await page.locator('.calendar-page').waitFor();
   assert.equal(await readRaw(), original, 'Opening V1.4 must not rewrite the schema2 source');
-  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.4-upgrade-backup')), null);
-  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.5-upgrade-backup')), null);
+  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1.4-upgrade-backup')), null);
+  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1.5-upgrade-backup')), null);
   await month();
   assert.equal(await page.locator('.month-grid > *').count(), 35);
   assert.equal(await page.locator('[data-month-date]').count(), 31);
@@ -125,8 +125,8 @@ try {
   const migrated = await readBook();
   assert.equal(migrated.schemaVersion, SCHEMA);
   assert.deepEqual(migrated.inventory, fixture.inventory); assert.deepEqual(migrated.meals, fixture.meals); assert.deepEqual(migrated.diaries, fixture.diaries);
-  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.4-upgrade-backup')), original);
-  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.5-upgrade-backup')), original);
+  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1.4-upgrade-backup')), original);
+  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1.5-upgrade-backup')), original);
   const saved = await readRaw(); await page.reload(); await page.locator('.calendar-page').waitFor();
   assert.equal(await readRaw(), saved); await month(); await chooseDate('2026-10-04');
   assert.equal(await page.locator('.day-sticker-strip img').count(), 3);
@@ -197,7 +197,7 @@ try {
   await page.waitForFunction(() => !document.querySelector('#share-form .form-error').hidden);
   assert.ok(await page.locator('#download-card').isDisabled());
   assert.equal(await readRaw(), beforeShare, 'Share choices and images must not mutate book');
-  const privatePrepared = await page.evaluate(async () => { const { prepareJournalShare } = await import('./share-journal.js'); return JSON.stringify(prepareJournalShare(JSON.parse(localStorage.getItem('jizhi-meals-v1')), { kind: 'life', scope: 'month', month: '2026-10' })); });
+  const privatePrepared = await page.evaluate(async () => { const { prepareJournalShare } = await import('./share-journal.js'); return JSON.stringify(prepareJournalShare(JSON.parse(localStorage.getItem('jizhi-ai-test-book-v1')), { kind: 'life', scope: 'month', month: '2026-10' })); });
   for (const marker of ['私人心情标记', '私人长日记标记', '私人小确幸标记', '学习私人备注标记', '运动私人备注标记', '餐食私人备注']) assert.ok(!privatePrepared.includes(marker));
   await page.locator('.close-button[data-close]').click();
   report.checks.push('eight template controls and downloaded PNGs, square size, range guard, default privacy and read-only sharing');
@@ -217,8 +217,8 @@ try {
   await page.waitForFunction(() => !document.querySelector('#sheet').open);
   const restored = await readBook();
   for (const key of ['inventory', 'meals', 'diaries', 'dayRecords', 'mealTemplates', 'activityCategories', 'recentStickerIds']) assert.deepEqual(restored[key], exportedBook[key]);
-  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.4-upgrade-backup')), original);
-  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1.5-upgrade-backup')), original);
+  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1.4-upgrade-backup')), original);
+  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1.5-upgrade-backup')), original);
   const current = await download(page.locator('[data-action="original"]'), 'current-original'); assert.equal(current.bytes.toString(), await readRaw());
   report.checks.push('real JSON export/import, original schema2 download, restoration of new records plus images/inventory/history');
 

@@ -10,8 +10,8 @@ const { chromium, webkit } = createRequire(import.meta.url)('playwright');
 const root = resolve('.');
 const output = resolve(process.env.V15_UI_OUTPUT || '/workspace/artifacts/jizhi-v15-ui');
 const engine = process.env.UI_ENGINE === 'webkit' ? 'webkit' : 'chromium';
-const STORAGE_KEY = 'jizhi-meals-v1';
-const V15_BACKUP_KEY = 'jizhi-meals-v1.5-upgrade-backup';
+const STORAGE_KEY = 'jizhi-ai-test-book-v1';
+const V15_BACKUP_KEY = 'jizhi-ai-test-book-v1.5-upgrade-backup';
 const today = '2026-10-13';
 const malicious = '<img src=x onerror="globalThis.v15InputExecuted=1">';
 const defaultCategories = {
@@ -311,7 +311,7 @@ async function inventoryAndMealsPhase() {
         assert.equal(await page.locator(`[data-runway-mode="${mode}"]`).getAttribute('aria-pressed'), 'true');
         assert.equal(await readRaw(page), before, 'Changing prediction mode must not modify records or reserve inventory');
       }
-      assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-runway-mode')), 'main');
+      assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-ai-test-runway-mode')), 'main');
       await page.reload(); await page.locator('.inventory-page').waitFor();
       assert.equal(await page.locator('[data-runway-mode="main"]').getAttribute('aria-pressed'), 'true');
       assert.equal(await readRaw(page), before);

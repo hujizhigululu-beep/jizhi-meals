@@ -28,6 +28,8 @@ export function renderSettingsView(options = {}) {
   return `<section class="page settings-page">
     <div class="section-heading"><div><div class="eyebrow">MY PRIVATE LITTLE SPACE</div><h1>我的手账小角落</h1><p class="subheading">给这本小手账，留一点安心的照顾 ♡</p></div></div>
 
+    <p class="ai-test-notice">🍓 AI 测试版 · 独立数据与缓存，请使用测试记录。</p>
+    <div id="ai-lab-slot"></div>
     <section class="settings-card settings-group settings-backup" aria-labelledby="settings-backup-title">
       <h3 class="settings-group-title" id="settings-backup-title"><span aria-hidden="true">01</span> 备份与恢复</h3>
       <p class="settings-group-intro">记录存在此浏览器，存一份 JSON 备份更安心。</p>
@@ -79,6 +81,6 @@ export function renderSettingsView(options = {}) {
     <section class="settings-card settings-danger" aria-labelledby="settings-clear-title">
       <h3 class="settings-group-title" id="settings-clear-title">清空这本手账</h3><p>会删除全部餐食、库存、日记、学习运动、贴纸、常用模板和自定义快捷类别。这个操作不能撤销，请先导出备份。</p><div class="settings-actions"><button class="pill danger" data-action="clear">清空手账</button></div>
     </section>
-    <p class="footer-note">机智定食 V1.5 · 私人生活手账<br>轻轻记下自己的日常 ♡</p>
+    <p class="footer-note">机智定食-ai测试版本 · V1.5.0-ai.1<br>轻轻记下自己的日常 ♡</p>
   </section>`;
 }

@@ -78,7 +78,7 @@ try {
       diaries: [{ date: '2026-10-13', mood: '甜甜的平静 ♡', joy: '路边的小花也在认真开呀。', text: '把晚饭煮得热乎乎的，听着歌收拾小桌子。\n今天的普通小事，也想好好收起来。' }],
     };
     window.initialBook = JSON.stringify(book);
-    localStorage.setItem('jizhi-meals-v1', initialBook);
+    localStorage.setItem('jizhi-ai-test-book-v1', initialBook);
     localStorage.setItem('share-art-keep', '原有备份标记');
     window.storageSnapshot = () => JSON.stringify(Object.keys(localStorage).sort().map(key => [key, localStorage.getItem(key)]));
     window.initialStorage = storageSnapshot();

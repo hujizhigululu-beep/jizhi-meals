@@ -106,7 +106,7 @@ try {
   await page.evaluate(async ({ fixtures, initialBook }) => {
     window.shareModule = await import('./share-journal.js');
     window.fixtures = fixtures;
-    localStorage.setItem('jizhi-meals-v1', initialBook);
+    localStorage.setItem('jizhi-ai-test-book-v1', initialBook);
     localStorage.setItem('adaptive-keep', '原有备份标记');
     window.storageSnapshot = () => JSON.stringify(Object.keys(localStorage).sort().map(key => [key, localStorage.getItem(key)]));
     window.originalStorage = storageSnapshot();
@@ -269,7 +269,7 @@ try {
   const appRaw = JSON.stringify(fixtures['one-each']);
   await appPage.addInitScript(raw => {
     if (!localStorage.getItem('adaptive-app-seeded')) {
-      localStorage.clear(); localStorage.setItem('jizhi-meals-v1', raw);
+      localStorage.clear(); localStorage.setItem('jizhi-ai-test-book-v1', raw);
       localStorage.setItem('adaptive-app-seeded', 'true'); localStorage.setItem('adaptive-keep', '原有备份标记');
     }
   }, appRaw);
@@ -277,7 +277,7 @@ try {
   await appPage.goto(`${origin}/#calendar`);
   await appPage.locator('.calendar-page').waitFor();
   const appStorage = await appPage.evaluate(() => JSON.stringify(Object.keys(localStorage).sort().map(key => [key, localStorage.getItem(key)])));
-  assert.equal(await appPage.evaluate(() => localStorage.getItem('jizhi-meals-v1')), appRaw, 'opening the app must preserve schema 2 fixture');
+  assert.equal(await appPage.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1')), appRaw, 'opening the app must preserve schema 2 fixture');
   await appPage.locator('[data-action="share-day"]').click();
   const waitPreview = () => appPage.waitForFunction(() => {
     const image = document.querySelector('.share-preview img'), download = document.querySelector('#download-card');

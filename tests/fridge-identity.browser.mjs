@@ -22,10 +22,10 @@ try {
       const page = await browser.newPage({ ...device, viewport:{width:390,height:844}, deviceScaleFactor:1, timezoneId:'Asia/Shanghai' });
       const errors = []; page.on('pageerror', error => errors.push(error.message));
       await page.addInitScript(() => {
-        localStorage.setItem('jizhi-meals-v1', JSON.stringify({ schemaVersion:2, inventory:['蛋白质','蔬菜','碳水','整套食物','早餐'].map((category,i) => ({ id:'food-'+i, name:['牛肉丸','绿叶蔬菜','米饭','完整便当','早餐面包'][i], category,quantity:[9,8,12,3,5][i],perMeal:1,unit:'份',note:i===1?'洗好收在冷藏格':'',expires:'' })), meals:[],diaries:[] }));
+        localStorage.setItem('jizhi-ai-test-book-v1', JSON.stringify({ schemaVersion:2, inventory:['蛋白质','蔬菜','碳水','整套食物','早餐'].map((category,i) => ({ id:'food-'+i, name:['牛肉丸','绿叶蔬菜','米饭','完整便当','早餐面包'][i], category,quantity:[9,8,12,3,5][i],perMeal:1,unit:'份',note:i===1?'洗好收在冷藏格':'',expires:'' })), meals:[],diaries:[] }));
       });
       await page.goto(`http://127.0.0.1:${server.address().port}/#inventory`); await page.locator('.fridge-rows').waitFor();
-      const raw = await page.evaluate(() => localStorage.getItem('jizhi-meals-v1'));
+      const raw = await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1'));
       const toggleStyle = enabled => page.evaluate(enabled => { document.querySelector('#strawberry-identity-style').disabled = !enabled; }, enabled);
       await toggleStyle(false);
       await page.screenshot({ path:resolve(output,`before-${name}.png`) });
@@ -58,7 +58,7 @@ try {
       const styled = await page.evaluate(() => ({body:getComputedStyle(document.body).backgroundColor,header:getComputedStyle(document.querySelector('.brand-header')).backgroundImage}));
       await toggleStyle(false);
       assert.notDeepEqual(await page.evaluate(() => ({body:getComputedStyle(document.body).backgroundColor,header:getComputedStyle(document.querySelector('.brand-header')).backgroundImage})),styled,'brand should be shared across pages');
-      assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1')),raw,'visual sample must not change data');
+      assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1')),raw,'visual sample must not change data');
       assert.deepEqual(errors,[]);
       console.log(`${name}: mobile layouts, clear edit targets, list/cards, fold, editor, unchanged raw data and shared brand styling passed.`);
     } finally { await browser.close(); }

@@ -1,9 +1,9 @@
 import { SCHEMA, freshState, normalize } from './model.js';
-export const STORAGE_KEY = 'jizhi-meals-v1';
-export const MIGRATION_BACKUP_KEY = 'jizhi-meals-v1-migration-backup';
-export const V13_BACKUP_KEY = 'jizhi-meals-v1.3-upgrade-backup';
-export const V14_BACKUP_KEY = 'jizhi-meals-v1.4-upgrade-backup';
-export const V15_BACKUP_KEY = 'jizhi-meals-v1.5-upgrade-backup';
+export const STORAGE_KEY = 'jizhi-ai-test-book-v1';
+export const MIGRATION_BACKUP_KEY = 'jizhi-ai-test-book-v1-migration-backup';
+export const V13_BACKUP_KEY = 'jizhi-ai-test-book-v1.3-upgrade-backup';
+export const V14_BACKUP_KEY = 'jizhi-ai-test-book-v1.4-upgrade-backup';
+export const V15_BACKUP_KEY = 'jizhi-ai-test-book-v1.5-upgrade-backup';
 export function load(storage) {
   const raw = storage.getItem(STORAGE_KEY);
   if (raw == null) return { state: freshState(), warnings: [], raw: null, locked: false };

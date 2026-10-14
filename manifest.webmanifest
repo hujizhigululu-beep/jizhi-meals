@@ -1,8 +1,8 @@
 {
-  "id": "./",
-  "name": "机智定食 · 私人生活手账",
-  "short_name": "机智定食",
-  "description": "草莓牛奶色的私人生活手账，餐食、零食、日记和分享卡片，离线也能用。",
+  "id": "./?app=jizhi-ai-test",
+  "name": "机智定食-ai测试版本",
+  "short_name": "机智定食-ai测试版本",
+  "description": "独立 AI 测试版：草莓邮局连接实验室与私人生活手账。密钥仅在页面会话中使用。",
   "lang": "zh-CN",
   "start_url": "./",
   "scope": "./",
@@ -11,8 +11,23 @@
   "background_color": "#FFF8FA",
   "theme_color": "#FFF8FA",
   "icons": [
-    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "./icons/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

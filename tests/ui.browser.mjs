@@ -73,16 +73,16 @@ try {
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => { if (response.status() >= 400) errors.push(response.status() + ' ' + response.url()); });
   await page.addInitScript(() => {
-    if (localStorage.getItem('jizhi-meals-v1')) return;
+    if (localStorage.getItem('jizhi-ai-test-book-v1')) return;
     const now = new Date(); const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     const seed = { schemaVersion: 2, inventory: ['蛋白质','蔬菜','碳水','整套食物','早餐'].map((category,i) => ({ id:'food-'+i,name:['牛肉丸','绿叶蔬菜','米饭','完整便当','早餐面包'][i],category,quantity:[9,8,12,3,5][i],perMeal:1,unit:'份',note:i === 1 ? '洗好收在冷藏格' : '',expires:'' })),
       meals: ['breakfast','lunch','dinner'].map((slot,i) => ({ id:'meal-'+i,date,slot,name:['牛奶和坚果','牛肉丸便当','去食堂吃晚饭'][i],type:i===2?'公司食堂':'自制便当',protein:'',note:'',resources:[],completed:i===0,completedAt:i===0?new Date().toISOString():null })),
       diaries:[{ date,mood:'(˶ᵔ ᵕ ᵔ˶)',text:'今天散步时，看见路边开了一朵小花。\n回家后收好冰箱，慢慢做一顿喜欢的饭。\n还记下了喜欢的小点心，和窗边的阳光。',joy:'晒到温暖的太阳',updatedAt:new Date().toISOString() }] };
-    localStorage.setItem('jizhi-meals-v1', JSON.stringify(seed));
+    localStorage.setItem('jizhi-ai-test-book-v1', JSON.stringify(seed));
   });
   const base = `http://127.0.0.1:${server.address().port}/`;
   await page.goto(base + '#inventory'); await page.locator('.fridge-rows').waitFor();
-  const raw = await page.evaluate(() => localStorage.getItem('jizhi-meals-v1'));
+  const raw = await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1'));
   assert.equal(await page.locator('.runway-details').getAttribute('open'), null);
   assert.equal(await page.locator('.ingredient-row[open]').count(), 0);
   const firstIngredient = page.locator('.ingredient-row').first();
@@ -175,7 +175,7 @@ try {
   assert.equal(await page.locator('.settings-install-help').getAttribute('open'), null);
   const download = page.waitForEvent('download'); await page.locator('[data-action="export"]').click();
   assert.match((await download).suggestedFilename(), /备份/);
-  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1')),raw,'UI actions must not mutate journal data');
+  assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-ai-test-book-v1')),raw,'UI actions must not mutate journal data');
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
   await page.reload(); await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
   // Windows WebKit's synthetic offline flag aborts navigation before the worker.

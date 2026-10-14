@@ -8,7 +8,7 @@ import { freshState, putMeal } from '../model.js';
 // Real browser checks; Playwright is provided by development tooling, not the PWA.
 const { chromium } = createRequire(import.meta.url)('playwright');
 const root = resolve('.'), output = resolve(process.env.MEAL_UI_OUTPUT || '/workspace/artifacts/meal-ui');
-const key = 'jizhi-meals-v1', date = '2026-10-14';
+const key = 'jizhi-ai-test-book-v1', date = '2026-10-14';
 const report = { checks: [], layouts: [], errors: [] };
 await mkdir(output, { recursive: true });
 const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
@@ -200,7 +200,7 @@ try {
       assert.notEqual(await fold.getAttribute('open'), null, 'Mode changes preserve the open panel');
       const expected = await page.evaluate(async mode => {
         const { predictRunway, predictMainCourseRunway, stockSummary } = await import('./runway.js');
-        const state = JSON.parse(localStorage.getItem('jizhi-meals-v1'));
+        const state = JSON.parse(localStorage.getItem('jizhi-ai-test-book-v1'));
         return mode === 'main' ? predictMainCourseRunway(state, '2026-10-14', 2).covered : stockSummary(state.inventory, '2026-10-14').total;
       }, mode);
       assert.equal(Number(await page.locator('.runway-total strong').textContent()), expected);

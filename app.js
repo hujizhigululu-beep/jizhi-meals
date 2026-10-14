@@ -69,16 +69,16 @@ const mealExpandedIds = new Set();
 const diaryExpandedDates = new Set();
 let offlineReady = false;
 let swUpdateReady = false;
-const APP_CACHE = 'jizhi-meals-shell-v1.5-adaptive-ui-1';
+const APP_CACHE = 'jizhi-ai-test-shell-v1.5-ai-1';
 let cardAsset = null;
 let cardPreviewUrl = null;
 let shareGeneration = 0;
 let shareController = null;
 let installPrompt = null;
 let backupTime = '';
-try { backupTime = storage?.getItem('jizhi-last-export') || ''; } catch {}
+try { backupTime = storage?.getItem('jizhi-ai-test-last-export') || ''; } catch {}
 let fridgeView = 'list', runwayDaily = 2, runwayMode = 'comprehensive', runwayOpen = false;
-try { fridgeView = storage?.getItem('jizhi-fridge-view') === 'cards' ? 'cards' : 'list'; runwayDaily = storage?.getItem('jizhi-runway-daily') === '1' ? 1 : 2; runwayMode = storage?.getItem('jizhi-runway-mode') === 'main' ? 'main' : 'comprehensive'; } catch {}
+try { fridgeView = storage?.getItem('jizhi-ai-test-fridge-view') === 'cards' ? 'cards' : 'list'; runwayDaily = storage?.getItem('jizhi-ai-test-runway-daily') === '1' ? 1 : 2; runwayMode = storage?.getItem('jizhi-ai-test-runway-mode') === 'main' ? 'main' : 'comprehensive'; } catch {}
 function preference(key, value) {
   try { storage.setItem(key, String(value)); return true; }
   catch { toast('查看偏好没能保存，请检查浏览器存储空间。'); return false; }
@@ -615,11 +615,11 @@ function download(content, filename) {
   const a = document.createElement('a'); a.href = url; a.download = filename; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 function exportBackup(original = false) {
-  if (original && savedRaw) { download(savedRaw, `机智定食-原文件-${today()}.json`); toast('原文件已交给浏览器，请确认保存位置。'); return; }
+  if (original && savedRaw) { download(savedRaw, `机智定食-ai测试版本-原文件-${today()}.json`); toast('原文件已交给浏览器，请确认保存位置。'); return; }
   if (locked) { toast('请先保存原文件，或导入有效备份。'); return; }
-  download(JSON.stringify(state, null, 2), `机智定食-备份-${today()}.json`);
+  download(JSON.stringify(state, null, 2), `机智定食-ai测试版本-备份-${today()}.json`);
   backupTime = new Date().toLocaleString('zh-CN', { hour12: false });
-  try { storage.setItem('jizhi-last-export', backupTime); } catch {}
+  try { storage.setItem('jizhi-ai-test-last-export', backupTime); } catch {}
   if (page === 'settings') render(); toast('备份已交给浏览器，请确认文件已保存 ♡');
 }
 $('#import-file').onchange = async e => {
@@ -714,8 +714,8 @@ document.addEventListener('click', async e => {
   if (button.dataset.add) return mealEditor(button.dataset.add);
   if (button.dataset.detail) return mealDetail(button.dataset.detail);
   if (button.dataset.editMeal) { const meal = state.meals.find(m => m.id === button.dataset.editMeal); if (meal) return mealEditor(meal.slot, meal.id); return; }
-  if (button.dataset.runwayMode) { if(['comprehensive','main'].includes(button.dataset.runwayMode)&&preference('jizhi-runway-mode',button.dataset.runwayMode)){runwayMode=button.dataset.runwayMode;render();}return; }
-  if (button.dataset.fridgeView) { if (preference('jizhi-fridge-view', button.dataset.fridgeView)) { fridgeView = button.dataset.fridgeView; render(); } return; }
+  if (button.dataset.runwayMode) { if(['comprehensive','main'].includes(button.dataset.runwayMode)&&preference('jizhi-ai-test-runway-mode',button.dataset.runwayMode)){runwayMode=button.dataset.runwayMode;render();}return; }
+  if (button.dataset.fridgeView) { if (preference('jizhi-ai-test-fridge-view', button.dataset.fridgeView)) { fridgeView = button.dataset.fridgeView; render(); } return; }
   if (button.dataset.ingredient) return ingredientEditor(button.dataset.ingredient);
   if (button.dataset.complete) { button.disabled = true; await markComplete(button.dataset.complete); if (button.isConnected) button.disabled = false; return; }
   if (button.dataset.undo) { button.disabled = true; await undoMeal(button.dataset.undo); if (button.isConnected) button.disabled = false; return; }
@@ -734,9 +734,9 @@ document.addEventListener('click', async e => {
     }
     case 'prev': case 'next': { const next = addDays(selectedDate, button.dataset.action === 'prev' ? -7 : 7); if (next) {selectedDate=next;render();}else toast('已到日期边界啦。');break;}
     case 'jump': jumpDate(); break;
-    case 'v13-backup': download(storage.getItem(V13_BACKUP_KEY), '机智定食-V1.3升级前备份.json'); break;
-    case 'v15-backup': {const raw=storage.getItem(V15_BACKUP_KEY);if(raw)download(raw,'机智定食-V1.5升级前备份.json');break;}
-    case 'v14-backup': {const raw=storage.getItem(V14_BACKUP_KEY);if(raw)download(raw,'机智定食-V1.4升级前备份.json');break;}
+    case 'v13-backup': download(storage.getItem(V13_BACKUP_KEY), '机智定食-ai测试版本-V1.3升级前备份.json'); break;
+    case 'v15-backup': {const raw=storage.getItem(V15_BACKUP_KEY);if(raw)download(raw,'机智定食-ai测试版本-V1.5升级前备份.json');break;}
+    case 'v14-backup': {const raw=storage.getItem(V14_BACKUP_KEY);if(raw)download(raw,'机智定食-ai测试版本-V1.4升级前备份.json');break;}
     case 'add-ingredient': ingredientEditor(); break;
     case 'add-snack': mealEditor('snack'); break;
     case 'edit-diary': diaryEditor(); break;
@@ -745,7 +745,7 @@ document.addEventListener('click', async e => {
     case 'native-share-card': await nativeShareCard(button); break;
     case 'export': exportBackup(); break;
     case 'original': exportBackup(true); break;
-    case 'migration-backup': { const raw = migrationBackup(); if (raw) download(raw, '机智定食-V1原始备份.json'); break; }
+    case 'migration-backup': { const raw = migrationBackup(); if (raw) download(raw, '机智定食-ai测试版本-V1原始备份.json'); break; }
     case 'import': $('#import-file').click(); break;
     case 'clear': await clearData(); break;
     case 'install': if (installPrompt) { await installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; render(); } break;
@@ -755,7 +755,7 @@ window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); instal
 window.addEventListener('appinstalled', () => { installPrompt = null; toast('手账装进手机啦 🍓'); if (page === 'settings') render(); });
 render();
 if ('serviceWorker' in navigator && window.isSecureContext) {
-  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(registration => {
+  navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' }).then(registration => {
     const waiting = () => { if (registration.waiting) { swUpdateReady = true; if (page === 'settings') render(); } };
     waiting();
     registration.addEventListener('updatefound', () => {
@@ -772,7 +772,7 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
   }).catch(() => { offlineReady = false; if (page === 'settings') render(); });
 }
 
-document.addEventListener('change', event => { if (event.target.id === 'runway-daily' && preference('jizhi-runway-daily', event.target.value)) { runwayDaily = Number(event.target.value); render(); } });
+document.addEventListener('change', event => { if (event.target.id === 'runway-daily' && preference('jizhi-ai-test-runway-daily', event.target.value)) { runwayDaily = Number(event.target.value); render(); } });
 
 document.addEventListener('input',event=>{
   const form=event.target.closest('.activity-form');if(!form||!['content','minutes','note','categoryId','distanceKm'].includes(event.target.name))return;

@@ -7,7 +7,7 @@
   <meta name="description" content="草莓牛奶色的私人生活手账。餐食月历、学习运动、贴纸与小故事，离线也能用。">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="机智定食">
+  <meta name="apple-mobile-web-app-title" content="机智定食-ai测试版本">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
@@ -34,15 +34,17 @@
   <link rel="stylesheet" href="./meal-shortcuts.css">
   <link rel="stylesheet" href="./activity-shortcuts.css">
   <link rel="stylesheet" href="./sticker-picker.css">
-  <title>机智定食 · 私人生活手账</title>
+  <meta name="referrer" content="no-referrer">
+  <link rel="stylesheet" href="./ai-lab.css">
+  <title>机智定食-ai测试版本</title>
 </head>
 <body>
   <div class="app-shell">
     <header class="brand-header" data-chapter="day"><div class="notebook-heading notebook-heading-day" data-theme="day">
     <span class="notebook-cover-tape" aria-hidden="true"></span>
     <div class="notebook-brand-copy">
-      <span class="notebook-edition cover-edition">PRIVATE FOOD JOURNAL</span>
-      <a class="brand" href="#calendar" aria-label="机智定食首页"><span>机智定食<small>把日常，收得甜甜一点 ♡</small></span></a>
+      <span class="notebook-edition cover-edition">AI 测试版 · 独立手账</span>
+      <a class="brand" href="#calendar" aria-label="机智定食-ai测试版本首页"><span>机智定食-ai测试版本<small>把日常，收得甜甜一点 ♡</small></span></a>
     </div>
     <div class="notebook-cover-art" aria-hidden="true">
       <span class="notebook-art-paper"></span>
@@ -66,5 +68,6 @@
   <input id="import-file" type="file" accept="application/json,.json" hidden>
   <noscript>这本手账需要开启 JavaScript 才能使用。数据只保存在你的设备中。</noscript>
   <script type="module" src="./app.js"></script>
+  <script type="module" src="./ai-entry.js"></script>
 </body>
 </html>

@@ -32,8 +32,8 @@ export function renderNotebookHeader(page, view = 'day') {
   return `<div class="notebook-heading notebook-heading-${theme}" data-theme="${theme}">
     <span class="notebook-cover-tape" aria-hidden="true"></span>
     <div class="notebook-brand-copy">
-      <span class="notebook-edition cover-edition">${item.english}</span>
-      <a class="brand" href="#calendar" aria-label="机智定食首页"><span>机智定食<small>${item.line}</small></span></a>
+      <span class="notebook-edition cover-edition">AI 测试版 · 独立手账</span>
+      <a class="brand" href="#calendar" aria-label="机智定食-ai测试版本首页"><span>机智定食-ai测试版本<small>${item.line}</small></span></a>
     </div>
     <div class="notebook-cover-art" aria-hidden="true">
       <span class="notebook-art-paper"></span>
