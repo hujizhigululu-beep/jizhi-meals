@@ -33,4 +33,8 @@
 
 新离线缓存为 `jizhi-ai-test-shell-v1.5-ai3-2`，包含 `ai-batch.js`。关闭旧测试站标签页后再打开可接收新缓存；API Key 仍只存在页面内存。
 
-本次按请求只更新 GitHub 测试分支；独立测试网站的发布状态以站点部署为准。
+已于2026-10-14发布到原测试网址：https://jizhi-dingshi-ai-test.hujizhigululu.chatgpt.site/ 。Sites版本4，源提交 `1ede55d7a7beb3a5bb4f155e05de07b9f8b7384b`，部署 `appgdep_6acf3f75d9fc8191a85f28f96e19a1f2` 状态 `succeeded`，沿用public访问方式。发布包包含147个离线预缓存资源。
+
+发布后使用全新Chromium临时浏览器验证：页面HTTP200，日记录只有统一生成入口，五项任务与背景记录默认勾选，设置页显示ai3.2；七个变更运行文件与发布源逐字节SHA256一致，零页面错误、零AI接口请求。390px线上面板截图与结果记录保存在开发环境的 `tests/ui-previews/ai-batch-live/`（不包含用户数据，不随站点发布）。
+
+已打开旧版本的用户，需要关闭测试站所有标签页与主屏幕应用后重新打开，等待新缓存接替。不要清理网站数据；重新打开后本次API Key需再填写。
