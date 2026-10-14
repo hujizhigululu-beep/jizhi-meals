@@ -79,6 +79,7 @@ test('300000-character long presets retain every character through save, normali
   savePostOfficeField(state, 'userPersona', long);
   savePostOfficeField(state, 'characterPersona', long, 'saihara');
   savePostOfficeField(state, 'writingPreset', long);
+  savePostOfficeField(state, 'characterWritingPreset', '', 'saihara');
   savePostOfficeField(state, 'letterTask', long);
   const restored = normalize(JSON.parse(JSON.stringify(state)));
   assert.equal(restored.locked, false);
@@ -240,6 +241,7 @@ test('unselected properties are never read; disabled activity details and planne
 test('composed natural-language messages keep configuration order and exact reviewed record text', () => {
   const config = defaultPostOffice();
   config.userPersona = ' USER\n'; config.characters[0].persona = ' CHARACTER\n'; config.writingPreset = ' WRITE\n'; config.letterTask = ' TASK\n';
+  config.characters[0].writingPreset = '';
   const recordsText = ' 用户手动修改\n及补充，完全保留。 ';
   const messages = composeLetterMessages({ config, characterId: 'saihara', date: DATE, recordsText, lengthHint: '约800字' });
   assert.deepEqual(messages.map(row => row.role), ['system', 'user']);

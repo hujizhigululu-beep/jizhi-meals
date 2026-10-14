@@ -5,6 +5,7 @@ export const V13_BACKUP_KEY = 'jizhi-ai-test-book-v1.3-upgrade-backup';
 export const V14_BACKUP_KEY = 'jizhi-ai-test-book-v1.4-upgrade-backup';
 export const V15_BACKUP_KEY = 'jizhi-ai-test-book-v1.5-upgrade-backup';
 export const AI_PHASE2_BACKUP_KEY = 'jizhi-ai-test-book-ai2-upgrade-backup';
+export const AI_ROLES_BACKUP_KEY = 'jizhi-ai-test-book-ai3-upgrade-backup';
 export function load(storage) {
   const raw = storage.getItem(STORAGE_KEY);
   if (raw == null) return { state: freshState(), warnings: [], raw: null, locked: false };
@@ -26,6 +27,10 @@ export function persist(storage, state, { replaceProtected = false } = {}) {
       protectedPrevious = normalize(previous).locked;
     } catch { protectedPrevious = true; }
     if (protectedPrevious && !replaceProtected) throw new Error('原文件格式异常或属于更新版本，已保护原文件；请先导出，再明确确认恢复。');
+    if (!protectedPrevious && previous?.postOffice?.version === 1 && storage.getItem(AI_ROLES_BACKUP_KEY) == null) {
+      try { storage.setItem(AI_ROLES_BACKUP_KEY, raw); }
+      catch { throw new Error('角色升级前的原文备份没能保存，原数据没有改变。请先导出备份或腾出存储空间。'); }
+    }
     // Schema 1–3 already keep their complete original JSON in version backups.
     // Keep a separate untouched first-phase schema-4 book before adding the post office.
     if (!protectedPrevious && previous?.schemaVersion === SCHEMA && previous.postOffice === undefined && storage.getItem(AI_PHASE2_BACKUP_KEY) == null) {

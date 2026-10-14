@@ -1,7 +1,7 @@
 import { renderSettingsView } from './settings-view.js';
 import { CATEGORIES, portions, stockSummary, predictRunway, predictMainCourseRunway } from './runway.js';
 import { freshState, uid, round, dateKey, parseDate, addDays, weekDates, SLOTS, ALL_SLOTS, TYPES, forecast, reserved, putMeal, removeMeal, completeMeal, undoComplete, transferMeal, normalize, putDiary, removeDiary } from './model.js';
-import { load, persist, STORAGE_KEY, MIGRATION_BACKUP_KEY, V13_BACKUP_KEY, V14_BACKUP_KEY, V15_BACKUP_KEY, AI_PHASE2_BACKUP_KEY } from './storage.js';
+import { load, persist, STORAGE_KEY, MIGRATION_BACKUP_KEY, V13_BACKUP_KEY, V14_BACKUP_KEY, V15_BACKUP_KEY, AI_PHASE2_BACKUP_KEY, AI_ROLES_BACKUP_KEY } from './storage.js';
 import { renderSummary, shiftSummaryMonth, summaryMonthDate } from './summary.js';
 import { shareImageFile } from './share-card.js';
 import { mountTimeline } from './timeline.js';
@@ -71,7 +71,7 @@ const mealExpandedIds = new Set();
 const diaryExpandedDates = new Set();
 let offlineReady = false;
 let swUpdateReady = false;
-const APP_CACHE = 'jizhi-ai-test-shell-v1.5-ai2-1';
+const APP_CACHE = 'jizhi-ai-test-shell-v1.5-ai3-1';
 let cardAsset = null;
 let cardPreviewUrl = null;
 let shareGeneration = 0;
@@ -264,9 +264,9 @@ function renderCalendar() {
     <div class="date-strip" role="group" aria-label="本周七天">${dates.map((key, index) => { const day = parseDate(key); return `<button class="date-tab ${index > 4 ? 'weekend' : ''} ${key === today() ? 'today' : ''} ${key === selectedDate ? 'active' : ''}" data-date="${key}" aria-pressed="${key === selectedDate}" aria-label="${dateLabel(key, true)}${key === today() ? '，今天' : ''}">${key === today() ? '<span class="today-heart" aria-hidden="true">♥</span>' : ''}<span class="weekday">${weekdays[day.getDay()]}</span><span class="date-number">${day.getDate()}</span>${(state.meals.some(m => m.date === key) || state.diaries.some(d => d.date === key)) ? '<span class="date-dot" aria-hidden="true"></span>' : ''}</button>`; }).join('')}</div>
     <div class="day-heading"><h2>${dateLabel(selectedDate)}</h2><span class="tiny-heart">${selectedDate === today() ? '♡ 就是今天' : '♡ 我的小计划'}</span></div>
     <div class="day-tools"><span class="day-record-label">✎ 今日记录</span><button class="pill" data-action="share-day">🍓 分享卡片</button></div>
-    <div class="post-day-entry"><button class="pill" data-action="postoffice-day">✉ 给这一天寄一封来信</button></div>
     <div class="meals">${SLOTS.map(slot => mealCard(slot)).join('')}</div>
     ${renderSnacks()}
+    <div data-ai-daily-slot data-ai-kind="meals" data-ai-date="${selectedDate}"></div>
     ${renderDayRecords(state,selectedDate,recordUI(selectedDate))}
     ${renderDiary()}
     <p class="footer-note">一口一口，好好生活 ♡ · 本周 ${weekMeals.length} 条小纸条</p>
@@ -293,8 +293,9 @@ function renderSnacks() {
 function renderDiary() {
   const diary = state.diaries.find(d => d.date === selectedDate);
   const heading = `<div class="diary-heading"><h2>今天的小故事 (˶ᵔ ᵕ ᵔ˶)</h2><button class="text-button" data-action="edit-diary">${diary ? '编辑小纸条' : '写点什么'}</button></div>`;
-  if (!diary) return `<section class="diary-card" aria-label="今日日记">${heading}<p class="muted">心情、小确幸，慢慢写就好 (｡•ᴗ•｡)</p></section>`;
-  return `<section class="diary-card" aria-label="今日日记">${heading}<details class="diary-disclosure" data-diary-date="${selectedDate}" ${diaryExpandedDates.has(selectedDate) ? 'open' : ''}><summary class="diary-summary">${diary.mood ? `<span class="diary-mood">${escape(diary.mood)}</span>` : ''}<span class="diary-preview">${escape(diary.text || diary.joy || '这一页的小心情 ♡')}</span><span class="diary-fold-toggle" aria-hidden="true">⌄</span></summary><div class="diary-body">${diary.mood ? `<p class="diary-mood">${escape(diary.mood)}</p>` : ''}${diary.text ? `<p class="diary-text">${escape(diary.text)}</p>` : ''}${diary.joy ? `<p class="diary-joy">今日小确幸 ♡<br>${escape(diary.joy)}</p>` : ''}</div></details></section>`;
+  const replies = `<div data-ai-daily-slot data-ai-kind="letter" data-ai-date="${selectedDate}"></div>`;
+  if (!diary) return `<section class="diary-card" aria-label="今日日记">${heading}<p class="muted">心情、小确幸，慢慢写就好 (｡•ᴗ•｡)</p>${replies}</section>`;
+  return `<section class="diary-card" aria-label="今日日记">${heading}<details class="diary-disclosure" data-diary-date="${selectedDate}" ${diaryExpandedDates.has(selectedDate) ? 'open' : ''}><summary class="diary-summary">${diary.mood ? `<span class="diary-mood">${escape(diary.mood)}</span>` : ''}<span class="diary-preview">${escape(diary.text || diary.joy || '这一页的小心情 ♡')}</span><span class="diary-fold-toggle" aria-hidden="true">⌄</span></summary><div class="diary-body">${diary.mood ? `<p class="diary-mood">${escape(diary.mood)}</p>` : ''}${diary.text ? `<p class="diary-text">${escape(diary.text)}</p>` : ''}${diary.joy ? `<p class="diary-joy">今日小确幸 ♡<br>${escape(diary.joy)}</p>` : ''}</div></details>${replies}</section>`;
 }
 function diaryEditor() {
   if (readOnlyGuard()) return;
@@ -320,11 +321,12 @@ function diaryEditor() {
   };
 }
 
-function shareEditor() {
+function shareEditor(inventoryAI = false) {
   shareController?.destroy(); releaseCard(); shareGeneration++;
   const date = selectedDate;
   showSheet('给记录换件手账衣服 🍓', dateLabel(date, true), '<div id="journal-share-editor"></div>');
   shareController=mountShareEditor($('#journal-share-editor'),structuredClone(state),date,{
+    inventoryAI,
     onPending:releaseCard,
     onImage:image=>{releaseCard();cardAsset=image;cardPreviewUrl=URL.createObjectURL(image.blob);return cardPreviewUrl;}
   });
@@ -376,14 +378,15 @@ function renderIngredient(item) {
   return `<article class="ingredient-card"><div class="ingredient-header"><h2 class="ingredient-name">${escape(item.name)}</h2><span class="ingredient-emoji" aria-hidden="true">${illustration(ingredientArt(item.name))}</span></div>${numbers}${category}${meta}${actions}</article>`;
 }
 function renderInventory() {
-  return `<section class="page inventory-page"><div class="section-heading"><div><div class="eyebrow">MY LITTLE FRIDGE</div><h1>我的食材小冰箱</h1><p class="subheading">${state.inventory.length ? '收好 ' + state.inventory.length + ' 种食材，慢慢安排' : '把喜欢的食材，一份份收好'}</p></div></div>${runwayPanel()}<div class="fridge-toolbar" id="inventory-add-zone"><h2>冰箱里的小储备</h2><button class="pill pink inventory-add-button" data-action="add-ingredient">＋ 添加食材</button><div class="fridge-switch" role="group" aria-label="食材查看模式"><button class="pill" data-fridge-view="list" aria-pressed="${fridgeView === 'list'}">列表</button><button class="pill" data-fridge-view="cards" aria-pressed="${fridgeView === 'cards'}">卡片</button></div></div>${state.inventory.length ? `<div class="inventory-list ${fridgeView === 'list' ? 'fridge-rows' : ''}">${fridgeView === 'list' ? '<div class="inventory-column-head" aria-hidden="true"><span>食材 · 可吃顿数</span><span class="inventory-column-numbers"><span>当前</span><span>预计</span></span><span></span></div>' : ''}${state.inventory.map(renderIngredient).join('')}</div>` : `<div class="empty-state"><span class="illustration" aria-hidden="true">${illustration('basket')}</span><h2>小冰箱还空着呢 (｡•ᴗ•｡)</h2><p>先收好食材，再安排喜欢的一餐。</p><button class="pill pink" data-action="add-ingredient">＋ 添加第一份食材</button></div>`}<button class="pill inventory-add-button inventory-add-again" data-action="add-ingredient">＋ 再添一份食材</button><details class="inventory-explanation"><summary>当前库存与预计剩余</summary><p>当前库存是实际剩余；预计剩余减去所有日期尚未吃的计划，包括过去和未来。安排餐食只预留，吃过才扣库存。</p></details><div class="journal-whitespace" aria-hidden="true"></div></section>`;
+  return `<section class="page inventory-page"><div class="section-heading"><div><div class="eyebrow">MY LITTLE FRIDGE</div><h1>我的食材小冰箱</h1><p class="subheading">${state.inventory.length ? '收好 ' + state.inventory.length + ' 种食材，慢慢安排' : '把喜欢的食材，一份份收好'}</p></div></div>${runwayPanel()}<div class="fridge-toolbar" id="inventory-add-zone"><h2>冰箱里的小储备</h2><button class="pill pink inventory-add-button" data-action="add-ingredient">＋ 添加食材</button><div class="fridge-switch" role="group" aria-label="食材查看模式"><button class="pill" data-fridge-view="list" aria-pressed="${fridgeView === 'list'}">列表</button><button class="pill" data-fridge-view="cards" aria-pressed="${fridgeView === 'cards'}">卡片</button></div></div>${state.inventory.length ? `<div class="inventory-list ${fridgeView === 'list' ? 'fridge-rows' : ''}">${fridgeView === 'list' ? '<div class="inventory-column-head" aria-hidden="true"><span>食材 · 可吃顿数</span><span class="inventory-column-numbers"><span>当前</span><span>预计</span></span><span></span></div>' : ''}${state.inventory.map(renderIngredient).join('')}</div>` : `<div class="empty-state"><span class="illustration" aria-hidden="true">${illustration('basket')}</span><h2>小冰箱还空着呢 (｡•ᴗ•｡)</h2><p>先收好食材，再安排喜欢的一餐。</p><button class="pill pink" data-action="add-ingredient">＋ 添加第一份食材</button></div>`}<button class="pill inventory-add-button inventory-add-again" data-action="add-ingredient">＋ 再添一份食材</button><details class="inventory-explanation"><summary>当前库存与预计剩余</summary><p>当前库存是实际剩余；预计剩余减去所有日期尚未吃的计划，包括过去和未来。安排餐食只预留，吃过才扣库存。</p></details><div data-ai-daily-slot data-ai-kind="inventory" data-ai-date="${selectedDate}"></div><button class="text-button" data-action="share-inventory-ai">分享卡片 · 可选库存 AI 纸条</button><div class="journal-whitespace" aria-hidden="true"></div></section>`;
 }
 function renderSettings() {
   let hasV13Backup = false; try { hasV13Backup = !!storage?.getItem(V13_BACKUP_KEY); } catch {}
   let hasV15Backup = false; try { hasV15Backup = !!storage?.getItem(V15_BACKUP_KEY); } catch {}
   let hasV14Backup = false; try { hasV14Backup = !!storage?.getItem(V14_BACKUP_KEY); } catch {}
   let hasAIPhase2Backup = false; try { hasAIPhase2Backup = !!storage?.getItem(AI_PHASE2_BACKUP_KEY); } catch {}
-  return renderSettingsView({ hasAIPhase2Backup, letterCount:state.postOffice.letters.length, ios: /iPad|iPhone|iPod/.test(navigator.userAgent), offlineReady, swUpdateReady, installPrompt: !!installPrompt, backupTime, locked, savedRaw: !!savedRaw, hasMigrationBackup: !!migrationBackup(), hasV13Backup, hasV14Backup, hasV15Backup, mealTemplateCount:state.mealTemplates.length,studyCategoryCount:state.activityCategories.study.filter(c=>c.active).length,exerciseCategoryCount:state.activityCategories.exercise.filter(c=>c.active).length, mealCount: state.meals.length, inventoryCount: state.inventory.length, diaryCount: state.diaries.length, dayRecordCount:state.dayRecords.length });
+  let hasAIRolesBackup = false; try { hasAIRolesBackup = !!storage?.getItem(AI_ROLES_BACKUP_KEY); } catch {}
+  return renderSettingsView({ hasAIRolesBackup, hasAIPhase2Backup, letterCount:state.postOffice.letters.length, ios: /iPad|iPhone|iPod/.test(navigator.userAgent), offlineReady, swUpdateReady, installPrompt: !!installPrompt, backupTime, locked, savedRaw: !!savedRaw, hasMigrationBackup: !!migrationBackup(), hasV13Backup, hasV14Backup, hasV15Backup, mealTemplateCount:state.mealTemplates.length,studyCategoryCount:state.activityCategories.study.filter(c=>c.active).length,exerciseCategoryCount:state.activityCategories.exercise.filter(c=>c.active).length, mealCount: state.meals.length, inventoryCount: state.inventory.length, diaryCount: state.diaries.length, dayRecordCount:state.dayRecords.length });
 }
 
 function mealEditor(slot, id = null) {
@@ -618,32 +621,44 @@ function download(content, filename) {
   const url = URL.createObjectURL(new Blob([content], { type: 'application/json;charset=utf-8' }));
   const a = document.createElement('a'); a.href = url; a.download = filename; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
-function exportBackup(original = false) {
+async function exportBackup(original = false) {
   if (original && savedRaw) { download(savedRaw, `机智定食-ai测试版本-原文件-${today()}.json`); toast('原文件已交给浏览器，请确认保存位置。'); return; }
   if (locked) { toast('请先保存原文件，或导入有效备份。'); return; }
-  download(JSON.stringify(state, null, 2), `机智定食-ai测试版本-备份-${today()}.json`);
+  try {
+    const book = structuredClone(state);
+    const { exportAvatarAssets } = await import('./ai-avatar.js');
+    const aiAvatarAssets = await exportAvatarAssets(book);
+    const encoded=JSON.stringify({ ...book, aiAvatarAssets }, null, 2);
+    if (new Blob([encoded]).size > 50 * 1024 * 1024) throw new Error('完整备份超过 50 MiB，未导出不能恢复的文件。请先保留原文件，再清理部分已保存内容。');
+    download(encoded, `机智定食-ai测试版本-备份-${today()}.json`);
+  } catch (error) { toast(error.message || '头像备份暂时无法读取，未导出不完整备份。'); return; }
   backupTime = new Date().toLocaleString('zh-CN', { hour12: false });
   try { storage.setItem('jizhi-ai-test-last-export', backupTime); } catch {}
   if (page === 'settings') render(); toast('备份已交给浏览器，请确认文件已保存 ♡');
 }
 $('#import-file').onchange = async e => {
   const file = e.target.files[0]; e.target.value = ''; if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { toast('这份备份大于 10 MB，请先核对文件。原数据未改变。'); return; }
-  let result;
-  try { result = normalize(JSON.parse(await file.text())); } catch (error) { toast(error instanceof SyntaxError ? 'JSON 文件没能读懂，请核对备份。原数据没有改变。' : error.message); return; }
+  if (file.size > 50 * 1024 * 1024) { toast('这份备份大于 50 MB，请先核对文件。原数据未改变。'); return; }
+  let result, avatarAssets;
+  try { const parsed = JSON.parse(await file.text()); avatarAssets = parsed.aiAvatarAssets ?? []; delete parsed.aiAvatarAssets; result = normalize(parsed); } catch (error) { toast(error instanceof SyntaxError ? 'JSON 文件没能读懂，请核对备份。原数据没有改变。' : error.message); return; }
   if (result.locked) { toast('备份含有异常记录，未导入也未改变原数据。请保留原文件并核对内容。'); return; }
   const dates = [...result.state.meals.map(m => m.date), ...result.state.diaries.map(d => d.date), ...result.state.dayRecords.map(d=>d.date)].sort();
-  showSheet('把这本手账恢复回来？', '导入会完整替换餐食、库存、日记、学习运动、模板、贴纸，以及邮局提示词和收藏来信。', `<div class="import-summary">文件：${escape(file.name)}<br>${result.state.meals.length} 餐记录 · ${result.state.inventory.length} 种食材 · ${result.state.diaries.length} 篇日记<br>${result.state.dayRecords.length} 天生活打卡 / 贴纸 · ${result.state.postOffice.letters.length} 封收藏来信${dates.length ? `<br>日期：${dates[0]} 至 ${dates.at(-1)}` : ''}${result.warnings.length ? `<br><strong class="danger">有 ${result.warnings.length} 项异常：</strong><br>${[...new Set(result.warnings)].map(escape).join('<br>')}` : ''}</div><p class="sheet-subtitle">建议先导出当前数据。恢复后的当前库存直接采用备份数值，不会再次扣减已吃记录。</p><p class="form-error" id="import-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" data-close>取消</button><button class="primary" id="restore-confirm">确认替换并恢复</button></div>`);
-  $('#restore-confirm').onclick = () => {
+  showSheet('把这本手账恢复回来？', '导入会完整替换餐食、库存、日记、学习运动、模板、贴纸，以及用户资料、角色、头像、AI 点评和收藏来信。', `<div class="import-summary">文件：${escape(file.name)}<br>${result.state.meals.length} 餐记录 · ${result.state.inventory.length} 种食材 · ${result.state.diaries.length} 篇日记<br>${result.state.dayRecords.length} 天生活打卡 / 贴纸 · ${result.state.postOffice.letters.length} 封收藏来信 · ${result.state.postOffice.comments.length} 条 AI 点评 · ${result.state.postOffice.characters.length} 个角色 · ${Array.isArray(avatarAssets)?avatarAssets.length:0} 个头像资源${dates.length ? `<br>日期：${dates[0]} 至 ${dates.at(-1)}` : ''}${result.warnings.length ? `<br><strong class="danger">有 ${result.warnings.length} 项异常：</strong><br>${[...new Set(result.warnings)].map(escape).join('<br>')}` : ''}</div><p class="sheet-subtitle">建议先导出当前数据。恢复后的当前库存直接采用备份数值，不会再次扣减已吃记录。</p><p class="form-error" id="import-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" data-close>取消</button><button class="primary" id="restore-confirm">确认替换并恢复</button></div>`);
+  $('#restore-confirm').onclick = async () => {
+    const restoreButton = $('#restore-confirm'); restoreButton.disabled = true;
     try {
       if (!storage) throw new Error('浏览器不允许本地保存，请先开启网站存储。');
       if (storage.getItem(STORAGE_KEY) !== savedRaw) { refreshFromStorage(); closeSheet(); toast('另一窗口刚更新了手账，请重新选择备份。'); return; }
+      const { importAvatarAssets } = await import('./ai-avatar.js');
+      await importAvatarAssets(avatarAssets, result.state);
+      if (storage.getItem(STORAGE_KEY) !== savedRaw || !restoreButton.isConnected || !sheet.open || restoreButton !== $('#restore-confirm')) { toast('手账或恢复面板已变化，本次恢复已取消。'); return; }
       const saved = persist(storage, result.state, { replaceProtected: true }); state = saved; savedRaw = JSON.stringify(saved); locked = false; warnings = result.warnings; dayUI.clear();postOfficeBookEpoch++;$('#main').replaceChildren();render(); closeSheet(); toast('手账恢复好啦 (๑•̀ㅂ•́)و✧' + (warnings.length ? ' 部分异常已提示，请保留原备份。' : ''));
-    } catch { $('#import-error').textContent = '没能写入本地存储，请检查存储权限或剩余空间；原数据未改变。'; $('#import-error').hidden = false; }
+    } catch (error) { const area=$('#import-error');if(area){area.textContent=(error.message || '没能写入本地存储，请检查存储权限或剩余空间。')+' 原有手账没有改变。';area.hidden=false;} }
+    finally { restoreButton.disabled = false; }
   };
 };
 async function clearData() {
-  if (!await ask('确定清空整本手账？', '全部餐食、库存、日记、学习运动、贴纸、邮局提示词和收藏来信都会被删除。升级前原始备份仍会留下。此操作不能撤销，请先导出备份。', '确认清空全部')) return;
+  if (!await ask('确定清空整本手账？', '全部餐食、库存、日记、学习运动、贴纸、用户资料、角色设定、AI 点评和收藏来信都会被删除。升级前原始备份仍会留下。此操作不能撤销，请先导出备份。', '确认清空全部')) return;
   try {
     if (!storage) throw new Error();
     if (storage.getItem(STORAGE_KEY) !== savedRaw) { refreshFromStorage(); toast('另一窗口刚修改了手账，请检查后重试。'); return; }
@@ -747,9 +762,11 @@ document.addEventListener('click', async e => {
     case 'add-snack': mealEditor('snack'); break;
     case 'edit-diary': diaryEditor(); break;
     case 'share-day': shareEditor(); break;
+    case 'share-inventory-ai': shareEditor(true); break;
     case 'download-card': downloadCard(); break;
     case 'native-share-card': await nativeShareCard(button); break;
     case 'export': exportBackup(); break;
+    case 'ai3-backup': { const raw=storage?.getItem(AI_ROLES_BACKUP_KEY); if(raw)download(raw,'机智定食-ai测试版本-角色升级前原文.json'); break; }
     case 'original': exportBackup(true); break;
     case 'migration-backup': { const raw = migrationBackup(); if (raw) download(raw, '机智定食-ai测试版本-V1原始备份.json'); break; }
     case 'import': $('#import-file').click(); break;
@@ -808,4 +825,4 @@ document.addEventListener('submit',event=>{
 });
 
 // Narrow bridge for the lazy post-office page; credentials never enter app state.
-export const postOfficeHost = { getState: () => state, getSelectedDate: () => selectedDate, getBookEpoch: () => postOfficeBookEpoch, commit, ask, toast };
+export const postOfficeHost = { getState: () => state, getSelectedDate: () => selectedDate, getBookEpoch: () => postOfficeBookEpoch, isReadOnly:()=>locked, commit, ask, toast, openDay };

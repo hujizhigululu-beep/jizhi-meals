@@ -5,6 +5,7 @@ import { activeActivityItems } from './activity.js';
 import { getActivityCategory } from './activity-shortcuts.js';
 import { SHARE_THEMES_A, SHARE_LAYOUTS_A } from './share-layouts-a.js';
 import { SHARE_THEMES_B, SHARE_LAYOUTS_B } from './share-layouts-b.js';
+import { selectShareAIContent, appendAIShareCard } from './share-ai.js';
 
 export const SHARE_TYPES = Object.freeze({ meal: '吃饭', exercise: '运动', study: '学习', life: '综合生活' });
 export const SHARE_THEMES = Object.freeze({ ...SHARE_THEMES_A, ...SHARE_THEMES_B });
@@ -41,6 +42,8 @@ export function normalizeJournalShareOptions(options = {}) {
     dinner: options.dinner !== false, snacks: options.snacks !== false,
     stickerIds: Array.isArray(options.stickerIds)
       ? [...new Set(options.stickerIds)].filter(id => stickerSet.has(id)).slice(0, 3) : null,
+    aiIds: Array.isArray(options.aiIds) ? [...new Set(options.aiIds)].filter(id => typeof id === 'string') : [],
+    inventoryAI: options.inventoryAI === true,
   };
 }
 
@@ -201,7 +204,11 @@ async function loadSticker(id) {
 export async function generateJournalShareCard(state, options = {}) {
   const settings = normalizeJournalShareOptions(options);
   const data = prepareJournalShare(state, settings);
-  if (!data.hasRecords) throw new Error(`这段日期还没有可分享的${SHARE_TYPES[data.kind]}记录。`);
+  const aiEntries = selectShareAIContent(state, { ...settings, start: data.start, end: data.end });
+  if (!data.hasRecords) {
+    if (aiEntries.length) return { ...await appendAIShareCard(null, aiEntries, settings), data, template: settings.template, stickerCount: 0 };
+    throw new Error(`这段日期还没有可分享的${SHARE_TYPES[data.kind]}记录。`);
+  }
   if (typeof document === 'undefined') throw new Error('请在浏览器中生成分享卡片。');
   if (document.fonts?.ready) await document.fonts.ready;
   const images = await Promise.all(data.stickerIds.map(loadSticker));
@@ -250,9 +257,10 @@ export async function generateJournalShareCard(state, options = {}) {
       context.fillText('草莓插画：OpenMoji · CC BY-SA 4.0', width / 2, height - 20);
     }
     const blob = await new Promise((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('图片没有生成成功，请缩小日期范围后重试。')), 'image/png'));
-    return { blob, filename: `机智定食-${template.name}-${data.start}${data.end !== data.start ? '至' + data.end : ''}-${settings.format}.png`,
+    const card = { blob, filename: `机智定食-${template.name}-${data.start}${data.end !== data.start ? '至' + data.end : ''}-${settings.format}.png`,
       width: canvas.width, height: canvas.height, data, template: template.id, stickerCount: images.length,
       text: painter.ops.filter(op => op.type === 'text').map(op => op.text) };
+    return aiEntries.length ? await appendAIShareCard(card, aiEntries, settings) : card;
   } finally {
     // The independent Blob owns the image now; release the large pixel buffer.
     canvas.width = 1; canvas.height = 1;
