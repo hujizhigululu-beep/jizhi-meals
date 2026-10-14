@@ -71,7 +71,7 @@ const mealExpandedIds = new Set();
 const diaryExpandedDates = new Set();
 let offlineReady = false;
 let swUpdateReady = false;
-const APP_CACHE = 'jizhi-ai-test-shell-v1.5-ai3-1';
+const APP_CACHE = 'jizhi-ai-test-shell-v1.5-ai3-2';
 let cardAsset = null;
 let cardPreviewUrl = null;
 let shareGeneration = 0;
@@ -121,6 +121,7 @@ function commit(change, success = '') {
 }
 function refreshFromStorage() {
   dataRevision++;
+  postOfficeBookEpoch++;
   captureDayUI();
   try {
     const result=load(storage);
@@ -264,6 +265,7 @@ function renderCalendar() {
     <div class="date-strip" role="group" aria-label="本周七天">${dates.map((key, index) => { const day = parseDate(key); return `<button class="date-tab ${index > 4 ? 'weekend' : ''} ${key === today() ? 'today' : ''} ${key === selectedDate ? 'active' : ''}" data-date="${key}" aria-pressed="${key === selectedDate}" aria-label="${dateLabel(key, true)}${key === today() ? '，今天' : ''}">${key === today() ? '<span class="today-heart" aria-hidden="true">♥</span>' : ''}<span class="weekday">${weekdays[day.getDay()]}</span><span class="date-number">${day.getDate()}</span>${(state.meals.some(m => m.date === key) || state.diaries.some(d => d.date === key)) ? '<span class="date-dot" aria-hidden="true"></span>' : ''}</button>`; }).join('')}</div>
     <div class="day-heading"><h2>${dateLabel(selectedDate)}</h2><span class="tiny-heart">${selectedDate === today() ? '♡ 就是今天' : '♡ 我的小计划'}</span></div>
     <div class="day-tools"><span class="day-record-label">✎ 今日记录</span><button class="pill" data-action="share-day">🍓 分享卡片</button></div>
+    <div data-ai-batch-slot data-ai-date="${selectedDate}"></div>
     <div class="meals">${SLOTS.map(slot => mealCard(slot)).join('')}</div>
     ${renderSnacks()}
     <div data-ai-daily-slot data-ai-kind="meals" data-ai-date="${selectedDate}"></div>
@@ -378,7 +380,7 @@ function renderIngredient(item) {
   return `<article class="ingredient-card"><div class="ingredient-header"><h2 class="ingredient-name">${escape(item.name)}</h2><span class="ingredient-emoji" aria-hidden="true">${illustration(ingredientArt(item.name))}</span></div>${numbers}${category}${meta}${actions}</article>`;
 }
 function renderInventory() {
-  return `<section class="page inventory-page"><div class="section-heading"><div><div class="eyebrow">MY LITTLE FRIDGE</div><h1>我的食材小冰箱</h1><p class="subheading">${state.inventory.length ? '收好 ' + state.inventory.length + ' 种食材，慢慢安排' : '把喜欢的食材，一份份收好'}</p></div></div>${runwayPanel()}<div class="fridge-toolbar" id="inventory-add-zone"><h2>冰箱里的小储备</h2><button class="pill pink inventory-add-button" data-action="add-ingredient">＋ 添加食材</button><div class="fridge-switch" role="group" aria-label="食材查看模式"><button class="pill" data-fridge-view="list" aria-pressed="${fridgeView === 'list'}">列表</button><button class="pill" data-fridge-view="cards" aria-pressed="${fridgeView === 'cards'}">卡片</button></div></div>${state.inventory.length ? `<div class="inventory-list ${fridgeView === 'list' ? 'fridge-rows' : ''}">${fridgeView === 'list' ? '<div class="inventory-column-head" aria-hidden="true"><span>食材 · 可吃顿数</span><span class="inventory-column-numbers"><span>当前</span><span>预计</span></span><span></span></div>' : ''}${state.inventory.map(renderIngredient).join('')}</div>` : `<div class="empty-state"><span class="illustration" aria-hidden="true">${illustration('basket')}</span><h2>小冰箱还空着呢 (｡•ᴗ•｡)</h2><p>先收好食材，再安排喜欢的一餐。</p><button class="pill pink" data-action="add-ingredient">＋ 添加第一份食材</button></div>`}<button class="pill inventory-add-button inventory-add-again" data-action="add-ingredient">＋ 再添一份食材</button><details class="inventory-explanation"><summary>当前库存与预计剩余</summary><p>当前库存是实际剩余；预计剩余减去所有日期尚未吃的计划，包括过去和未来。安排餐食只预留，吃过才扣库存。</p></details><div data-ai-daily-slot data-ai-kind="inventory" data-ai-date="${selectedDate}"></div><button class="text-button" data-action="share-inventory-ai">分享卡片 · 可选库存 AI 纸条</button><div class="journal-whitespace" aria-hidden="true"></div></section>`;
+  return `<section class="page inventory-page"><div class="section-heading"><div><div class="eyebrow">MY LITTLE FRIDGE</div><h1>我的食材小冰箱</h1><p class="subheading">${state.inventory.length ? '收好 ' + state.inventory.length + ' 种食材，慢慢安排' : '把喜欢的食材，一份份收好'}</p></div></div>${runwayPanel()}<div class="fridge-toolbar" id="inventory-add-zone"><h2>冰箱里的小储备</h2><button class="pill pink inventory-add-button" data-action="add-ingredient">＋ 添加食材</button><div class="fridge-switch" role="group" aria-label="食材查看模式"><button class="pill" data-fridge-view="list" aria-pressed="${fridgeView === 'list'}">列表</button><button class="pill" data-fridge-view="cards" aria-pressed="${fridgeView === 'cards'}">卡片</button></div></div>${state.inventory.length ? `<div class="inventory-list ${fridgeView === 'list' ? 'fridge-rows' : ''}">${fridgeView === 'list' ? '<div class="inventory-column-head" aria-hidden="true"><span>食材 · 可吃顿数</span><span class="inventory-column-numbers"><span>当前</span><span>预计</span></span><span></span></div>' : ''}${state.inventory.map(renderIngredient).join('')}</div>` : `<div class="empty-state"><span class="illustration" aria-hidden="true">${illustration('basket')}</span><h2>小冰箱还空着呢 (｡•ᴗ•｡)</h2><p>先收好食材，再安排喜欢的一餐。</p><button class="pill pink" data-action="add-ingredient">＋ 添加第一份食材</button></div>`}<button class="pill inventory-add-button inventory-add-again" data-action="add-ingredient">＋ 再添一份食材</button><details class="inventory-explanation"><summary>当前库存与预计剩余</summary><p>当前库存是实际剩余；预计剩余减去所有日期尚未吃的计划，包括过去和未来。安排餐食只预留，吃过才扣库存。</p></details><div data-ai-batch-slot data-ai-date="${selectedDate}"></div><div data-ai-daily-slot data-ai-kind="inventory" data-ai-date="${selectedDate}"></div><button class="text-button" data-action="share-inventory-ai">分享卡片 · 可选库存 AI 纸条</button><div class="journal-whitespace" aria-hidden="true"></div></section>`;
 }
 function renderSettings() {
   let hasV13Backup = false; try { hasV13Backup = !!storage?.getItem(V13_BACKUP_KEY); } catch {}

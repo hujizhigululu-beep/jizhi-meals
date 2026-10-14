@@ -87,6 +87,6 @@ export function renderSettingsView(options = {}) {
     <section class="settings-card settings-danger" aria-labelledby="settings-clear-title">
       <h3 class="settings-group-title" id="settings-clear-title">清空这本手账</h3><p>会删除全部餐食、库存、日记、学习运动、贴纸、常用模板、快捷类别、用户资料、角色设定、AI 点评和收藏来信。这个操作不能撤销，请先导出备份。</p><div class="settings-actions"><button class="pill danger" data-action="clear">清空手账</button></div>
     </section>
-    <p class="footer-note">机智定食-ai测试版本 · V1.5.0-ai3.1<br>轻轻记下自己的日常 ♡</p>
+    <p class="footer-note">机智定食-ai测试版本 · V1.5.0-ai3.2<br>轻轻记下自己的日常 ♡</p>
   </section>`;
 }

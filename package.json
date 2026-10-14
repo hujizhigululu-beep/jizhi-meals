@@ -1,12 +1,12 @@
 {
   "name": "jizhi-meals-ai-test",
-  "version": "1.5.0-ai3.1",
+  "version": "1.5.0-ai3.2",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test --test-isolation=none tests/*.test.mjs",
     "test:browser": "node tests/v14.browser.mjs && node tests/activity-transactions.browser.mjs && node tests/fridge.browser.mjs && node tests/ui.browser.mjs",
-    "check": "node --check app.js && node --check model.js && node --check storage.js && node --check share-card.js && node --check summary.js && node --check timeline.js && node --check sw.js && node --check runway.js && node --check settings-view.js && node --check activity.js && node --check stickers.js && node --check month-calendar.js && node --check day-records-view.js && node --check share-journal.js && node --check share-layouts-a.js && node --check share-layouts-b.js && node --check share-editor.js && node --check share-art-strawberry.js && node --check share-art-badges.js && node --check share-art-collage.js && node --check notebook-header.js && node --check share-art-tickets.js && node --check share-art-study.js && node --check share-art-report.js && node --check schema-extra.js && node --check meal-templates.js && node --check meal-shortcuts-view.js && node --check activity-shortcuts.js && node --check sticker-picker.js && node --check ai-entry.js && node --check ai-api.js && node --check ai-lab.js && node --check ai-session.js && node --check post-office.js && node --check post-office-entry.js && node --check post-office-view.js && node --check ai-avatar.js && node --check ai-settings.js && node --check ai-daily.js && node --check ai-daily-entry.js && node --check share-ai.js",
+    "check": "node --check app.js && node --check model.js && node --check storage.js && node --check share-card.js && node --check summary.js && node --check timeline.js && node --check sw.js && node --check runway.js && node --check settings-view.js && node --check activity.js && node --check stickers.js && node --check month-calendar.js && node --check day-records-view.js && node --check share-journal.js && node --check share-layouts-a.js && node --check share-layouts-b.js && node --check share-editor.js && node --check share-art-strawberry.js && node --check share-art-badges.js && node --check share-art-collage.js && node --check notebook-header.js && node --check share-art-tickets.js && node --check share-art-study.js && node --check share-art-report.js && node --check schema-extra.js && node --check meal-templates.js && node --check meal-shortcuts-view.js && node --check activity-shortcuts.js && node --check sticker-picker.js && node --check ai-entry.js && node --check ai-api.js && node --check ai-lab.js && node --check ai-session.js && node --check post-office.js && node --check post-office-entry.js && node --check post-office-view.js && node --check ai-avatar.js && node --check ai-settings.js && node --check ai-daily.js && node --check ai-batch.js && node --check ai-daily-entry.js && node --check share-ai.js",
     "test:fridge-browser": "node tests/fridge.browser.mjs",
     "test:ui-browser": "node tests/ui.browser.mjs",
     "test:fridge-identity": "node tests/fridge-identity.browser.mjs",
@@ -20,8 +20,9 @@
     "test:meal-ui-browser": "node tests/meal-ui.browser.mjs",
     "test:adaptive-share-browser": "node tests/share-adaptive.browser.mjs",
     "test:ai-browser": "node tests/ai-lab.browser.mjs",
-    "test:post-office-browser": "node tests/post-office.browser.mjs",
+    "test:post-office-browser": "node tests/ai-batch.browser.mjs",
     "test:roles-browser": "node tests/ai-roles.browser.mjs",
+    "test:batch-browser": "node tests/ai-batch.browser.mjs",
     "test:settings-ai-browser": "node tests/ai-settings.browser.mjs",
     "test:share-ai-browser": "node tests/share-ai.browser.mjs"
   }

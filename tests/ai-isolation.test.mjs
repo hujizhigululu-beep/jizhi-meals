@@ -132,7 +132,7 @@ function workerHarness({ online = true, hit } = {}) {
     self: { location: { origin }, registration: { scope }, clients: { claim() { claims++; } },
       addEventListener(type, handler) { handlers.set(type, handler); } },
     caches: {
-      async keys() { return ['jizhi-meals-shell-v1.5-adaptive-ui-1', 'jizhi-ai-test-shell-old', 'another-app', 'jizhi-ai-test-shell-v1.5-ai3-1']; },
+      async keys() { return ['jizhi-meals-shell-v1.5-adaptive-ui-1', 'jizhi-ai-test-shell-old', 'another-app', 'jizhi-ai-test-shell-v1.5-ai3-1', 'jizhi-ai-test-shell-v1.5-ai3-2']; },
       async delete(key) { deletions.push(key); return true; },
       async open(key) { opens.push(key); return { async match(request) {
         matches.push(request);
@@ -151,7 +151,7 @@ test('test worker activation removes only old test caches and preserves formal a
   let activation;
   harness.handlers.get('activate')({ waitUntil(promise) { activation = promise; } });
   await activation;
-  assert.deepEqual(harness.deletions, ['jizhi-ai-test-shell-old']);
+  assert.deepEqual(harness.deletions, ['jizhi-ai-test-shell-old', 'jizhi-ai-test-shell-v1.5-ai3-1']);
   assert.equal(harness.claims(), 1);
   const cache = vm.runInContext('CACHE', harness.context);
   assert.ok(cache.startsWith('jizhi-ai-test-shell-'));
@@ -224,5 +224,5 @@ test('manifest, HTML and rendered page identities distinguish the AI test app', 
     assert.ok(renderNotebookHeader(page).includes(APP_NAME));
     assert.ok(renderNotebookHeader(page).includes('AI 测试版'));
   }
-  assert.ok(renderSettingsView().includes(`${APP_NAME} · V1.5.0-ai3.1`));
+  assert.ok(renderSettingsView().includes(`${APP_NAME} · V1.5.0-ai3.2`));
 });
