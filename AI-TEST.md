@@ -41,3 +41,13 @@ Chromium 14项、WebKit 13项专项通过：手机320/390/430px无溢出；密�
 关闭或停止使用测试站点即可，不影响正式版。保留或删除实验分支均可，禁止合并正式main。Sites更新从独立部署项目发布，不改正式Pages。不得将真实Key放入代码、配置、日志、截图或报告。
 
 跨域说明参考 [MDN CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)，请求形状参考 [OpenAI Chat Completions](https://developers.openai.com/api/reference/resources/chat)。中转站支持范围以实际验证为准。
+
+## 发布后实测
+
+独立 Sites 发布成功，部署源提交为 0d75e0f9abc3ce16b52b701930213fada5cac69f。以平台提供的所有者站点服务访问机制，仅对本站请求发送平台鉴权头；该头不发送给中转站、不进入源代码、备份或报告。
+
+发布域名的真实 Chromium 浏览器实测：HTTP 200；标题「机智定食-ai测试版本」；390×844手机尺寸页面横向溢出为0。浏览器从实际测试域名直接向配置中转站发固定测试消息，使用明显无效的模拟Key/模型ID，得到可读HTTP401鉴权失败。该次请求跨域可达，未验证真实Key及模型成功回复。完成后密钥已清除；截图不含密钥。
+
+未登录的正常浏览器显示「需要登录」，因此手机需登录创建该站点的ChatGPT账号。真实手机的登录、主屏幕安装及真实Key调用需要用户本人验证，不能用所有者服务访问或桌面手机尺寸代替。
+
+发布后正式网址仍HTTP200，HTML SHA-256与首次检查完全一致，HTML无ai-entry.js；远程main仍9c41c32d148e4d0bf50c4c70f3baf047f6fc5da7。原本地main工作区干净。实验分支已独立推送，未合并，也未改变正式Pages来源。无需用户手动修改任何GitHub设置。
