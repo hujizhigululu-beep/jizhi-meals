@@ -16,6 +16,8 @@
     "test:activity-transactions": "node tests/activity-transactions.browser.mjs",
     "test:share-art": "node tests/share-art.browser.mjs",
     "test:notebook-ui": "node tests/notebook-ui.browser.mjs",
-    "test:shortcuts-browser": "node tests/shortcuts-v15.browser.mjs"
+    "test:shortcuts-browser": "node tests/shortcuts-v15.browser.mjs",
+    "test:meal-ui-browser": "node tests/meal-ui.browser.mjs",
+    "test:adaptive-share-browser": "node tests/share-adaptive.browser.mjs"
   }
 }

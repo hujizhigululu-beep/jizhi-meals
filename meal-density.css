@@ -170,3 +170,42 @@
     font-size: 14px;
   }
 }
+
+/* The disclosure header owns the meal name. Expanded content contains only
+ * additional details, with the action row following the last real field. */
+.calendar-page .meal-card.has-meal .meal-record[open] > .meal-record-summary .meal-name-line {
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.calendar-page .meal-card.has-meal .meal-record[open] > .meal-record-summary .meal-name {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+.calendar-page .meal-card.has-meal .meal-record[open] > .meal-record-summary .meal-brief {
+  display: none;
+}
+.calendar-page .meal-card.has-meal .meal-record-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: auto;
+  min-height: 0;
+  padding-block: 7px;
+}
+.calendar-page .meal-card.has-meal .meal-record-body > :is(.meal-resource-list, .meal-kind, .meal-note) {
+  margin: 0;
+}
+.calendar-page .meal-card.has-meal .meal-record-body > .meal-card-controls {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  margin-top: 2px;
+}
+.calendar-page .meal-card.has-meal .meal-record-body > .meal-card-controls button {
+  min-height: 44px;
+  min-width: 72px;
+}

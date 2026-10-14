@@ -9,6 +9,9 @@ export const COLLAGE_THEME = Object.freeze({
 const titleStyle = {size: 21, lineHeight: 29, weight: '700'};
 const metaStyle = {size: 14, lineHeight: 21};
 const noteStyle = {size: 18, lineHeight: 27};
+const emojiMood = row => row.title === '心情' && Boolean(row.note?.trim())
+  && [...row.note.trim()].length <= 16
+  && /^[\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}\u200d\ufe0e\ufe0f\s]+$/u.test(row.note.trim());
 const paperByKind = {
   meal: {fill: '#FFFDF5', trim: '#F5BAD0', line: '#ECD6BC', label: '好好吃饭', mark: 'TASTY LITTLE MOMENT'},
   exercise: {fill: '#F0F7DF', trim: '#BCD9B1', line: '#C3D3A9', label: '动一动', mark: 'A LITTLE ADVENTURE'},
@@ -52,7 +55,7 @@ function gapCluster(p, panel) {
 }
 
 function smallPaper(p, card, t) {
-  const {x, y, w, h, row, kind, index} = card;
+  const {x, y, w, h, row, kind, index, stamp} = card;
   const paper = paperByKind[kind] || paperByKind.meal;
   // A tall paragraph stays straight; a short scrap has a slight real paper tilt.
   const angle = h > 280 ? 0 : (index % 3 === 0 ? -1.6 : index % 3 === 1 ? 1.25 : -.55);
@@ -82,7 +85,7 @@ function smallPaper(p, card, t) {
         p.circle(lx, h, 3.5, {fill: t.bg});
       }
       p.rect(8, 8, w - 16, h - 16, {stroke: '#DB91AC', radius: 1});
-      p.art('collage-heart-post', w - 51, 14, 31, 38);
+      p.art('collage-heart-post', w - (stamp ? 32 : 51), 12, stamp ? 17 : 31, stamp ? 21 : 38);
     } else if (kind === 'joy') {
       p.rect(0, 0, w, 12, {fill: '#F4D894'});
       p.tape(w / 2 - 34, -8, 68, {fill: '#BADDC5', angle: 3});
@@ -93,35 +96,45 @@ function smallPaper(p, card, t) {
     }
     const inset = kind === 'story' ? 40 : 17;
     const usable = w - inset - 17;
-    const label = kind === 'mood' ? '心情邮票' : kind === 'joy' ? '今日的小确幸' : kind === 'story' ? row.title || paper.label : row.groupLabel || paper.label;
-    p.text(label, inset, 19, usable - 42, {size: 13, lineHeight: 20, weight: '700', color: kind === 'exercise' ? '#708B55' : kind === 'study' ? '#9580B8' : '#BA7788'});
+    const label = paperLabel(row, kind);
+    const labelW = usable - (stamp ? 22 : kind === 'story' ? 0 : 42);
+    const labelStyle = {size: stamp ? 12 : 13, lineHeight: stamp ? 18 : 20, weight: '700', color: kind === 'exercise' ? '#708B55' : kind === 'study' ? '#9580B8' : '#BA7788'};
+    const labelY = stamp ? 12 : 16;
+    const labelH = p.text(label, inset, labelY, labelW, labelStyle);
     if (!['mood', 'joy', 'story'].includes(kind)) p.text(String(index + 1).padStart(2, '0'), 17, h - 18, w - 34, {size: 9, lineHeight: 12, color: '#B29A86', align: 'right'});
-    let ty = 49;
+    let ty = labelY + labelH + 6;
     if (['mood', 'joy', 'story'].includes(kind)) {
-      if (row.meta) ty += p.text(row.meta, inset, ty, usable, {...metaStyle, color: t.muted}) + 9;
-      if (row.note) ty += p.text(row.note, inset, ty, usable, {...noteStyle, size: kind === 'mood' ? 22 : 18, lineHeight: kind === 'mood' ? 31 : 27, color: t.ink});
+      if (row.meta) ty += p.text(row.meta, inset, ty, usable, {...metaStyle, color: t.muted}) + 6;
+      if (row.note) ty += p.text(row.note, inset, ty, usable, {...noteStyle, size: stamp ? 29 : kind === 'mood' ? 22 : 18, lineHeight: stamp ? 38 : kind === 'mood' ? 31 : 27, align: stamp ? 'center' : 'left', color: t.ink});
       // Imported/custom labels remain visible even if they do not match the standard diary names.
       if (kind !== 'story' && row.title && !['心情', '小确幸'].includes(row.title)) p.text(row.title, inset, ty + 8, usable, {...metaStyle, color: t.muted});
     } else {
       ty += p.text(row.title || '', inset, ty, usable, {...titleStyle, color: t.ink});
-      if (row.meta) ty += 8 + p.text(row.meta, inset, ty + 8, usable, {...metaStyle, color: t.muted});
-      if (row.note) ty += 8 + p.text(row.note, inset, ty + 8, usable, {...noteStyle, color: t.ink});
+      if (row.meta) ty += 6 + p.text(row.meta, inset, ty + 6, usable, {...metaStyle, color: t.muted});
+      if (row.note) ty += 7 + p.text(row.note, inset, ty + 7, usable, {...noteStyle, color: t.ink});
     }
   });
 }
 
-function cardHeight(p, row, kind, w) {
+function paperLabel(row, kind) {
+  return kind === 'mood' ? '心情邮票' : kind === 'joy' ? '今日的小确幸'
+    : kind === 'story' ? row.title || paperByKind.story.label : row.groupLabel || (paperByKind[kind] || paperByKind.meal).label;
+}
+
+function cardHeight(p, row, kind, w, stamp = false) {
   const inset = kind === 'story' ? 40 : 17;
   const usable = w - inset - 17;
+  const labelW = usable - (stamp ? 22 : kind === 'story' ? 0 : 42);
+  const contentY = (stamp ? 12 : 16) + p.measure(paperLabel(row, kind), labelW, {size: stamp ? 12 : 13, lineHeight: stamp ? 18 : 20, weight: '700'}) + 6;
   if (['mood', 'joy', 'story'].includes(kind)) {
-    const note = {...noteStyle, size: kind === 'mood' ? 22 : 18, lineHeight: kind === 'mood' ? 31 : 27};
+    const note = {...noteStyle, size: stamp ? 29 : kind === 'mood' ? 22 : 18, lineHeight: stamp ? 38 : kind === 'mood' ? 31 : 27};
     const customLabelH = kind !== 'story' && row.title && !['心情', '小确幸'].includes(row.title) ? p.measure(row.title, usable, metaStyle) + 8 : 0;
-    return Math.max(kind === 'mood' ? 137 : 130, 49 + (row.meta ? p.measure(row.meta, usable, metaStyle) + 9 : 0) + p.measure(row.note || '', usable, note) + customLabelH + 24);
+    return contentY + (row.meta ? p.measure(row.meta, usable, metaStyle) + 6 : 0) + p.measure(row.note || '', usable, note) + customLabelH + (stamp ? 15 : 19);
   }
-  return Math.max(131, 49 + p.measure(row.title || '', usable, titleStyle)
-    + (row.meta ? p.measure(row.meta, usable, metaStyle) + 8 : 0)
-    + (row.note ? p.measure(row.note, usable, noteStyle) + 8 : 0)
-    + (kind === 'exercise' ? 34 : 25));
+  return contentY + p.measure(row.title || '', usable, titleStyle)
+    + (row.meta ? p.measure(row.meta, usable, metaStyle) + 6 : 0)
+    + (row.note ? p.measure(row.note, usable, noteStyle) + 7 : 0)
+    + (kind === 'exercise' ? 31 : 25);
 }
 
 export function drawCollage(p, d, t = COLLAGE_THEME) {
@@ -136,16 +149,17 @@ export function drawCollage(p, d, t = COLLAGE_THEME) {
   const headerBottom = Math.max(64 + headingH + 47, 32 + stampH + 17);
   const startY = headerBottom + 16;
   const ordinary = (d.groups || []).flatMap(group => (group.rows || []).map(row => ({row: paperRow(row, group.kind, d.isRange), kind: group.kind})));
-  const diary = (d.lifeRows || []).map(row => ({row: paperRow(row, 'life', d.isRange), kind: row.title === '心情' ? 'mood' : row.title === '小确幸' ? 'joy' : 'story'}));
+  const diary = (d.lifeRows || []).filter(row => row.note).map(row => ({row: paperRow(row, 'life', d.isRange), kind: row.title === '心情' ? 'mood' : row.title === '小确幸' ? 'joy' : 'story', stamp: emojiMood(row)}));
   const papers = [...ordinary, ...diary];
-  if (d.caption) papers.push({kind: 'story', row: {title: '本日摘记', meta: '', note: d.caption}});
+  if (d.caption && !diary.length) papers.push({kind: 'story', row: {title: '本日摘记', meta: '', note: d.caption}});
 
   const cards = [], gapPanels = [];
   let contentBottom = startY;
   if (papers.length === 1) {
     const one = papers[0];
-    const singleW = Math.min(available - 32, Math.max(360, available * .82));
-    const h = cardHeight(p, one.row, one.kind, singleW);
+    const singleW = one.stamp ? Math.min(164, available) : one.kind === 'story'
+      ? available - 32 : Math.min(available - 32, Math.max(300, available * .68));
+    const h = cardHeight(p, one.row, one.kind, singleW, one.stamp);
     cards.push({...one, x: outer + 13, y: startY + 9, w: singleW, h, index: 0});
     contentBottom = startY + h + 24;
   } else if (papers.length) {
@@ -167,7 +181,7 @@ export function drawCollage(p, d, t = COLLAGE_THEME) {
         cols[0] = cols[1] = y + h + 25;
       } else {
         const col = cols[0] <= cols[1] ? 0 : 1;
-        const pw = col ? rightW : leftW, h = cardHeight(p, paper.row, paper.kind, pw);
+        const pw = paper.stamp ? Math.min(164, col ? rightW : leftW) : col ? rightW : leftW, h = cardHeight(p, paper.row, paper.kind, pw, paper.stamp);
         cards.push({...paper, x: col ? outer + leftW + gap : outer, y: cols[col], w: pw, h, index});
         cols[col] += h + 25;
       }
@@ -211,7 +225,7 @@ export function drawCollage(p, d, t = COLLAGE_THEME) {
   // The card surfaces themselves vary: receipt, graph note, postage and lined letter.
   cards.forEach(card => smallPaper(p, card, t));
   gapPanels.forEach(panel => gapCluster(p, panel));
-  if (papers.length === 1) {
+  if (papers.length === 1 && cards[0].x + cards[0].w <= w - 110) {
     const card = cards[0];
     p.art('collage-camera', w - 101, card.y + Math.min(67, card.h * .25), 64, 76);
     p.art('collage-heart-post', w - 83, card.y + Math.min(140, card.h * .61), 39, 49);

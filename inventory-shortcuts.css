@@ -215,3 +215,29 @@
 .inventory-page .runway-note > .runway-counts { margin:7px 0; padding:7px 0; border-top:1px dashed #d7ddc9; }
 .inventory-page .runway-note > .runway-counts > span { display:block; line-height:1.6; }
 .inventory-page .runway-note > .runway-counts b { margin:0 3px; font-size:16px; }
+
+/* Keep the existing provision ticket, with only its heading visible on entry. */
+.inventory-page .runway-note { padding: 4px 12px; }
+.inventory-page .runway-fold { min-width: 0; }
+.inventory-page .runway-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  list-style: none;
+  cursor: pointer;
+}
+.inventory-page .runway-heading::-webkit-details-marker { display: none; }
+.inventory-page .runway-heading::marker { content: ''; }
+.inventory-page .runway-heading h2 { margin: 0; padding: 0; line-height: 1.5; }
+.inventory-page .runway-heading h2::after { display: none; }
+.inventory-page .runway-fold-toggle { color: #7d8961; font-size: 18px; transition: transform .15s ease; }
+.inventory-page .runway-fold[open] > .runway-heading .runway-fold-toggle { transform: rotate(180deg); }
+.inventory-page .runway-fold[open] > .runway-heading { border-bottom: 1px dashed #d8dcc4; }
+.inventory-page .runway-heading:focus-visible { outline: 2px solid var(--berry, #ad5778); outline-offset: 2px; border-radius: 4px; }
+.inventory-page .runway-body { position: relative; min-width: 0; padding: 2px 0 3px; }
+.inventory-page .runway-body .runway-background-art { top: 53px; }
+.inventory-page .runway-body > .runway-counts { margin: 7px 0; padding: 7px 0; border-top: 1px dashed #d7ddc9; }
+.inventory-page .runway-body > .runway-counts > span { display: block; line-height: 1.6; }
+.inventory-page .runway-body > .runway-counts b { margin: 0 3px; font-size: 16px; }

@@ -46,6 +46,7 @@ try {
           assert.ok(await button.evaluate(node => { const r=node.getBoundingClientRect(); return node.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)); }),`${name} edit button covered`);
         }
       }
+      if (await page.locator('.runway-fold').getAttribute('open') === null) await page.locator('.runway-fold > summary').click();
       await page.locator('.runway-details > summary').click();
       await page.locator('#runway-daily').selectOption('1');
       assert.equal(await page.locator('.runway-total strong').innerText(),'11');

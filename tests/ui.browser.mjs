@@ -87,7 +87,7 @@ try {
   assert.equal(await page.locator('.ingredient-row[open]').count(), 0);
   const firstIngredient = page.locator('.ingredient-row').first();
   assert.equal(await firstIngredient.locator('.ingredient-meta').isVisible(), false);
-  assert.ok(await firstIngredient.evaluate(el => el.getBoundingClientRect().height) <= 48);
+  assert.ok(await firstIngredient.evaluate(el => el.getBoundingClientRect().height) <= 56, 'collapsed inventory row follows the 52px notebook summary style');
   await firstIngredient.locator('.stock-numbers').click();
   assert.equal(await firstIngredient.locator('.ingredient-meta').isVisible(), true);
   await firstIngredient.locator('[data-ingredient]').click();
@@ -97,6 +97,7 @@ try {
   await firstIngredient.locator('.ingredient-row-heading').click();
   assert.equal(await page.locator('.inventory-explanation').getAttribute('open'), null);
   assert.equal(await page.locator('.runway-counts').isVisible(), false);
+  if (await page.locator('.runway-fold').getAttribute('open') === null) await page.locator('.runway-fold > summary').click();
   await page.locator('.runway-details > summary').click();
   assert.equal(await page.locator('.runway-counts').isVisible(), true);
   await page.locator('.runway-details > summary').click();
@@ -109,6 +110,7 @@ try {
       await page.setViewportSize({ width,height:844 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${target} overflow at ${width}`);
       if (target === 'inventory') {
+        if (await page.locator('.runway-fold').getAttribute('open') === null) await page.locator('.runway-fold > summary').click();
         await checkRunwayArt(page);
         const total = page.locator('.runway-total strong');
         const originalTotal = await total.textContent();

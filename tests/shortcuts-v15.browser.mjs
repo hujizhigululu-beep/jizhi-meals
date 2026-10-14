@@ -305,6 +305,7 @@ async function inventoryAndMealsPhase() {
     await check('runway mode is a viewing preference; protein-only stock covers nine main meals while comprehensive coverage is zero', async () => {
       await nav(page, 'inventory');
       const before = await readRaw(page);
+      if (await page.locator('.runway-fold').getAttribute('open') === null) await page.locator('.runway-fold > summary').click();
       for (const mode of ['main', 'comprehensive', 'main']) {
         await page.locator(`[data-runway-mode="${mode}"]`).click();
         assert.equal(await page.locator(`[data-runway-mode="${mode}"]`).getAttribute('aria-pressed'), 'true');
@@ -316,6 +317,7 @@ async function inventoryAndMealsPhase() {
       assert.equal(await readRaw(page), before);
       await replaceFixture(page, mainOnlyFixture); await nav(page, 'inventory');
       const onlyRaw = await readRaw(page), backup = await page.evaluate(key => localStorage.getItem(key), V15_BACKUP_KEY);
+      if (await page.locator('.runway-fold').getAttribute('open') === null) await page.locator('.runway-fold > summary').click();
       await page.locator('[data-runway-mode="comprehensive"]').click();
       assert.equal(await page.locator('.runway-total strong').textContent(), '0');
       assert.match(await page.locator('.runway-coverage strong').textContent(), /尚不能覆盖/);

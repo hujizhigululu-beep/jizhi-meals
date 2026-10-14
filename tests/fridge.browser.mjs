@@ -21,15 +21,20 @@ try {
   await page.addInitScript(seed => { if (!localStorage.getItem('jizhi-meals-v1')) localStorage.setItem('jizhi-meals-v1', JSON.stringify(seed)); }, seed);
   await page.goto(`http://127.0.0.1:${server.address().port}/#inventory`);
   await page.locator('.runway-note').waitFor();
+  assert.equal(await page.locator('.runway-fold').getAttribute('open'), null);
+  await page.locator('.runway-fold > summary').click();
   assert.match(await page.locator('.runway-total').innerText(), /11/);
   const raw = await page.evaluate(() => localStorage.getItem('jizhi-meals-v1'));
   await page.locator('[data-fridge-view="list"]').click();
   await page.locator('.fridge-rows').waitFor();
   assert.equal(await page.evaluate(() => localStorage.getItem('jizhi-meals-v1')), raw);
   await page.reload(); await page.locator('.fridge-rows').waitFor();
+  if (await page.locator('.runway-fold').getAttribute('open') === null) await page.locator('.runway-fold > summary').click();
   await page.locator('.runway-details > summary').click();
   await page.locator('#runway-daily').selectOption('1');
   await page.reload(); assert.equal(await page.locator('#runway-daily').inputValue(), '1');
+  assert.equal(await page.locator('.runway-fold').getAttribute('open'), null, 'new page entry starts with the provision ticket folded');
+  await page.locator('.runway-fold > summary').click();
   for (const width of [320, 375, 390]) {
     await page.setViewportSize({ width, height: 844 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `overflow at ${width}`);

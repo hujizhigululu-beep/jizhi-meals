@@ -10,7 +10,7 @@ import { getDayRecord, toggleCheckin, toggleCategoryCheckin, putActivity, remove
 import { renderDayRecords, CHECKIN_NAMES } from './day-records-view.js';
 import { mountShareEditor } from './share-editor.js';
 import { getActivityCategories, upsertActivityCategory, setActivityCategoryActive, moveActivityCategory } from './activity-shortcuts.js';
-import { MEAL_SCENES, prefillMealTemplate, upsertMealTemplate, removeMealTemplate } from './meal-templates.js';
+import { MEAL_SCENES, prefillMealTemplate, prefillBreakfastMeal, upsertMealTemplate, removeMealTemplate } from './meal-templates.js';
 import { renderMealShortcuts, renderTemplateIngredients } from './meal-shortcuts-view.js';
 import { renderNotebookHeader } from './notebook-header.js';
 
@@ -69,7 +69,7 @@ const mealExpandedIds = new Set();
 const diaryExpandedDates = new Set();
 let offlineReady = false;
 let swUpdateReady = false;
-const APP_CACHE = 'jizhi-meals-shell-v1.5-shortcuts-1';
+const APP_CACHE = 'jizhi-meals-shell-v1.5-adaptive-ui-1';
 let cardAsset = null;
 let cardPreviewUrl = null;
 let shareGeneration = 0;
@@ -77,7 +77,7 @@ let shareController = null;
 let installPrompt = null;
 let backupTime = '';
 try { backupTime = storage?.getItem('jizhi-last-export') || ''; } catch {}
-let fridgeView = 'list', runwayDaily = 2, runwayMode = 'comprehensive';
+let fridgeView = 'list', runwayDaily = 2, runwayMode = 'comprehensive', runwayOpen = false;
 try { fridgeView = storage?.getItem('jizhi-fridge-view') === 'cards' ? 'cards' : 'list'; runwayDaily = storage?.getItem('jizhi-runway-daily') === '1' ? 1 : 2; runwayMode = storage?.getItem('jizhi-runway-mode') === 'main' ? 'main' : 'comprehensive'; } catch {}
 function preference(key, value) {
   try { storage.setItem(key, String(value)); return true; }
@@ -276,10 +276,12 @@ function mealCard(slot, snack = null) {
   if (!meal) return `<article class="${classes}">${category}<div class="meal-content"><span class="empty-label">今天想吃什么捏？(｡•ᴗ•｡)</span></div><div class="meal-card-controls"><button class="meal-add" data-add="${slot}" aria-label="添加${labels[slot]}">＋</button></div></article>`;
   const brief = meal.note || resourceText(meal) || meal.protein || times[slot];
   const resources = meal.resources.length ? `<span class="meal-resource-list">${meal.resources.map(r => `<span class="meal-resource-chip">${escape(r.name)} ${r.amount}${escape(r.unit)}</span>`).join('')}</span>` : '';
+  const typeLabel = meal.type === '外出就餐' ? '外食' : meal.type;
+  const kind = [meal.name === typeLabel || meal.name.startsWith(`${typeLabel}｜`) ? '' : meal.type, meal.protein].filter(Boolean).join(' · ');
   const quick = meal.completed
     ? `<button class="meal-undo" data-undo="${escape(meal.id)}" aria-label="撤销${escape(meal.name)}已吃并返还库存">撤销</button>`
     : `<button class="meal-complete" data-complete="${escape(meal.id)}" aria-label="标记${escape(meal.name)}已吃">吃过</button>`;
-  return `<article class="${classes}"><details class="meal-record" data-meal-fold="${escape(meal.id)}" ${mealExpandedIds.has(meal.id) ? 'open' : ''}><summary class="meal-record-summary">${category}<div class="meal-inline-summary"><div class="meal-name-line"><span class="meal-name">${escape(meal.name)}</span><span class="${meal.completed ? 'done-stamp' : 'planned-stamp'}">${meal.completed ? '已吃' : '小计划'}</span></div><span class="meal-brief">${escape(brief)}</span></div><span class="meal-fold-toggle" aria-hidden="true">⌄</span></summary><div class="meal-record-body"><button class="meal-details" data-detail="${escape(meal.id)}" aria-label="查看${escape(meal.name)}详情"><span class="meal-name">${escape(meal.name)}</span><span aria-hidden="true">详情 ↗</span></button>${resources}<p class="meal-kind">${escape(meal.type)}${meal.protein ? ' · ' + escape(meal.protein) : ''}</p>${meal.note ? `<p class="meal-note">${escape(meal.note)}</p>` : ''}<div class="meal-card-controls"><button class="meal-edit" data-edit-meal="${escape(meal.id)}" aria-label="查看或编辑${escape(meal.name)}">编辑这餐</button><button class="text-button" data-detail="${escape(meal.id)}">复制 / 移动 / 删除</button></div></div></details><div class="meal-quick-controls">${quick}</div></article>`;
+  return `<article class="${classes}"><details class="meal-record" data-meal-fold="${escape(meal.id)}" ${mealExpandedIds.has(meal.id) ? 'open' : ''}><summary class="meal-record-summary">${category}<div class="meal-inline-summary"><div class="meal-name-line"><span class="meal-name">${escape(meal.name)}</span><span class="${meal.completed ? 'done-stamp' : 'planned-stamp'}">${meal.completed ? '已吃' : '小计划'}</span></div><span class="meal-brief">${escape(brief)}</span></div><span class="meal-fold-toggle" aria-hidden="true">⌄</span></summary><div class="meal-record-body">${resources}${kind ? `<p class="meal-kind">${escape(kind)}</p>` : ''}${meal.note ? `<p class="meal-note">${escape(meal.note)}</p>` : ''}<div class="meal-card-controls"><button class="meal-edit" data-edit-meal="${escape(meal.id)}" aria-label="查看或编辑${escape(meal.name)}">编辑这餐</button><button class="text-button" data-detail="${escape(meal.id)}">复制 / 移动 / 删除</button></div></div></details><div class="meal-quick-controls">${quick}</div></article>`;
 }
 function renderSnacks() {
   const snacks = state.meals.filter(m => m.date === selectedDate && m.slot === 'snack').sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
@@ -359,7 +361,7 @@ function runwayPanel() {
   const prediction = (main ? predictMainCourseRunway : predictRunway)(state, today(), runwayDaily);
   const unclassified = state.inventory.filter(item => !CATEGORIES.includes(item.category)).length;
   const coverage = prediction.last ? dateLabel(prediction.last.date, true).replace(/ 周[日一二三四五六]/, '') + ' · ' + labels[prediction.last.slot] : '尚不能覆盖下一餐';
-  return `<aside class="runway-note"><span class="runway-background-art" aria-hidden="true"></span><h2>餐食续航 <span aria-hidden="true">♡</span></h2><div class="runway-mode-switch" role="group" aria-label="餐食续航预测模式">${[['comprehensive','综合预测'],['main','主菜续航']].map(([mode,label])=>`<button type="button" data-runway-mode="${mode}" data-mode="${mode}" aria-pressed="${runwayMode===mode}">${label}</button>`).join('')}</div><p class="runway-total">${main?'主菜还能吃':'当前还能吃'} <strong>${main?prediction.covered:summary.total}</strong> 顿${prediction.capped?' <small>预测范围内</small>':''}</p><p class="runway-coverage"><small>按当前计划覆盖至</small><strong>${coverage}</strong></p>${main?`<div class="runway-counts"><span>蛋白质搭配 <b>${prediction.proteinMeals}</b> 顿</span><span>整套餐食 <b>${prediction.readyMeals}</b> 顿</span></div>`:`<p class="runway-bottleneck">最先不足 <strong>${summary.bottlenecks.join('、')}</strong></p>`}<details class="runway-details"><summary>展开说明与设置</summary><div class="runway-counts">${main?'':`<span>自己搭配 <b>${summary.combined}</b> 顿</span><span>整套食物 <b>${summary.ready}</b> 顿</span>`}<span>早餐 <b>${summary.breakfast}</b> 次 · 单独统计</span></div><label class="runway-default">未安排餐次<select id="runway-daily" aria-label="未安排餐次默认消耗"><option value="1" ${runwayDaily === 1 ? 'selected' : ''}>每天 1 顿 · 晚餐</option><option value="2" ${runwayDaily === 2 ? 'selected' : ''}>每天 2 顿 · 午餐和晚餐</option></select></label>${unclassified ? `<p>${unclassified} 种食材尚未归入五类，编辑确认分类后计入组合。</p>` : ''}${prediction.shortage ? `<p class="runway-shortage">下一次不足：${dateLabel(prediction.shortage.date, true)} · ${labels[prediction.shortage.slot]}<br>${escape(prediction.shortage.reason)}</p>` : '<p>超过 10 年预测范围，请结合实际计划查看。</p>'}<p>${main?'主菜仅用蛋白质与整套食物。蛋白质按当前数量 ÷ 每餐用量组成主菜；同一已安排餐次的多种蛋白质只计一顿，蛋白质与整套同时使用也只计一顿。蔬菜和碳水不限制主菜续航；早餐分类不算午晚餐。':'每份 = 当前数量 ÷ 每餐默认用量。蛋白质、蔬菜、碳水各 1 份组成一餐；整套食物独立计餐，结果向下取整。'}负库存按 0 计，保质期当天可用。</p><p>从今天开始，已吃餐次跳过；所有未吃计划优先预留具体用量，包括过去日期的预留。早餐和加餐按实际用量消耗，不增加午晚餐顿数。空白午晚餐使用余下库存，先搭配、再用整套食物。没有本模式库存关联的计划跳过。切换模式与预测均不修改库存或计划。</p><button class="text-button" data-action="export">存一份 JSON 备份 ↗</button></details></aside>`;
+  return `<aside class="runway-note"><details class="runway-fold" ${runwayOpen ? 'open' : ''}><summary class="runway-heading"><h2><span aria-hidden="true">🍱</span> 餐食续航 <span aria-hidden="true">♡</span></h2><span class="runway-fold-toggle" aria-hidden="true">⌄</span></summary><div class="runway-body"><span class="runway-background-art" aria-hidden="true"></span><div class="runway-mode-switch" role="group" aria-label="餐食续航预测模式">${[['comprehensive','综合预测'],['main','主菜续航']].map(([mode,label])=>`<button type="button" data-runway-mode="${mode}" data-mode="${mode}" aria-pressed="${runwayMode===mode}">${label}</button>`).join('')}</div><p class="runway-total">${main?'主菜还能吃':'当前还能吃'} <strong>${main?prediction.covered:summary.total}</strong> 顿${prediction.capped?' <small>预测范围内</small>':''}</p><p class="runway-coverage"><small>按当前计划覆盖至</small><strong>${coverage}</strong></p>${main?`<div class="runway-counts"><span>蛋白质搭配 <b>${prediction.proteinMeals}</b> 顿</span><span>整套餐食 <b>${prediction.readyMeals}</b> 顿</span></div>`:`<p class="runway-bottleneck">最先不足 <strong>${summary.bottlenecks.join('、')}</strong></p>`}<details class="runway-details"><summary>展开说明与设置</summary><div class="runway-counts">${main?'':`<span>自己搭配 <b>${summary.combined}</b> 顿</span><span>整套食物 <b>${summary.ready}</b> 顿</span>`}<span>早餐 <b>${summary.breakfast}</b> 次 · 单独统计</span></div><label class="runway-default">未安排餐次<select id="runway-daily" aria-label="未安排餐次默认消耗"><option value="1" ${runwayDaily === 1 ? 'selected' : ''}>每天 1 顿 · 晚餐</option><option value="2" ${runwayDaily === 2 ? 'selected' : ''}>每天 2 顿 · 午餐和晚餐</option></select></label>${unclassified ? `<p>${unclassified} 种食材尚未归入五类，编辑确认分类后计入组合。</p>` : ''}${prediction.shortage ? `<p class="runway-shortage">下一次不足：${dateLabel(prediction.shortage.date, true)} · ${labels[prediction.shortage.slot]}<br>${escape(prediction.shortage.reason)}</p>` : '<p>超过 10 年预测范围，请结合实际计划查看。</p>'}<p>${main?'主菜仅用蛋白质与整套食物。蛋白质按当前数量 ÷ 每餐用量组成主菜；同一已安排餐次的多种蛋白质只计一顿，蛋白质与整套同时使用也只计一顿。蔬菜和碳水不限制主菜续航；早餐分类不算午晚餐。':'每份 = 当前数量 ÷ 每餐默认用量。蛋白质、蔬菜、碳水各 1 份组成一餐；整套食物独立计餐，结果向下取整。'}负库存按 0 计，保质期当天可用。</p><p>从今天开始，已吃餐次跳过；所有未吃计划优先预留具体用量，包括过去日期的预留。早餐和加餐按实际用量消耗，不增加午晚餐顿数。空白午晚餐使用余下库存，先搭配、再用整套食物。没有本模式库存关联的计划跳过。切换模式与预测均不修改库存或计划。</p><button class="text-button" data-action="export">存一份 JSON 备份 ↗</button></details></div></details></aside>`;
 }
 function renderIngredient(item) {
   const predicted = forecast(state, item.id), planned = reserved(state, item.id);
@@ -384,26 +386,39 @@ function mealEditor(slot, id = null) {
   if (readOnlyGuard()) return;
   const existing = state.meals.find(m => m.id === id);
   const meal = existing || { id: uid(), date: selectedDate, slot, name: '', type: slot === 'snack' ? '零食 / 加餐' : '自制便当', protein: '', note: '', resources: [], ...(slot === 'snack' ? { time: '' } : {}) };
+  const editorSlot = meal.slot;
+  let breakfastSelected = false;
   let rows = structuredClone(meal.resources || []);
   let scene = MEAL_SCENES.includes(meal.type) ? meal.type : meal.type==='外出就餐'?'外食':'',selectedTemplateId='';
   showSheet(existing ? '整理这张餐食小纸条' : '今天又有好吃的啦 🍓', `${dateLabel(meal.date, true)} · ${labels[meal.slot]} ♡`, `<form id="meal-form"><div id="meal-shortcuts-host"></div><p id="meal-template-notices" class="field-hint" hidden></p><label class="form-field">菜名<input name="name" required maxlength="80" placeholder="例如：牛肉丸便当" value="${escape(meal.name)}" autocomplete="off"></label>${slot === 'snack' ? `<label class="form-field">时间 <span class="muted">（可选）</span><input name="time" type="time" value="${escape(meal.time || '')}"></label>` : ''}<label class="form-field">这餐的类型<select name="type">${TYPES.map(t => `<option ${meal.type === t ? 'selected' : ''}>${t}</option>`).join('')}</select></label><div id="meal-component-host"></div><fieldset class="resource-controls"><legend>这餐用到的库存食材 <span class="muted">（可选）</span></legend><p class="field-hint">每份食材独立填写用量；安排时预留，吃过才扣库存。配菜也可以直接写在备注里。</p><div class="resource-list" id="resource-list"></div><button type="button" class="pill" id="add-resource" data-action="add-resource" ${state.inventory.length ? '' : 'disabled'}>＋ 添一种食材</button>${state.inventory.length ? '' : '<p class="resource-empty">小冰箱还空着，可以先保存菜名，再去库存添食材。</p>'}</fieldset><label class="form-field">蛋白质来源 <span class="muted">（可选，不扣库存）</span><input name="protein" maxlength="60" value="${escape(meal.protein)}" placeholder="例如：鸡蛋 / 牛肉"></label><label class="form-field">一点小备注 <span class="muted">（可选）</span><textarea name="note" maxlength="200" placeholder="例如：配菜、解冻提醒">${escape(meal.note)}</textarea></label>${existing?.completed ? '<p class="info-card soft">这餐已吃过。调整食材时会先返还原用量，再扣减新用量，仍保留已吃记录。</p>' : ''}<p class="form-error" role="alert" hidden></p><div class="form-buttons"><button class="secondary" type="button" data-close>再想想</button><button class="primary" type="submit">收进手账 ♡</button></div></form>`);
   const form = $('#meal-form');
   function shortcutControls() {
     const fold=form.querySelector('.meal-template-fold'),templateName=form.elements.mealTemplateName?.value||'';
-    form.querySelector('#meal-shortcuts-host').innerHTML=renderMealShortcuts(state,meal.date,meal.slot,{scene,selectedTemplateId,templatesOpen:fold?.open,templateName});
+    const scrollLeft=form.querySelector('.meal-scene-slips')?.scrollLeft||0;
+    form.querySelector('#meal-shortcuts-host').innerHTML=renderMealShortcuts(state,meal.date,meal.slot,{scene,selectedTemplateId,templatesOpen:fold?.open,templateName,showBreakfast:!existing||editorSlot==='breakfast',breakfastSelected});
+    form.querySelector('.meal-scene-slips').scrollLeft=scrollLeft;
     componentControls();
   }
   function componentControls() {
     const opened=Array.from(form.querySelectorAll('.meal-component-group[open]')).map(el=>el.dataset.component);
-    form.querySelector('#meal-component-host').innerHTML=renderTemplateIngredients(state.inventory,scene,rows.map(row=>row.ingredientId));
+    form.querySelector('#meal-component-host').innerHTML=renderTemplateIngredients(state.inventory,breakfastSelected?'早餐':scene,rows.map(row=>row.ingredientId));
     form.querySelectorAll('.meal-component-group').forEach(el=>el.open=opened.includes(el.dataset.component));
   }
   form.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button)return;
+    if(button.hasAttribute('data-meal-breakfast')) {
+      const draft=prefillBreakfastMeal();
+      if(!existing)meal.slot=draft.slot;
+      breakfastSelected=true;selectedTemplateId='';scene='';
+      form.elements.name.value=draft.name;form.elements.type.value=draft.type;form.elements.note.value='';form.elements.protein.value='';rows=draft.resources;
+      const notices=form.querySelector('#meal-template-notices');notices.textContent='这张纸条记在早餐；餐名、类型和食材都可以按今天的口味修改。';notices.hidden=false;
+      syncMealSlot();renderRows();shortcutControls();return;
+    }
     if(button.hasAttribute('data-meal-scene')||button.hasAttribute('data-meal-template')) {
       const key=button.dataset.mealTemplate||button.dataset.mealScene;
       try {
         const draft=prefillMealTemplate(state,key);selectedTemplateId=button.dataset.mealTemplate||'';scene=selectedTemplateId?state.mealTemplates.find(t=>t.id===key).scene:key;
+        breakfastSelected=false;if(!existing)meal.slot=editorSlot;syncMealSlot();
         form.elements.name.value=draft.name;form.elements.type.value=draft.type;form.elements.note.value=draft.note;form.elements.protein.value='';rows=draft.resources;
         const notices=form.querySelector('#meal-template-notices');notices.textContent=draft.notices.join(' ');notices.hidden=!draft.notices.length;
         renderRows();shortcutControls();
@@ -411,7 +426,7 @@ function mealEditor(slot, id = null) {
     }
     if(button.hasAttribute('data-save-meal-template')){
       try {
-        if(!scene)throw new Error('请先选一种餐食场景，再收为常用组合。');
+        if(!scene)throw new Error('请把这餐的类型选为自制便当、外食等场景，再收为常用组合。'+(breakfastSelected?'早餐餐次会保留。':''));
         const template={name:form.elements.mealTemplateName.value.trim(),scene,mealName:form.elements.name.value.trim(),note:form.elements.note.value.trim(),resources:readRows()};
         if(commit(book=>upsertMealTemplate(book,template),'常吃组合收好啦，下次少写几笔 ♡'))shortcutControls();
       }catch(error){formError(form,error.message);}return;
@@ -427,6 +442,10 @@ function mealEditor(slot, id = null) {
       renderRows();componentControls();
     }
   });
+  function syncMealSlot() {
+    sheetContent.querySelector('.sheet-subtitle').textContent=`${dateLabel(meal.date,true)} · ${labels[meal.slot]} ♡`;
+    const time=form.elements.time?.closest('.form-field');if(time)time.hidden=meal.slot!=='snack';
+  }
   function readRows() {
     rows = Array.from(form.querySelectorAll('.resource-row')).map(row => ({ ingredientId: row.querySelector('select').value, amount: Number(row.querySelector('input').value) }));
     return rows.filter(r => r.ingredientId);
@@ -632,6 +651,7 @@ window.addEventListener('hashchange', () => { const next = location.hash.slice(1
 // Reading a paper only changes this session's fold state, never saved records.
 document.addEventListener('toggle', event => {
   const details = event.target;
+  if (details.isConnected && details.matches?.('.runway-fold')) runwayOpen = details.open;
   if (details.matches?.('.meal-record[data-meal-fold]')) {
     if (details.open) mealExpandedIds.add(details.dataset.mealFold);
     else mealExpandedIds.delete(details.dataset.mealFold);

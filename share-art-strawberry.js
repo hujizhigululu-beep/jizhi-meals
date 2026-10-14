@@ -5,6 +5,9 @@ export const STRAWBERRY_THEME = Object.freeze({
   titleFont: '"Songti SC", "SimSun", "Noto Serif CJK SC", Georgia, serif',
   bodyFont: '"PingFang SC", "Noto Sans CJK SC", -apple-system, "Apple Color Emoji", "Segoe UI Emoji", sans-serif'
 });
+const emojiMood = row => row.title === '心情' && Boolean(row.note?.trim())
+  && [...row.note.trim()].length <= 16
+  && /^[\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}\u200d\ufe0e\ufe0f\s]+$/u.test(row.note.trim());
 
 export function drawStrawberry(p, d, t = STRAWBERRY_THEME) {
   const w = p.width, s = Math.min(1.35, w / 600);
@@ -30,41 +33,52 @@ export function drawStrawberry(p, d, t = STRAWBERRY_THEME) {
   const rowHeight = (row, width) => p.measure(row.title || '', width, titleOpts)
     + (mealMeta(row) ? 5 * s + p.measure(mealMeta(row), width, metaOpts) : 0)
     + (row.note ? 8 * s + p.measure(row.note, width, noteOpts) : 0);
-  const panelHeight = (group, width) => 73 * s + group.rows.reduce((sum, row, index) => sum + rowHeight(row, width - 36 * s) + (index ? 19 * s : 0), 0) + 20 * s;
+  const compactPanel = (group, width) => group.rows.length === 1 && rowHeight(group.rows[0], width - 36 * s) <= 72 * s;
+  const panelHeight = (group, width) => (compactPanel(group, width) ? 54 : 73) * s
+    + group.rows.reduce((sum, row, index) => sum + rowHeight(row, width - 36 * s) + (index ? 19 * s : 0), 0)
+    + (compactPanel(group, width) ? 16 : 20) * s;
   const dateHeight = p.measure(d.dateLabel || '', inner - 42 * s, dateOpts);
   const startY = 152 * s + dateHeight + 23 * s;
   const paperAngle = (angle, height) => Math.sign(angle) * Math.min(Math.abs(angle), Math.atan(7 * s / Math.max(1, height)) * 180 / Math.PI);
   const blocks = [];
   let cursor = startY;
-  // Both pairs are collage pieces, rather than a sequence of report sections.
-  for (let i = 0; i < groups.length; i += 2) {
-    const a = groups[i], b = groups[i + 1], cw = b ? (inner - gap) / 2 : inner;
+  // Short notes keep separate heights; a long meal uses the whole sheet rather
+  // than leaving a tall empty column beside its neighboring breakfast scrap.
+  for (let i = 0; i < groups.length;) {
+    const a = groups[i], b = groups[i + 1], cw = (inner - gap) / 2;
     const ah = panelHeight(a, cw);
-    blocks.push({ group: a, x: m, y: cursor, width: cw, height: ah, angle: i ? .65 : -.7 });
-    if (b) {
+    if (b && ah <= 300 * s && panelHeight(b, cw) <= 300 * s) {
       const bh = panelHeight(b, cw);
+      blocks.push({ group: a, x: m, y: cursor, width: cw, height: ah, angle: i ? .65 : -.7 });
       blocks.push({ group: b, x: m + cw + gap, y: cursor + 7 * s, width: cw, height: bh, angle: i ? -.7 : .7 });
       cursor += Math.max(ah, bh + 7 * s) + 22 * s;
-    } else cursor += ah + 22 * s;
+      i += 2;
+    } else {
+      const pw = ah > 300 * s ? inner : Math.min(inner, 330 * s), ph = panelHeight(a, pw);
+      blocks.push({ group: a, x: m, y: cursor, width: pw, height: ph, angle: i ? .65 : -.7 });
+      cursor += ph + 22 * s;
+      i++;
+    }
   }
   const emptyHeight = rows.length ? 0 : 144 * s;
   if (emptyHeight) cursor += emptyHeight + 22 * s;
-  const lifeRows = d.caption && Array.isArray(d.lifeRows) ? d.lifeRows.filter(row => row.note) : [];
+  const lifeRows = Array.isArray(d.lifeRows) ? d.lifeRows.filter(row => row.note) : [];
   const littleRows = lifeRows.filter(row => row.title !== '小故事');
   const storyRows = lifeRows.filter(row => row.title === '小故事');
   const lifeMetaOpts = { size: 13 * s, lineHeight: 20 * s, color: '#ab8a7b' };
   const lifeWidth = (inner - 14 * s) / 2;
-  const lifeHeight = (row, width) => 36 * s + p.measure(row.note, width - 30 * s, captionOpts)
+  const lifeNoteOpts = row => emojiMood(row) ? {...captionOpts, size: 29 * s, lineHeight: 38 * s, align: 'center'} : captionOpts;
+  const lifeHeight = (row, width) => 36 * s + p.measure(row.note, width - 30 * s, lifeNoteOpts(row))
     + (d.isRange && row.meta ? p.measure(row.meta, width - 30 * s, lifeMetaOpts) + 6 * s : 0) + 17 * s;
   const littleBlocks = [];
   let lifeCursor = 0;
   for (let i = 0; i < littleRows.length; i += 2) {
-    const a = littleRows[i], b = littleRows[i + 1], cw = b ? lifeWidth : inner;
-    const ah = lifeHeight(a, cw);
-    littleBlocks.push({ row: a, x: 0, y: lifeCursor, width: cw, height: ah });
+    const a = littleRows[i], b = littleRows[i + 1], cw = b ? lifeWidth : Math.min(inner, 330 * s);
+    const aw = emojiMood(a) ? Math.min(cw, 164 * s) : cw, ah = lifeHeight(a, aw);
+    littleBlocks.push({ row: a, x: 0, y: lifeCursor, width: aw, height: ah, stamp: emojiMood(a) });
     if (b) {
-      const bh = lifeHeight(b, cw);
-      littleBlocks.push({ row: b, x: cw + 14 * s, y: lifeCursor + 4 * s, width: cw, height: bh });
+      const bw = emojiMood(b) ? Math.min(cw, 164 * s) : cw, bh = lifeHeight(b, bw);
+      littleBlocks.push({ row: b, x: cw + 14 * s, y: lifeCursor + 4 * s, width: bw, height: bh, stamp: emojiMood(b) });
       lifeCursor += Math.max(ah, bh + 4 * s) + 13 * s;
     } else lifeCursor += ah + 13 * s;
   }
@@ -109,6 +123,7 @@ export function drawStrawberry(p, d, t = STRAWBERRY_THEME) {
 
   function renderPanel(block) {
     const { group, x, y, width: pw, height: ph, angle } = block;
+    const compact = compactPanel(group, pw), headerH = (compact ? 42 : 60) * s;
     p.group(x, y, pw, ph, paperAngle(angle, ph), () => {
       const isEvening = group.label === '晚餐', isSnack = group.label === '零食 / 加餐';
       p.rect(0, 0, pw, ph, { fill: isEvening ? '#fff2f5' : isSnack ? '#fcf5ff' : '#fffef9', stroke: '#e8c5cb', radius: isSnack ? 3 * s : 7 * s, shadow: true });
@@ -116,21 +131,21 @@ export function drawStrawberry(p, d, t = STRAWBERRY_THEME) {
         p.rect(6 * s, 7 * s, pw - 12 * s, ph - 14 * s, { stroke: '#ecc0cc', radius: 4 * s, dash: [2 * s, 4 * s] });
         p.rect(0, 6 * s, 4 * s, ph - 12 * s, { fill: '#eaa6bb', radius: 2 * s });
       } else {
-        p.rect(0, 0, pw, 60 * s, { fill: group.color, radius: isSnack ? 3 * s : 7 * s });
-        if (isSnack) p.dots(8 * s, 8 * s, pw - 16 * s, 48 * s, { color: '#dfc6e8', step: 14 * s });
+        p.rect(0, 0, pw, headerH, { fill: group.color, radius: isSnack ? 3 * s : 7 * s });
+        if (isSnack) p.dots(8 * s, 8 * s, pw - 16 * s, headerH - 12 * s, { color: '#dfc6e8', step: 14 * s });
       }
       // Paper folds and label tabs leave room for the actual meal, even when it is long.
-      p.rect(11 * s, 13 * s, 30 * s, 29 * s, { fill: '#fffef9', stroke: '#e3c3c8', radius: 5 * s });
-      p.text(group.number, 13 * s, 17 * s, 26 * s,
+      p.rect(11 * s, (compact ? 8 : 13) * s, 30 * s, (compact ? 26 : 29) * s, { fill: '#fffef9', stroke: '#e3c3c8', radius: 5 * s });
+      p.text(group.number, 13 * s, (compact ? 10 : 17) * s, 26 * s,
         { size: 15 * s, lineHeight: 22 * s, font: 'title', weight: '700', color: '#bd7e90', align: 'center' });
-      p.text(group.label, 50 * s, 13 * s, pw - 118 * s,
+      p.text(group.label, 50 * s, (compact ? 9 : 13) * s, pw - (compact ? 100 : 118) * s,
         { size: group.label === '零食 / 加餐' ? 16 * s : 18 * s, lineHeight: 24 * s, weight: '700', color: '#8c5966' });
       // The subtitle is fixed stationery copy, kept separate from the user record area.
-      p.text(group.subtitle, 50 * s, 39 * s, pw - 106 * s,
+      if (!compact) p.text(group.subtitle, 50 * s, 39 * s, pw - 106 * s,
         { size: 10 * s, lineHeight: 15 * s, color: '#a4807b' });
-      p.art(group.art, pw - 63 * s, 5 * s, 57 * s, 57 * s);
-      p.line(15 * s, 61 * s, pw - 15 * s, 61 * s, { color: '#edcdd3', dash: [3 * s, 4 * s] });
-      let ry = 73 * s;
+      p.art(group.art, pw - (compact ? 48 : 63) * s, (compact ? 0 : 5) * s, (compact ? 44 : 57) * s, (compact ? 44 : 57) * s);
+      p.line(15 * s, headerH + (compact ? 0 : 1) * s, pw - 15 * s, headerH + (compact ? 0 : 1) * s, { color: '#edcdd3', dash: [3 * s, 4 * s] });
+      let ry = (compact ? 54 : 73) * s;
       group.rows.forEach((row, index) => {
         if (index) {
           p.line(18 * s, ry + 4 * s, pw - 18 * s, ry + 4 * s, { color: '#f0d8dd', dash: [2 * s, 5 * s] });
@@ -152,14 +167,21 @@ export function drawStrawberry(p, d, t = STRAWBERRY_THEME) {
     p.text('这段日期还没有餐食记录', m + 121 * s, y + 76 * s, inner - 138 * s, { size: 16 * s, lineHeight: 25 * s, color: t.muted });
   }
   for (const block of littleBlocks) {
-    const { row, x, y, width: cw, height: ch } = block;
+    const { row, x, y, width: cw, height: ch, stamp } = block;
     p.group(m + x, captionY + y, cw, ch, paperAngle(x ? .6 : -.5, ch), () => {
       const mood = row.title === '心情';
       p.rect(0, 0, cw, ch, { fill: mood ? '#ffe1ed' : '#fff2cd', stroke: mood ? '#e6b4c6' : '#e6d1a5', radius: 4 * s, shadow: true });
+      if (stamp) {
+        for (let sy = 10 * s; sy < ch; sy += 14 * s) {
+          p.circle(0, sy, 3 * s, {fill: t.paper});
+          p.circle(cw, sy, 3 * s, {fill: t.paper});
+        }
+        p.rect(6 * s, 6 * s, cw - 12 * s, ch - 12 * s, {stroke: '#e6b4c6', radius: 2 * s});
+      }
       p.text((mood ? '♡ ' : '✧ ') + row.title, 15 * s, 10 * s, cw - 30 * s, { size: 12 * s, lineHeight: 19 * s, weight: '700', color: mood ? '#b76b8a' : '#a58955' });
       let cy = 36 * s;
       if (d.isRange && row.meta) cy += p.text(row.meta, 15 * s, cy, cw - 30 * s, lifeMetaOpts) + 6 * s;
-      p.text(row.note, 15 * s, cy, cw - 30 * s, captionOpts);
+      p.text(row.note, 15 * s, cy, cw - 30 * s, lifeNoteOpts(row));
     });
   }
   for (const block of storyBlocks) {

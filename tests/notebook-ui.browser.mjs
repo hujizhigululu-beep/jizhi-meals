@@ -189,6 +189,7 @@ try {
     await page.locator('#diary-form').waitFor(); await inputs('diary editor');
     await page.locator('.close-button[data-close]').click();
     await nav('inventory');
+    if (await page.locator('.runway-fold').getAttribute('open') === null) await page.locator('.runway-fold > summary').click();
     const runway = page.locator('.runway-details');
     if (await runway.getAttribute('open') === null) await runway.locator('summary').click();
     await inputs('expanded runway settings');

@@ -3,7 +3,7 @@
 .meal-shortcuts-heading { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 4px; margin-bottom: 7px; }
 .meal-shortcuts-heading > span { font: 650 13px/1.5 var(--journal-title-font, serif); color: var(--journal-ink, #714f56); }
 .meal-shortcuts-heading small { font-size: 8px; letter-spacing: .09em; color: var(--journal-muted, #a17983); }
-.meal-scene-slips { display: flex; gap: 5px; overflow-x: auto; padding: 2px 1px 7px; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.meal-scene-slips { display: flex; gap: 5px; min-width: 0; max-width: 100%; overflow-x: auto; padding: 2px 1px 7px; overscroll-behavior-x: contain; scrollbar-width: thin; touch-action: pan-x pan-y; }
 .meal-scene-slip { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 4px; min-height: 44px; max-width: 160px; padding: 5px 8px; border: 1px dashed #e0c5c8; border-radius: 7px; background: #fff8e9; color: var(--journal-ink, #714f56); box-shadow: 0 2px 0 #f1dfd877; font-size: 12px; line-height: 1.4; }
 .meal-scene-slip:nth-child(2n) { background: var(--journal-mint, #eaf5e7); border-color: #c4d6bc; }
 .meal-scene-slip:nth-child(3n) { background: var(--journal-lilac, #f1eafa); border-color: #d6c6e1; }

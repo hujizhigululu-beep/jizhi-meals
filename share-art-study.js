@@ -38,30 +38,36 @@ const totalLabel = (d, kind) => {
 };
 
 function memoPlan(p, row, width, s, t) {
-  const titleO = {size: 13 * s, lineHeight: 20 * s, weight: '700', color: t.muted};
+  const stamp = row.title === '心情'
+    && /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator})[\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}\u200D\uFE0F]*$/u.test(String(row.note || '').trim())
+    && [...new Intl.Segmenter('zh', {granularity: 'grapheme'}).segment(String(row.note).trim())].length <= 2;
+  if (stamp) width = Math.min(width, 110 * s);
+  const titleO = {size: 13 * s, lineHeight: 20 * s, weight: '700', color: t.muted, ...(stamp ? {align: 'center'} : {})};
   const metaO = {size: 13 * s, lineHeight: 20 * s, color: t.muted};
-  const noteO = {size: 18 * s, lineHeight: 27 * s, color: t.ink, font: 'title'};
+  const noteO = {size: (stamp ? 26 : 18) * s, lineHeight: (stamp ? 32 : 27) * s, color: t.ink, font: 'title', ...(stamp ? {align: 'center'} : {})};
   const textW = width - 32 * s;
-  return {row, width, textW, titleO, metaO, noteO,
-    height: 30 * s + p.measure(row.title || '', textW, titleO)
+  return {row, width, textW, titleO, metaO, noteO, stamp,
+    height: (stamp ? 22 : 26) * s + p.measure(row.title || '', textW, titleO)
       + (row.meta ? p.measure(row.meta, textW, metaO) + 6 * s : 0)
-      + (row.note ? p.measure(row.note, textW, noteO) + 10 * s : 0)};
+      + (row.note ? p.measure(row.note, textW, noteO) + (stamp ? 5 : 8) * s : 0)};
 }
 
 function drawMemo(p, plan, x, y, s, t, index = 0) {
-  const {row, width, height, textW, titleO, metaO, noteO} = plan;
+  const {row, width, height, textW, titleO, metaO, noteO, stamp} = plan;
   const mood = row.title === '心情', joy = row.title === '小确幸';
   const fill = mood ? '#FDEAF0' : joy ? '#FFF0C5' : '#FFF4E4';
   const edge = mood ? '#EAC2D0' : joy ? '#E8D5A4' : '#E8CEB6';
   p.group(x, y, width, height, safeTilt(index % 2 ? .65 : -.45, height, s), () => {
     p.rect(0, 0, width, height, {fill, stroke: edge, radius: 3 * s, shadow: true});
-    p.rect(0, 0, 5 * s, height, {fill: mood ? '#E8ABC1' : joy ? '#EBD392' : '#E1BBA7', radius: 2 * s});
-    let ty = 13 * s;
+    if (stamp) p.rect(5 * s, 5 * s, width - 10 * s, height - 10 * s, {stroke: edge, dash: [2 * s, 3 * s], radius: 2 * s});
+    else p.rect(0, 0, 5 * s, height, {fill: mood ? '#E8ABC1' : joy ? '#EBD392' : '#E1BBA7', radius: 2 * s});
+    let ty = (stamp ? 11 : 13) * s;
     ty += p.text(row.title || '', 16 * s, ty, textW, titleO);
     if (row.meta) ty += 6 * s + p.text(row.meta, 16 * s, ty + 6 * s, textW, metaO);
-    if (row.note) p.text(row.note, 16 * s, ty + 10 * s, textW, noteO);
+    if (row.note) p.text(row.note, 16 * s, ty + (stamp ? 5 : 8) * s, textW, noteO);
   });
-  p.tape(x + width - 87 * s, y - 6 * s, 62 * s, {fill: index % 2 ? '#CAE0CB' : '#E3C8E8', angle: index % 2 ? 3 : -3});
+  const tapeW = (stamp ? 34 : 62) * s;
+  p.tape(x + width / 2 - tapeW / 2, y - 6 * s, tapeW, {fill: index % 2 ? '#CAE0CB' : '#E3C8E8', angle: index % 2 ? 3 : -3});
 }
 
 function planMemos(p, d, x, width, y, s, t) {
@@ -71,13 +77,17 @@ function planMemos(p, d, x, width, y, s, t) {
     const a = memoPlan(p, records[i], columnW, s, t);
     const b = records[i + 1] && memoPlan(p, records[i + 1], columnW, s, t);
     if (b && small(a.row) && small(b.row) && a.height <= 205 * s && b.height <= 205 * s) {
-      plans.push({...a, x, y, index: i}, {...b, x: x + columnW + gap, y: y + 4 * s, index: i + 1});
-      y += Math.max(a.height, b.height + 4 * s) + 22 * s;
+      // A mood stamp keeps its compact width. Its neighbour receives the spare
+      // space instead of stretching the stamp to the diary's row dimensions.
+      const rightX = x + a.width + gap;
+      const right = a.stamp ? memoPlan(p, b.row, width - a.width - gap, s, t) : b;
+      plans.push({...a, x, y, index: i}, {...right, x: rightX, y: y + 4 * s, index: i + 1});
+      y += Math.max(a.height, right.height + 4 * s) + 19 * s;
       i += 2;
     } else {
       const plan = memoPlan(p, records[i], width, s, t);
       plans.push({...plan, x, y, index: i});
-      y += plan.height + 22 * s;
+      y += plan.height + 19 * s;
       i++;
     }
   }
@@ -116,28 +126,28 @@ export function drawNotebook(p, d, t = NOTEBOOK_THEME) {
   const metaO = {size: 14 * s, lineHeight: 21 * s, color: t.muted};
   const noteO = {size: 18 * s, lineHeight: 27 * s, color: t.ink};
   const chapter = (row, width, index) => ({row, width, index,
-    height: 64 * s + p.measure(row.title || '', width - 32 * s, titleO)
+    height: 55 * s + p.measure(row.title || '', width - 32 * s, titleO)
       + (row.meta ? p.measure(row.meta, width - 32 * s, metaO) + 7 * s : 0)
       + (row.note ? p.measure(row.note, width - 32 * s, noteO) + 12 * s : 0)});
   const blocks = [];
   let cursor = startY;
   const columns = inner >= 435 * s && studies.length > 1 ? 2 : 1;
   const colW = columns === 2 ? (inner - gap) / 2 : inner;
-  for (let i = 0; i < studies.length;) {
-    const first = chapter(studies[i], colW, i), second = studies[i + 1] && chapter(studies[i + 1], colW, i + 1);
-    const pair = columns === 2 && second && first.height < 320 * s && second.height < 320 * s;
-    if (pair) {
-      blocks.push({...first, x, y: cursor}, {...second, x: x + colW + gap, y: cursor + 8 * s});
-      cursor += Math.max(first.height, second.height + 8 * s) + 24 * s;
-      i += 2;
+  const lanes = [cursor, cursor];
+  studies.forEach((row, index) => {
+    const small = chapter(row, colW, index);
+    if (columns === 2 && small.height < 320 * s) {
+      const lane = lanes[0] <= lanes[1] ? 0 : 1;
+      blocks.push({...small, x: x + lane * (colW + gap), y: lanes[lane]});
+      lanes[lane] += small.height + 22 * s;
     } else {
-      const block = chapter(studies[i], inner, i);
-      blocks.push({...block, x, y: cursor});
-      cursor += block.height + 22 * s;
-      i++;
+      const block = chapter(row, inner, index), y = Math.max(...lanes);
+      blocks.push({...block, x, y});
+      lanes.fill(y + block.height + 22 * s);
     }
-  }
-  if (!studies.length) cursor += 106 * s;
+  });
+  cursor = Math.max(...lanes);
+  if (!studies.length) cursor += 72 * s;
   const memoLayout = planMemos(p, d, x, inner, cursor + 5 * s, s, t);
   const memoBlocks = memoLayout.plans;
   cursor = memoLayout.end;
@@ -178,7 +188,7 @@ export function drawNotebook(p, d, t = NOTEBOOK_THEME) {
       p.text(String(index + 1).padStart(2, '0'), 15 * s, 14 * s, 30 * s, {size: 13 * s, lineHeight: 19 * s, weight: '700', align: 'center', color: '#9C7B9D'});
       p.text(row.minutesKnown ? `${row.minutes} 分钟` : '学习小记', 55 * s, 15 * s, pw - 70 * s,
         {size: 12 * s, lineHeight: 18 * s, color: '#AC8A9F', align: 'right'});
-      let ty = 47 * s;
+      let ty = 41 * s;
       ty += p.text(row.title || '', 16 * s, ty, pw - 32 * s, titleO);
       if (row.meta) ty += 7 * s + p.text(row.meta, 16 * s, ty + 7 * s, pw - 32 * s, metaO);
       if (row.note) {
@@ -190,8 +200,8 @@ export function drawNotebook(p, d, t = NOTEBOOK_THEME) {
     p.tape(block.x + pw / 2 - 29 * s, block.y - 6 * s, 58 * s, {fill: index % 2 ? '#D0DDBE' : '#EDC2D7', angle: index % 2 ? 3 : -2});
   }
   if (!studies.length) {
-    p.art('study-book', x + 7 * s, startY + 12 * s, 70 * s, 67 * s);
-    p.text('留一页，给慢慢来的自己。', x + 91 * s, startY + 28 * s, inner - 109 * s, {size: 19 * s, lineHeight: 29 * s, font: 'title', color: t.ink});
+    p.art('study-book', x + 7 * s, startY + 8 * s, 51 * s, 49 * s);
+    p.text('留一页，给慢慢来的自己。', x + 77 * s, startY + 15 * s, inner - 95 * s, {size: 19 * s, lineHeight: 29 * s, font: 'title', color: t.ink});
   }
   memoBlocks.forEach(plan => drawMemo(p, plan, plan.x, plan.y, s, t, plan.index));
   footer(p, t, x, footerY, inner, s, '今天又学到一点点啦 (˶ᵔ ᵕ ᵔ˶)');
@@ -218,13 +228,14 @@ export function drawLibrary(p, d, t = LIBRARY_THEME) {
   const blocks = [];
   let cursor = tableStart;
   studies.forEach((row, index) => {
-    const height = Math.max(90 * s, 32 * s + p.measure(row.title || '', textW, titleO)
+    // Only the actual duration stamp sets a lower bound, never an empty row.
+    const height = Math.max((row.minutesKnown ? 84 : 60) * s, 32 * s + p.measure(row.title || '', textW, titleO)
       + (row.meta ? p.measure(row.meta, textW, metaO) + 7 * s : 0)
       + (row.note ? p.measure(row.note, textW, noteO) + 10 * s : 0));
     blocks.push({row, index, y: cursor, height});
     cursor += height;
   });
-  if (!studies.length) cursor += 104 * s;
+  if (!studies.length) cursor += 59 * s;
   const tableEnd = cursor;
   cursor += 29 * s;
   const memoLayout = planMemos(p, d, x + 3 * s, inner - 6 * s, cursor, s, t);
@@ -275,8 +286,8 @@ export function drawLibrary(p, d, t = LIBRARY_THEME) {
     if (row.minutesKnown) p.text('分钟', durationX + 3 * s, y + 51 * s, minutesW - 16 * s, {size: 9 * s, lineHeight: 14 * s, color: '#BD9297', align: 'center'});
   });
   if (!studies.length) {
-    p.rect(x, tableStart, inner, 104 * s, {fill: '#FFFAE9', stroke: '#DCC4A9'});
-    p.text('这一格，留给下一次的小收获。', x + 24 * s, tableStart + 35 * s, inner - 48 * s, {size: 18 * s, lineHeight: 27 * s, color: t.muted, font: 'title'});
+    p.rect(x, tableStart, inner, 59 * s, {fill: '#FFFAE9', stroke: '#DCC4A9'});
+    p.text('这一格，留给下一次的小收获。', x + 24 * s, tableStart + 16 * s, inner - 48 * s, {size: 18 * s, lineHeight: 27 * s, color: t.muted, font: 'title'});
   }
   // The closing stamp describes a real saved record, never a fictitious loan.
   p.text('学习内容登记  /  PERSONAL INDEX', x + 2 * s, tableEnd + 8 * s, inner, {size: 9 * s, lineHeight: 14 * s, color: '#B29682', align: 'right'});

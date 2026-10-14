@@ -47,7 +47,10 @@ export function drawCafe(p, d, t = CAFE_THEME) {
   const featureTextH = main ? p.measure(main.title || '', featureW, titleO)
     + (mealMeta(main, d.isRange) ? 8 * s + p.measure(mealMeta(main, d.isRange), featureW, metaO) : 0) : 57 * s;
   const mainNoteH = main?.note ? p.measure(main.note, inner - 38 * s, noteO) + 16 * s : 0;
-  const mainH = 68 * s + Math.max(featureTextH, 86 * s) + mainNoteH + 23 * s;
+  // The illustration reserves just its own height; a one-line meal need not
+  // fill the much taller feature plate used by the original composition.
+  const featureTop = 54 * s, featureArtH = 76 * s;
+  const mainH = featureTop + Math.max(featureTextH, featureArtH) + mainNoteH + 16 * s;
   const groups = [];
   for (const record of remaining) {
     const label = record.groupLabel || '餐食小记';
@@ -61,13 +64,13 @@ export function drawCafe(p, d, t = CAFE_THEME) {
     + p.measure(row.title || '', width - 34 * s, rowO)
     + (mealMeta(row, d.isRange) ? 6 * s + p.measure(mealMeta(row, d.isRange), width - 34 * s, metaO) : 0)
     + (row.note ? 9 * s + p.measure(row.note, width - 34 * s, noteO) : 0)
-    + (index ? 20 * s : 0), 0) + 25 * s;
+    + (index ? 20 * s : 0), 0) + 15 * s;
   for (let i = 0; i < groups.length; i += 2) {
     const pair = groups.slice(i, i + 2), cw = pair.length > 1 ? (inner - gap) / 2 : inner;
     const measured = pair.map(group => ({ group, height: panelHeight(group, cw) }));
     const pairH = Math.max(...measured.map(item => item.height));
     measured.forEach((item, index) => panelPlans.push({ ...item, width: cw, x: m + index * (cw + gap), y: cursor + index * 5 * s }));
-    cursor += pairH + (pair.length > 1 ? 5 * s : 0) + 24 * s;
+    cursor += pairH + (pair.length > 1 ? 5 * s : 0) + 19 * s;
   }
   const notes = lifeRows(d);
   const lifePlans = [];
@@ -115,7 +118,7 @@ export function drawCafe(p, d, t = CAFE_THEME) {
     p.rect(16 * s, 16 * s, inner - 32 * s, 29 * s, { fill: '#fffbef', stroke: '#e6cda6', radius: 3 * s });
     p.text('MAIN PLATE  ·  ' + (main?.groupLabel || '餐桌小记'), 28 * s, 21 * s, inner - 56 * s,
       { size: 12 * s, lineHeight: 19 * s, weight: '700', color: '#ad8167' });
-    let y = 66 * s;
+    let y = featureTop;
     if (main) {
       y += p.text(main.title || '', 19 * s, y, featureW, titleO);
       const meta = mealMeta(main, d.isRange);
@@ -124,9 +127,9 @@ export function drawCafe(p, d, t = CAFE_THEME) {
       p.text('这段日期还没有餐食记录', 19 * s, y, featureW,
         { size: 19 * s, lineHeight: 28 * s, color: t.muted });
     }
-    p.art('cafe-place-setting', inner - 128 * s, 58 * s, 110 * s, 95 * s);
+    p.art('cafe-place-setting', inner - 107 * s, 48 * s, 88 * s, featureArtH);
     if (main?.note) {
-      y = 68 * s + Math.max(featureTextH, 86 * s) + 10 * s;
+      y = featureTop + Math.max(featureTextH, featureArtH) + 10 * s;
       p.line(19 * s, y - 2 * s, inner - 19 * s, y - 2 * s, { color: '#e4c99c', dash: [2 * s, 5 * s] });
       p.text(main.note, 19 * s, y + 6 * s, inner - 38 * s, noteO);
     }
@@ -224,18 +227,18 @@ export function drawTicket(p, d, t = TICKET_THEME) {
     const titleH = p.measure(row.title || '', titleW, rowO);
     const metaH = meta ? p.measure(meta, cardW - 34 * s, metaO) + 7 * s : 0;
     const noteH = row.note ? p.measure(row.note, cardW - 34 * s, noteO) + 11 * s : 0;
-    const height = 24 * s + Math.max(titleH, row.minutesKnown ? 43 * s : 0) + metaH + noteH + 20 * s;
+    const height = 18 * s + Math.max(titleH, row.minutesKnown ? 43 * s : 0) + metaH + noteH + 16 * s;
     rowPlans.push({ row, index, meta, titleW, titleH, height, y: cursor });
     cursor += height + 17 * s;
   });
-  if (!records.length) cursor += 109 * s;
+  if (!records.length) cursor += 75 * s;
   const routeEnd = cursor;
   const notes = lifeRows(d);
   const lifePlans = [];
   const lifeW = inner - 42 * s;
   for (const row of notes) {
     const metaH = d.isRange && row.meta ? p.measure(row.meta, lifeW, metaO) + 5 * s : 0;
-    const height = 43 * s + metaH + p.measure(row.note, lifeW, noteO) + 19 * s;
+    const height = 38 * s + metaH + p.measure(row.note, lifeW, noteO) + 14 * s;
     lifePlans.push({ row, metaH, height, y: cursor + 14 * s });
     cursor += height + 28 * s;
   }
@@ -296,14 +299,14 @@ export function drawTicket(p, d, t = TICKET_THEME) {
       p.line(lineX + 19 * s, y + 29 * s, cardX, y + 29 * s, { color: '#c0cbb7', dash: [2 * s, 3 * s] });
       p.rect(cardX, y, cardW, ch, { fill: even ? '#fff8ec' : '#f4f7ed', stroke: '#d1d9c2', radius: 6 * s, shadow: true });
       p.rect(cardX, y + 10 * s, 3 * s, ch - 20 * s, { fill: even ? '#e4b8c7' : '#b9d3af', radius: 1.5 * s });
-      let ty = y + 21 * s;
+      let ty = y + 18 * s;
       p.text(row.title || '', cardX + 17 * s, ty, titleW, rowO);
       if (row.minutesKnown) {
         const badgeX = cardX + cardW - 76 * s;
-        p.rect(badgeX, y + 14 * s, 60 * s, 49 * s, { fill: '#f4dbe3', stroke: '#e2bac8', radius: 5 * s });
-        p.text(String(row.minutes), badgeX + 5 * s, y + 19 * s, 50 * s,
+        p.rect(badgeX, y + 12 * s, 60 * s, 49 * s, { fill: '#f4dbe3', stroke: '#e2bac8', radius: 5 * s });
+        p.text(String(row.minutes), badgeX + 5 * s, y + 17 * s, 50 * s,
           { size: 22 * s, lineHeight: 27 * s, font: 'title', weight: '700', color: '#aa6d87', align: 'center' });
-        p.text('MIN', badgeX + 5 * s, y + 45 * s, 50 * s,
+        p.text('MIN', badgeX + 5 * s, y + 43 * s, 50 * s,
           { size: 9 * s, lineHeight: 13 * s, weight: '700', color: '#ba8f9e', align: 'center' });
       }
       ty += Math.max(titleH, row.minutesKnown ? 43 * s : 0);
@@ -313,10 +316,8 @@ export function drawTicket(p, d, t = TICKET_THEME) {
     p.circle(lineX, routeEnd - 6 * s, 4 * s, { fill: '#f4bbce', stroke: '#bb899b' });
     p.line(lineX, last.y + 45 * s, lineX, routeEnd - 13 * s, { color: '#b8c9ae', dash: [3 * s, 5 * s] });
   } else {
-    p.art('ticket-signpost', m + 20 * s, routeY + 3 * s, 62 * s, 83 * s);
-    p.text('轻轻记下动一动的日常', m + 100 * s, routeY + 13 * s, inner - 125 * s,
-      { size: 20 * s, lineHeight: 29 * s, weight: '600', font: 'title', color: '#73907a' });
-    p.text('这段日期还没有运动打卡', m + 100 * s, routeY + 54 * s, inner - 125 * s, metaO);
+    p.art('ticket-signpost', m + 27 * s, routeY + 2 * s, 45 * s, 60 * s);
+    p.text('这段日期还没有运动打卡', m + 90 * s, routeY + 19 * s, inner - 115 * s, metaO);
   }
   for (const item of lifePlans) {
     const { row, y, height: ch, metaH } = item;
@@ -326,7 +327,7 @@ export function drawTicket(p, d, t = TICKET_THEME) {
       for (let ly = 63 * s; ly < ch - 9 * s; ly += 28 * s) p.line(8 * s, ly, nw - 8 * s, ly, { color: '#eaddbc' });
       p.text('ALONG THE DAY  ·  ' + (row.title || '沿途小记'), 8 * s, 15 * s, lifeW,
         { size: 11 * s, lineHeight: 18 * s, weight: '700', color: '#ae956d' });
-      let ty = 43 * s;
+      let ty = 38 * s;
       if (metaH) ty += p.text(row.meta, 8 * s, ty, lifeW, metaO) + 5 * s;
       p.text(row.note, 8 * s, ty, lifeW, noteO);
     });

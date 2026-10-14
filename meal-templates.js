@@ -9,6 +9,12 @@ const templateFields = ['id', 'name', 'scene', 'mealName', 'note', 'resources'];
 const sceneType = scene => scene === '外食' ? '外出就餐' : scene;
 const copyResource = resource => ({ ingredientId: resource.ingredientId, name: resource.name, amount: resource.amount, unit: resource.unit });
 const copyTemplate = template => ({ ...template, resources: template.resources.map(copyResource) });
+
+/** Breakfast is a meal slot, never a saved scene or meal type. This shortcut
+ * only prepares a draft; choosing ingredients and saving remain explicit. */
+export function prefillBreakfastMeal() {
+  return { slot: 'breakfast', name: '早餐', type: '其他', note: '', resources: [], notices: [] };
+}
 function protectedError(message = '原数据已保护，请先保存原文件并恢复有效备份。') {
   const error = new Error(message); error.code = 'PROTECTED_DATA'; return error;
 }
