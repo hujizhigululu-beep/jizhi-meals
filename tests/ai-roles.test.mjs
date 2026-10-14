@@ -1,10 +1,32 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { freshState, normalize } from '../model.js';
+import { load, persist, STORAGE_KEY, AI_ROLES_BACKUP_KEY } from '../storage.js';
 import { defaultPostOffice, normalizePostOffice, upsertCharacter, copyCharacter, removeCharacter, resetCharacter, setDefaultCharacter, saveUserProfile, saveTaskPrompt, putAIContent, removeAIContent, selectAIContents, composeAIMessages, inventoryText } from '../post-office.js';
 
 const date = '2026-10-14', time = '2026-10-14T03:00:00.000Z';
 const content = (type = 'meals', extra = {}) => ({ type, date, characterId: 'saihara', body: '这顿饭像一张温柔的小便签，我已经认真收到了。', generatedAt: time, recordsText: '明确选择的测试记录', recordIds: ['diary:2026-10-14'], ...extra });
+
+function legacyBookRaw() {
+  const state=freshState(), config=state.postOffice;
+  state.postOffice={version:1,userPersona:'旧用户原文\n ',writingPreset:config.writingPreset,letterTask:config.letterTask,characters:config.characters.map(({id,name,persona})=>({id,name,persona})),letters:[{id:'legacy-letter',date,characterName:'最原终一',body:'旧来信全文\n末尾 ',generatedAt:time}]};
+  return JSON.stringify(state,null,2);
+}
+test('first role upgrade saves exact old JSON once before changing the test book',()=>{
+  const raw=legacyBookRaw(), entries=new Map([[STORAGE_KEY,raw]]), writes=[];
+  const storage={getItem:key=>entries.get(key)??null,setItem(key,value){writes.push(key);entries.set(key,value);}};
+  const loaded=load(storage);assert.equal(loaded.locked,false);assert.deepEqual(writes,[]);
+  saveUserProfile(loaded.state,{name:'新用户名称'});const saved=persist(storage,loaded.state);
+  assert.equal(entries.get(AI_ROLES_BACKUP_KEY),raw);assert.deepEqual(writes,[AI_ROLES_BACKUP_KEY,STORAGE_KEY]);
+  assert.equal(saved.postOffice.letters[0].body,'旧来信全文\n末尾 ');assert.equal(saved.postOffice.user.name,'新用户名称');
+  persist(storage,saved);assert.equal(entries.get(AI_ROLES_BACKUP_KEY),raw);assert.equal(writes.filter(key=>key===AI_ROLES_BACKUP_KEY).length,1);
+});
+test('failed role-upgrade backup refuses the whole save and leaves original book intact',()=>{
+  const raw=legacyBookRaw(), entries=new Map([[STORAGE_KEY,raw]]), writes=[];
+  const storage={getItem:key=>entries.get(key)??null,setItem(key,value){writes.push(key);if(key===AI_ROLES_BACKUP_KEY)throw new Error('synthetic quota');entries.set(key,value);}};
+  const loaded=load(storage);saveUserProfile(loaded.state,{name:'本次未保存名称'});
+  assert.throws(()=>persist(storage,loaded.state),/原数据没有改变/);assert.equal(entries.get(STORAGE_KEY),raw);assert.deepEqual(writes,[AI_ROLES_BACKUP_KEY]);
+});
 
 test('phase-2 migration preserves edited raw prompts and historical names without inserting character-specific literature', () => {
   const legacy = { version: 1, userPersona: '\n用户原文  ', writingPreset: ' 通用原文\n', letterTask: '任务原文', characters: [{ id: 'saihara', name: '用户改名', persona: '最原原文\n ' }, { id: 'little-tt', name: '小tt', persona: '\n小tt原文' }], letters: [{ id: 'old-letter', date, characterName: '最原终一', body: '完整旧信\n末尾  ', generatedAt: time }] };
